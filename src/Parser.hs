@@ -4,5 +4,5 @@ import Text.Regex.Posix
 parseHeader :: String -> [String]
 parseHeader hdr = [hdr]
 
-parseHeaderItem :: String -> (Int, Int)
-parseHeaderItem hdr =  hdr =~ "OP( )*" :: (Int, Int)
+parseHeaderItem :: String -> String -> (Int, Int)
+parseHeaderItem hdr pat =  hdr =~ pat :: (Int, Int)

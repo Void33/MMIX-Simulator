@@ -9,3 +9,4 @@ cabal-dev
 .log
 .synctex.gz
 .toc
+.dist-buildwrapper/*
