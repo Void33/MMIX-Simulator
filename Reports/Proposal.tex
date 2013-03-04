@@ -44,29 +44,112 @@
 
 %%% END Article customizations
 
-%%% The "real" document content comes below...
-
-\title{MMIX Simulator}
+\title{Component Based MMIX Simulator using Multiple Programming Paradigms}
 \author{Stephen Edmans}
-%\date{} % Activate to display a given date or no date (if empty),
+\date{} % Activate to display a given date or no date (if empty),
 
 \begin{document}
 \maketitle
 \newpage
 \tableofcontents
 \newpage
-\begin{abstract}
-My abstract
-\end{abstract}
+\listoffigures
+\newpage
 \section{Introduction}
-\section{Background}
-Professor Donald Knuth of Stanford University has designed a
+There is a prevailing design paradigm to break systems up into smaller components %REFERENCE
+The idea behind this paradigm is that these components can be swapped out for alternatives when the need requires.  They can also be developed in parallel and potentially by separate teams of developers. 
+There is now a proliferation of 
+
+\section{Existing Implementations}
+
+% List the existing implementations that I can find.
+% Comment on how they are approaching the process
+
 \section{Outline Design}
+The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a component that I am calling the Simulation Engine. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by the .
+
+\begin{figure}[h!]
+	\label{fig:interactions}
+\begin{picture}(200,200)(10,10)
+	\put(10,  130){\framebox(150, 50){User Interface}}
+	\put(230, 130){\framebox(150, 50){Assembler}}
+	\put(10,  10) {\framebox(150, 50){Simulation Engine}}
+	\put(160, 165){\vector(1, 0){70}}
+	\put(195, 180){\circle{15}}
+	\put(192, 177){1}
+	\put(230, 145){\vector(-1, 0){70}}
+	\put(195, 130){\circle{15}}
+	\put(192, 127){2}
+	\put(25,  60) {\vector(0, 1){70}}
+	\put(10,  95) {\circle{15}}
+	\put(7,   92) {3}
+	\put(65,  130){\vector(0, -1){70}}
+	\put(50,  95) {\circle{15}}
+	\put(47,  92) {4}
+	\put(105, 60) {\vector(0, 1){70}}
+	\put(90,  95) {\circle{15}}
+	\put(87,  92) {5}
+	\put(145, 130){\vector(0, -1){70}}
+	\put(130, 95) {\circle{15}}
+	\put(127, 92) {6}
+\end{picture}
+	\caption{Component Interaction}
+\end{figure}
+
+\begin{enumerate}
+	\item Source Text
+	\item Binary Representation
+	\item Binary Representation
+	\item Current State
+	\item Process Next Step
+	\item Change of State
+\end{enumerate}
+
+% Target environment (Windows? Mac? Linux? cross platform?)
+
 \subsection{Assembler}
+% Haskell
+% 
+
 \subsection{Simulation Engine}
-\subsection{User Interface}
+% Erlang
+%
+
+\subsection{Graphical User Interface}
+% (Scala? F#?)
+%
+
+The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components. The GUI can be broken up into 4 separate sections as illustrated in figure
+
+\begin{figure}[h!]
+	\label{GUI}
+	\begin{picture}(200,300)(10,10)
+		\put(0,0){\framebox(450,300){}}
+		\put(10, 10){\framebox(100, 280){Registers}}
+		\put(120, 10){\framebox(315, 100){Standard Console}}
+		\put(120, 120){\framebox(315, 80){Main Program State}}
+		\put(120, 210){\framebox(315, 80){Memory}}
+	\end{picture}
+	\caption{Graphical User Interface}
+\end{figure}
+
+\subsubsection{Memory}
+\subsubsection{Registers}
+\subsubsection{Main Program State}
+\subsubsection{Standard Console}
+\section{Development Plan}
+
+% How will I break down the work?
+% What milestones and delivery dates do I want to propose
+
 \section{Testing}
-\section{Timetable}
+
+% How am I going to test the application.  
+% Test Driven Development.
+
 \section{Summary}
+
+% How is my proposed implementation different from the existing implementations.
+% Are there any metrics that I can use to compare my implementation with the existing implementations.
 
 \end{document}
