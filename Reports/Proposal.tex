@@ -114,29 +114,48 @@ The MMIX simulator application will consists of three separate components. The t
 \subsection{Simulation Engine}
 % Erlang
 %
+Reset Simulator
+Load Program
+Reset Program
+Process Next Statement
 
 \subsection{Graphical User Interface}
 % (Scala? F#?)
 %
+The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components.
 
-The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components. The GUI can be broken up into 4 separate sections as illustrated in figure
+\subsubsection{Programming Paradigm}
+
+\subsubsection{Initial Design}
+ The GUI can be broken up into 4 separate sections as illustrated in figure
 
 \begin{figure}[h!]
 	\label{GUI}
 	\begin{picture}(200,300)(10,10)
 		\put(0,0){\framebox(450,300){}}
 		\put(10, 10){\framebox(100, 280){Registers}}
-		\put(120, 10){\framebox(315, 100){Standard Console}}
-		\put(120, 120){\framebox(315, 80){Main Program State}}
+		\put(120, 10){\framebox(315,30){Simulation Controls}}
+		\put(120, 50){\framebox(315, 50){Main Program State}}
+		\put(350, 55){\framebox(80, 40){History}}
+		\put(120, 110){\framebox(315, 90){Standard Console}}
 		\put(120, 210){\framebox(315, 80){Memory}}
 	\end{picture}
 	\caption{Graphical User Interface}
 \end{figure}
 
 \subsubsection{Memory}
+The memory section of the GUI will contain a representation of the simulators current memory.
+
+
+00000000: 8fff 0100 0000 0701 f4ff 0003 0000 0702 ................
+00000010: 0000 0000 2c20 776f 726c 640a 00        ...., world..
+
 \subsubsection{Registers}
+The registers section of the GUI will display a list of all of the available registers in the simulated MMIX machine.  It will show not only the names of the registers but there current values.  
 \subsubsection{Main Program State}
 \subsubsection{Standard Console}
+There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator have got standard input and output channels.  These are accessed through the standard console area on the GUI.
+\subsection{Simulation Controls}
 \section{Development Plan}
 
 % How will I break down the work?

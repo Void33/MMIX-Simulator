@@ -4,9 +4,12 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
-.virthualenv
-.aux
-.log
-.synctex.gz
-.toc
+*.virthualenv
+*.aux
+*.log
+*.synctex.gz
+*.toc
 .dist-buildwrapper/*
+*.aux
+
+*.lof
