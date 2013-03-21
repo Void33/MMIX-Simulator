@@ -56,9 +56,16 @@
 \listoffigures
 \newpage
 \section{Introduction}
-There is a prevailing design paradigm to break systems up into smaller components %REFERENCE
-The idea behind this paradigm is that these components can be swapped out for alternatives when the need requires.  They can also be developed in parallel and potentially by separate teams of developers. 
-There is now a proliferation of 
+As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components %REFERENCE
+These components will interact with each other to make the complete system. When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
+
+The system that I plan to create in this project is inspired by Jeliot, which is a tool that is used as an aid in the teaching of Java. %REFERENCE
+The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
+
+In his seminal work The Art of Computer Programming Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Dr. Knuth updated this machine language, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
+
+% Is it Dr or Prof?
+% Reference of book
 
 \section{Existing Implementations}
 
@@ -66,14 +73,16 @@ There is now a proliferation of
 % Comment on how they are approaching the process
 
 \section{Outline Design}
-The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a component that I am calling the Simulation Engine. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by the .
+The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a Virtual Machine component. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by the .
 
-\begin{figure}[h!]
+One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application run on other platforms.
+
+\begin{figure}
 	\label{fig:interactions}
 \begin{picture}(200,200)(10,10)
 	\put(10,  130){\framebox(150, 50){User Interface}}
 	\put(230, 130){\framebox(150, 50){Assembler}}
-	\put(10,  10) {\framebox(150, 50){Simulation Engine}}
+	\put(10,  10) {\framebox(150, 50){Virtual Machine}}
 	\put(160, 165){\vector(1, 0){70}}
 	\put(195, 180){\circle{15}}
 	\put(192, 177){1}
@@ -111,7 +120,7 @@ The MMIX simulator application will consists of three separate components. The t
 % Haskell
 % 
 
-\subsection{Simulation Engine}
+\subsection{Virtual Machine}
 % Erlang
 %
 Reset Simulator
@@ -122,21 +131,20 @@ Process Next Statement
 \subsection{Graphical User Interface}
 % (Scala? F#?)
 %
-The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components.
+The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components. There are three main forms of user interface commonly used at the present time.  The difference between the three are how the user access the application and where the processing occurs.  The traditional method is an application that is installed on the client machine and runs directly on the machine.  The newer approach 
 
 \subsubsection{Programming Paradigm}
 
 \subsubsection{Initial Design}
  The GUI can be broken up into 4 separate sections as illustrated in figure
 
-\begin{figure}[h!]
-	\label{GUI}
+\begin{figure}
+	\label{fig:GUI}
 	\begin{picture}(200,300)(10,10)
 		\put(0,0){\framebox(450,300){}}
 		\put(10, 10){\framebox(100, 280){Registers}}
 		\put(120, 10){\framebox(315,30){Simulation Controls}}
 		\put(120, 50){\framebox(315, 50){Main Program State}}
-		\put(350, 55){\framebox(80, 40){History}}
 		\put(120, 110){\framebox(315, 90){Standard Console}}
 		\put(120, 210){\framebox(315, 80){Memory}}
 	\end{picture}
