@@ -65,44 +65,50 @@ The Jeliot system allows a user to give it a piece of Java source code and it wi
 In his seminal work The Art of Computer Programming Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Dr. Knuth updated this machine language, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
 
 % Is it Dr or Prof?
+% Is it language or architecture?
 % Reference of book
 
 \section{Existing Implementations}
 
+There is already one existing main implementation created by Dr. Knuth and his team at Stanford University. This implementation runs as a few command line utilities.  These utilities include an assembler which converts a text file containing the relevant assembly language source code into a proprietary binary format.  There is a utility which reads files in this proprietary binary format and displays the content back to the console.  There is also the main utility which will execute the application stored in the binary files using an MMIX virtual machine.  It is possible to get the virtual machine to output some tracing information but it does not have a graphical user interface and it does not allow you to step through the processing of the application.  
+
+These utilities are all written in CWEB % DESCRIBE!.
+
+% Reference for Dr. Knuths 
 % List the existing implementations that I can find.
 % Comment on how they are approaching the process
 
 \section{Outline Design}
-The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a Virtual Machine component. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by the .
+The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a Virtual Machine component. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by figure~\ref{fig:interactionsDiagram}.
 
-One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application run on other platforms.
+One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application will run on other platforms.
 
-\begin{figure}
-	\label{fig:interactions}
-\begin{picture}(200,200)(10,10)
-	\put(10,  130){\framebox(150, 50){User Interface}}
-	\put(230, 130){\framebox(150, 50){Assembler}}
-	\put(10,  10) {\framebox(150, 50){Virtual Machine}}
-	\put(160, 165){\vector(1, 0){70}}
-	\put(195, 180){\circle{15}}
-	\put(192, 177){1}
-	\put(230, 145){\vector(-1, 0){70}}
-	\put(195, 130){\circle{15}}
-	\put(192, 127){2}
-	\put(25,  60) {\vector(0, 1){70}}
-	\put(10,  95) {\circle{15}}
-	\put(7,   92) {3}
-	\put(65,  130){\vector(0, -1){70}}
-	\put(50,  95) {\circle{15}}
-	\put(47,  92) {4}
-	\put(105, 60) {\vector(0, 1){70}}
-	\put(90,  95) {\circle{15}}
-	\put(87,  92) {5}
-	\put(145, 130){\vector(0, -1){70}}
-	\put(130, 95) {\circle{15}}
-	\put(127, 92) {6}
-\end{picture}
-	\caption{Component Interaction}
+\begin{figure}[ht]
+	\begin{picture}(200,300)(10,10)
+		\put(10,  130){\framebox(150, 50){User Interface}}
+		\put(230, 130){\framebox(150, 50){Assembler}}
+		\put(10,  10) {\framebox(150, 50){Virtual Machine}}
+		\put(160, 165){\vector(1, 0){70}}
+		\put(195, 180){\circle{15}}
+		\put(192, 177){1}
+		\put(230, 145){\vector(-1, 0){70}}
+		\put(195, 130){\circle{15}}
+		\put(192, 127){2}
+		\put(25,  60) {\vector(0, 1){70}}
+		\put(10,  95) {\circle{15}}
+		\put(7,   92) {3}
+		\put(65,  130){\vector(0, -1){70}}
+		\put(50,  95) {\circle{15}}
+		\put(47,  92) {4}
+		\put(105, 60) {\vector(0, 1){70}}
+		\put(90,  95) {\circle{15}}
+		\put(87,  92) {5}
+		\put(145, 130){\vector(0, -1){70}}
+		\put(130, 95) {\circle{15}}
+		\put(127, 92) {6}
+	\end{picture}
+	\caption{Component Interactions}
+	\label{fig:interactionsDiagram}
 \end{figure}
 
 \begin{enumerate}
@@ -114,11 +120,10 @@ One question that needs to be answered is what is the target platform for this a
 	\item Change of State
 \end{enumerate}
 
-% Target environment (Windows? Mac? Linux? cross platform?)
-
 \subsection{Assembler}
 % Haskell
 % 
+The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  
 
 \subsection{Virtual Machine}
 % Erlang
@@ -136,10 +141,9 @@ The main way that users will interact with the simulator is through a graphical 
 \subsubsection{Programming Paradigm}
 
 \subsubsection{Initial Design}
- The GUI can be broken up into 4 separate sections as illustrated in figure
+The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{fig:graphicalUserInterface}
 
-\begin{figure}
-	\label{fig:GUI}
+\begin{figure}[ht]
 	\begin{picture}(200,300)(10,10)
 		\put(0,0){\framebox(450,300){}}
 		\put(10, 10){\framebox(100, 280){Registers}}
@@ -149,6 +153,7 @@ The main way that users will interact with the simulator is through a graphical 
 		\put(120, 210){\framebox(315, 80){Memory}}
 	\end{picture}
 	\caption{Graphical User Interface}
+	\label{fig:graphicalUserInterface}
 \end{figure}
 
 \subsubsection{Memory}
@@ -164,19 +169,22 @@ The registers section of the GUI will display a list of all of the available reg
 \subsubsection{Standard Console}
 There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator have got standard input and output channels.  These are accessed through the standard console area on the GUI.
 \subsection{Simulation Controls}
+
+\section{Development Methodology}
+
+% How am I going to test the application.  
+% Test Driven Development.
+
 \section{Development Plan}
 
 % How will I break down the work?
 % What milestones and delivery dates do I want to propose
 
-\section{Testing}
-
-% How am I going to test the application.  
-% Test Driven Development.
-
 \section{Summary}
 
 % How is my proposed implementation different from the existing implementations.
 % Are there any metrics that I can use to compare my implementation with the existing implementations.
+
+\section{References}
 
 \end{document}
