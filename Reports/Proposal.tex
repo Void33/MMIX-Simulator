@@ -56,8 +56,11 @@
 \listoffigures
 \newpage
 \section{Introduction}
-As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components %REFERENCE
-These components will interact with each other to make the complete system. When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
+To quote Hughes~\cite{hughes:why}
+\begin{quote}
+	As software becomes more and more complex, it is more and more important to structure it well. Well-structured software is easy to write and to debug, and provides a collection of modules that can be reused to reduce future programming costs
+\end{quote}
+These collections of modules, or components as I will call them, will interact with each other to make the complete system. When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
 
 The system that I plan to create in this project is inspired by Jeliot, which is a tool that is used as an aid in the teaching of Java. %REFERENCE
 The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
@@ -123,7 +126,11 @@ One question that needs to be answered is what is the target platform for this a
 \subsection{Assembler}
 % Haskell
 % 
-The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  
+The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional language.
+
+To quote 
+\begin{quote}Functional programming is so called because its fundamental operation is the application of functions to arguments. A main program itself is written as a function that receives the program’s input as its argument and delivers the program’s output as its result.\end{quote}
+There are many functional languages available so determining which one to use requires some consideration.  One way to classify functional languages is to determine how easily they allow users to create side effects.
 
 \subsection{Virtual Machine}
 % Erlang
@@ -185,6 +192,9 @@ There are a number of embedded computers that do not interact directly with a us
 % How is my proposed implementation different from the existing implementations.
 % Are there any metrics that I can use to compare my implementation with the existing implementations.
 
-\section{References}
+\begin{thebibliography}{99}
+	\bibitem{hughes:why}John Hughes, The University Glasgow
+\end{thebibliography}
+http://www.cs.utexas.edu/~shmat/courses/cs345/whyfp.pdf
 
 \end{document}
