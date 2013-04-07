@@ -63,7 +63,7 @@ When you have control over the development of more than one of these components 
 
 The system that I plan to create in this project is inspired by Jeliot~\cite{jeliot:ref}, which is a tool that is used as an aid in the teaching of Java. The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
 
-In his seminal work The Art of Computer Programming Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Dr. Knuth updated this machine architecture, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
+In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work~\cite{knuth:aocp2} Dr. Knuth updated this machine architecture, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
 
 % Is it Dr or Prof?
 % Reference of book
@@ -120,20 +120,17 @@ One question that needs to be answered is what is the target platform for this a
 \end{figure}
 
 \subsection{Assembler}
-% Haskell
-% 
 The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional language, which to quote Turner~\cite{turner:why}
 \begin{quote}Functional programming is so called because its fundamental operation is the application of functions to arguments. A main program itself is written as a function that receives the program’s input as its argument and delivers the program’s output as its result.\end{quote}
-
+	
 There are many functional languages available so determining which one to use requires some consideration.  One way to classify functional languages is to determine how easily they allow users to create side effects. A procedure performs a ``side effect'' when a procedure does not just return a value it also amends the underlying state of the system.   Functional languages where you have to explicitly declare that code can perform side effects is called ``pure''.  
-
+I plan on using a ``pure'' functional programming language for the assembler.
 \subsection{Graphical User Interface}
-% (Scala? F#?)
-%
 The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions between the other components. The GUI will initially be written to run as a stand alone application.  If there is time at the end of the project I  will investigate how to push the GUI up onto the internet or even a mobile version.
 
+The only consideration that needs to be taken into account when deciding which programming paradigm and language to use when creating this component is that a GUI, almost by definition, has to handle numerous ``side effects''. This would make me lean towards an object oriented programming language, but there is a newer family of programming languages that allow the developer to use multiple programming paradigms. I plan on using one of these multi-paradigm programming language for the GUI.
 \subsubsection{Initial Design}
-The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{fig:graphicalUserInterface}.  Each of these sections 
+The GUI will be broken up into four separate main sections as illustrated in figure~\ref{fig:graphicalUserInterface}. Each of these sections will contain details about one distinct arrear of the MMIX simulator.
 
 \begin{figure}[ht!]
 	\begin{picture}(200,300)(10,10)
@@ -149,9 +146,9 @@ The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{
 \end{figure}
 
 \subsubsection{Memory}
-The memory section of the GUI will contain a representation of the simulators current memory.  The memory representation will show both an hexadecimal representation for the values in memory but also an ASCII representation of these values.  An example of what I am planning to include can be found in figure~\ref{fig:memory}.
+The memory section of the GUI will contain a representation of the simulators current memory.  The memory representation will show both an hexadecimal representation for the values in memory but also an ASCII representation of these values.  An example of what I am planning to include can be found in figure~\ref{fig:memory}.  I am envisaging that when the contents of a specific memory address changes then that location will be highlighted, probably with a change of colour.  After a period of time this highlighting will be removed.  This period  of time will probably be when the user executes the statement in the program.
 
-\begin{figure}[ht!]
+\begin{figure}[hb!]
 	\(
 		\begin{array}{llllllllll}
 			00000000: & 8fff & 0100 & 0000 & 0701 & f4ff & 0003 & 0000 & 0702 & ................ \\
@@ -163,24 +160,32 @@ The memory section of the GUI will contain a representation of the simulators cu
 \end{figure}
 
 \subsubsection{Registers}
-The registers section of the GUI will display a list of all of the available registers in the simulated MMIX machine.  It will show not only the names of the registers but there current values.  
+The MMIX architecture contains two types of registers, general purpose registers and special registers.  There are 256 general purpose registers that the developer is free to use as they see fit. There are 32 special registers which either record the internal state of the MMIX machine or how the MMIX machine is configured. The registers section of the GUI will display a list of all of the available registers in the simulated MMIX machine.  It will show not only the names of the registers but there current values.  I am envisaging that when the contents of a register changes then, like the memory section, it will be highlighted.
 \subsubsection{Main Program State}
+When every statement in the program is executed then the internal state of the MMIX machine will change.  I want the user to clearly see what these changes are.  One way I am intending to show these changes is with the highlighting of memory addresses and registers that I have mentioned above.  Another way I am intending to show these changes is with this section.  This section will list all of the registers that have changed along with possible a sample of the changed memory addresses. 
 \subsubsection{Standard Console}
-There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator have got standard input and output channels.  These are accessed through the standard console area on the GUI.
+There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator has got standard input and output channels.  These will need to be accessed in the simulator.  They will be accessed in the simulator through the standard console section.
 \subsubsection{Simulation Controls}
-
+The users will need some way to interact with the MMIX machine.  The simulation controls section will allow the user to control how the GUI communicates with the virtual machine. This will contain all of the interactions detailed in the virtual machine section (section~\ref{sec:VM}). 
 \subsection{Virtual Machine}
-% Erlang
-%
-The Virtual Machine component is the heart of the simulator.  It is this component that actually simulator the MMIX machine.  It will contain a representation of the MMIX machines memory; It will also contain all of the registers that the MMIX machine uses.  The virtual machine will only provide a very small number of processes externally.   
-% API
-\subsubsection{Reset Simulator}
-\subsubsection{Load Program}
-The graphical user interface will pass the binary representation of a program to the virtual machine.
-\subsubsection{Reset Program}
-\subsubsection{Process Next Statement}
+\label{sec:VM}
+The Virtual Machine component is the heart of the simulator.  It is this component that actually simulator the MMIX machine.  It will contain a representation of the MMIX machines memory. It will also contain all of the registers that the MMIX machine uses. I am envisaging that the application programming interface, which to quote Wikipedia~\cite{ref:api}
+\begin{quote}
+	An application programming interface (API) is a protocol intended to be used as an interface by software components to communicate with each other.
+\end{quote}
+for the VM will be very small.
 
-% Programming Paradigm
+The way that the virtual machine will change it's state is when it receives a command from the outside world. It will sit there waiting for the next instruction. The virtual machine will respond to these commands by performing the relevant actions and returning details of any changes to the virtual machine.  This leads me to want to use a functional language for this component and it also makes me wants to use a language that has got strong message oriented features.
+
+\subsubsection{Application Programming Interface}
+I am envisaging that the application programming interface for the virtual machine will only contain the following commands:
+
+\begin{description}
+	\item[Reset Simulator] This command will close down the existing virtual machine and await for a new program to be specified.
+	\item[Load Program] The GUI will pass the binary representation of a program to the virtual machine which will load this into the memory representation and it will reset the registers.
+	\item[Reset Program] This command will reset all of the registers in the virtual machine.
+	\item[Process Next Statement] This command will execute the current statement and move the state of the virtual machine on to the next statement.
+\end{description}
 
 \section{Development Methodology}
 
@@ -198,8 +203,11 @@ The graphical user interface will pass the binary representation of a program to
 % Are there any metrics that I can use to compare my implementation with the existing implementations.
 
 \begin{thebibliography}{99}
+	\bibitem{knuth:aocp1}Knuth, D.E., Art of Computer Programming
+	\bibitem{knuth:aocp2}Second Volume
 	\bibitem{turner:why}Turner, D., 1990. Research Topics in Functional Programming, Addison-Wesley. Available through \textless \url{http://www.cs.utexas.edu/~shmat/courses/cs345/whyfp.pdf}\textgreater [Accessed 2 April 2013]
 	\bibitem{jeliot:ref}University of Joensuu, 2007. Jeliot 3. [online] Available at: \textless\url{http://cs.joensuu.fi/jeliot/}\textgreater [Accessed 5 April 2013]
+	\bibitem{ref:api}Wikipedia. Application Programming Interface [online] Available at: \textless\url{http://en.wikipedia.org/wiki/Application_programming_interface}\textgreater [Accessed 7 April 2013]
 \end{thebibliography}
 
 \end{document}
