@@ -45,7 +45,7 @@
 
 %%% END Article customizations
 
-\title{Component Based MMIX Simulator using Multiple Programming Paradigms}
+\title{Component Based MMIX Simulator using Multiple Programming Paradigms - A Proposal}
 \author{Stephen Edmans}
 \date{} % Activate to display a given date or no date (if empty),
 
@@ -57,20 +57,16 @@
 \listoffigures
 \newpage
 \section{Introduction}
-As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components.  This is a sentiment mentioned by Turner~\cite{turner:why}  He calls these components ``collections of modules'', These components will interact with each other to make the complete system. 
+As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components.  This is a sentiment mentioned by Turner~\cite{turner:why}  He calls these components ``collections of modules'', these components will interact with each other to make the complete system. 
 
-When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
+When you have control over the development of more than one of these components it is a traditional approach to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these for each components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for the relevant component.
 
-The system that I plan to create in this project is inspired by Jeliot~\cite{jeliot:ref}, which is a tool that is used as an aid in the teaching of Java. The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
+The system that I plan to create in this project is inspired by Jeliot~\cite{jeliot:ref}, which is a tool that is used as an aid in the teaching of Java. The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying java virtual machine is doing when it runs the code.
 
-In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work~\cite{knuth:aocp2} Dr. Knuth updated this machine architecture, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
-
-% Is it Dr or Prof?
-% Reference of book
+In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Professor Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work~\cite{knuth:aocp2} Prof. Knuth updated this machine architecture, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
 
 \section{Existing Implementations}
-
-There is already one existing main implementation created by Dr. Knuth and his team at Stanford University. This implementation runs as a few command line utilities.  These utilities include an assembler which converts a text file containing the relevant assembly language source code into a proprietary binary format.  There is a utility which reads files in this proprietary binary format and displays the content back to the console.  There is also the main utility which will execute the application stored in the binary files using an MMIX virtual machine.  It is possible to get the virtual machine to output some tracing information but it does not have a graphical user interface and it does not allow you to step through the processing of the application.  
+There is already one existing main implementation created by Professor Knuth and his team at Stanford University. This implementation runs as a few command line utilities.  These utilities include an assembler which converts a text file containing the relevant assembly language source code into a proprietary binary format.  There is a utility which reads files in this proprietary binary format and displays the content back to the console.  There is also the main utility which will execute the application stored in the binary files using an MMIX virtual machine.  It is possible to get the virtual machine to output some tracing information but it does not have a graphical user interface and it does not allow you to step through the processing of the application.  
 
 These utilities are all written in CWEB % DESCRIBE!.
 
@@ -79,12 +75,9 @@ These utilities are all written in CWEB % DESCRIBE!.
 % Comment on how they are approaching the process
 
 \section{Outline Design}
-The MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a Virtual Machine component. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by figure~\ref{fig:interactionsDiagram}.
-
-One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application will run on other platforms.
-
+My MMIX simulator application will consists of three separate components. The task of converting the MMIX assembly language source text into the corresponding binary representation will be performed by a component I am calling the Assembler. The task of actually simulating an MMIX computer will be performed by a Virtual Machine component. The final component will be responsible for representing the current state of the MMIX computer to the user, along with orchestrating all of the interactions with the other components. I am calling this component the User Interface.  The interactions between the components can be illustrated by figure~\ref{fig:interactionsDiagram}.
 \begin{figure}[ht!]
-	\begin{picture}(200,300)(10,10)
+	\begin{picture}(200,200)(10,10)
 		\put(10,  130){\framebox(150, 50){User Interface}}
 		\put(230, 130){\framebox(150, 50){Assembler}}
 		\put(10,  10) {\framebox(150, 50){Virtual Machine}}
@@ -119,8 +112,10 @@ One question that needs to be answered is what is the target platform for this a
 	\label{fig:interactionsDiagram}
 \end{figure}
 
+One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application will run on other platforms.
+
 \subsection{Assembler}
-The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional language, which to quote Turner~\cite{turner:why}
+The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional programming language, which to quote Turner~\cite{turner:why}
 \begin{quote}Functional programming is so called because its fundamental operation is the application of functions to arguments. A main program itself is written as a function that receives the program’s input as its argument and delivers the program’s output as its result.\end{quote}
 	
 There are many functional languages available so determining which one to use requires some consideration.  One way to classify functional languages is to determine how easily they allow users to create side effects. A procedure performs a ``side effect'' when a procedure does not just return a value it also amends the underlying state of the system.   Functional languages where you have to explicitly declare that code can perform side effects is called ``pure''.  
@@ -162,18 +157,17 @@ The memory section of the GUI will contain a representation of the simulators cu
 \subsubsection{Registers}
 The MMIX architecture contains two types of registers, general purpose registers and special registers.  There are 256 general purpose registers that the developer is free to use as they see fit. There are 32 special registers which either record the internal state of the MMIX machine or how the MMIX machine is configured. The registers section of the GUI will display a list of all of the available registers in the simulated MMIX machine.  It will show not only the names of the registers but there current values.  I am envisaging that when the contents of a register changes then, like the memory section, it will be highlighted.
 \subsubsection{Main Program State}
-When every statement in the program is executed then the internal state of the MMIX machine will change.  I want the user to clearly see what these changes are.  One way I am intending to show these changes is with the highlighting of memory addresses and registers that I have mentioned above.  Another way I am intending to show these changes is with this section.  This section will list all of the registers that have changed along with possible a sample of the changed memory addresses. 
+When every statement in the program is executed then the internal state of the MMIX machine will change.  I want the user to clearly see what these changes are.  One way I am intending of showing these changes is with the highlighting of memory addresses and registers that I have mentioned above.  Another way I am intending to show these changes is with this section.  This section will list all of the registers that have changed along with possible a sample of the changed memory addresses. I will investigate the appropriateness of this during the development of the application.
 \subsubsection{Standard Console}
-There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator has got standard input and output channels.  These will need to be accessed in the simulator.  They will be accessed in the simulator through the standard console section.
+There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator has got standard input and output channels.  These will need to be accessed in the simulator.  They will be accessed in the simulator through the standard console section. There will be an area that lists all of the output from the virtual machine along with another area that allows the user to send text to the virtual machine.
 \subsubsection{Simulation Controls}
 The users will need some way to interact with the MMIX machine.  The simulation controls section will allow the user to control how the GUI communicates with the virtual machine. This will contain all of the interactions detailed in the virtual machine section (section~\ref{sec:VM}). 
 \subsection{Virtual Machine}
 \label{sec:VM}
-The Virtual Machine component is the heart of the simulator.  It is this component that actually simulator the MMIX machine.  It will contain a representation of the MMIX machines memory. It will also contain all of the registers that the MMIX machine uses. I am envisaging that the application programming interface, which to quote Wikipedia~\cite{ref:api}
+The Virtual Machine component is the heart of the simulator.  It is this component that actually simulator the MMIX machine.  It will contain a representation of the MMIX machines memory. It will also contain all of the registers that the MMIX machine uses. I am envisaging that the application programming interface for the VM will be very small. An application programming interface is to quote Wikipedia~\cite{ref:api}
 \begin{quote}
 	An application programming interface (API) is a protocol intended to be used as an interface by software components to communicate with each other.
 \end{quote}
-for the VM will be very small.
 
 The way that the virtual machine will change it's state is when it receives a command from the outside world. It will sit there waiting for the next instruction. The virtual machine will respond to these commands by performing the relevant actions and returning details of any changes to the virtual machine.  This leads me to want to use a functional language for this component and it also makes me wants to use a language that has got strong message oriented features.
 
@@ -187,24 +181,24 @@ I am envisaging that the application programming interface for the virtual machi
 	\item[Process Next Statement] This command will execute the current statement and move the state of the virtual machine on to the next statement.
 \end{description}
 
-\section{Development Methodology}
-
-% How am I going to test the application.  
-% Test Driven Development.
-
 \section{Development Plan}
+The next thing that I need to decide upon is how I plan to actually develop the simulator application. The first detail that I need to decide upon is what methodology should I use for each of the components. As I plan to use different programming paradigms for each of the components it is highly likely that the best development methodology for one of the languages will not be the best methodology for the other languages.
 
-% How will I break down the work?
-% What milestones and delivery dates do I want to propose
+Once I have decided upon the various development methodologies to use I plan on using a risk based approach to determine the order which areas of the application to develop.
 
+Once I have developed the simulator application I need to test that this simulator is working correctly.
+\subsection{Development Methodology}
+There are a number of different approaches to developing a software systems. Each language has got a subset of these approaches which are commonly used when developing them. I plan to investigate what the common development approaches are for each of the languages that I use for the application. Once I have investigated the development approaches I will pick one to use developing the application. I am a big fan of test driven development(TDD) and I will, where appropriate, I will chose a methodology that either uses or is derived from it.
+\subsection{Risk Based Prioritisation}
+When you are developing an application there will be some parts of the application that you know how to develop and there will be other parts that you need to determine how to create. The parts of the application that you do not already know how to develop are obviously considered to have a higher risk associated with them. When you are developing an application you have to determine how critical each part of the system is. As an example if the purpose of your application is to calculate page ranks then the application must calculate page ranks. If it does not calculate these page rank then the application is a failure. How critical a piece of functionality in increase the risk of that piece of functionality. When you are prioritising what area you are developing next you should take these difficulties into account. You should develop the pieces of functionality in priority order, from highest priority to lowest.
+\subsection{Testing}
+The testing of the simulator application I will perform can be split into three phases. The first phase is unit testing where I will be testing that the individual components work as I expect them too. The second phase is integration testing where I will be testing that the interactions between the components work correctly. The third phase is acceptance testing where I will be testing that the simulator application as a whole. To do this I will be taking some of the application that have already been written~\cite{ref:mmixmaster} and run them through the simulator application. 
 \section{Summary}
-
-% How is my proposed implementation different from the existing implementations.
-% Are there any metrics that I can use to compare my implementation with the existing implementations.
-
+The application that I am proposing to write will simulate the artificial machine developed by Professor Knuth\cite{knuth:aocp1}. The application will be split up into three separate components. The first component is an assembler that I plan to develop using a ``pure'' functional programming language and my initial plans are to use Haskell. The second component is a graphical user interface that I plan to develop using a multi-paradigm programming language and my initial plans are to use Scala. The final component is a virtual machine that will perform the actual simulation that I plan to develop using a message oriented functional programming language. The language that I am planning on using to develop this component is Erlang.
 \begin{thebibliography}{99}
 	\bibitem{knuth:aocp1}Knuth, D.E., Art of Computer Programming
 	\bibitem{knuth:aocp2}Second Volume
+	\bibitem{ref:mmixmaster}MMixMaster. 2007. MMix Master Home Page [online] Available at: \textless\url{http://mmixmasters.sourceforge.net/}\textgreater [Accessed 7 April 2013]
 	\bibitem{turner:why}Turner, D., 1990. Research Topics in Functional Programming, Addison-Wesley. Available through \textless \url{http://www.cs.utexas.edu/~shmat/courses/cs345/whyfp.pdf}\textgreater [Accessed 2 April 2013]
 	\bibitem{jeliot:ref}University of Joensuu, 2007. Jeliot 3. [online] Available at: \textless\url{http://cs.joensuu.fi/jeliot/}\textgreater [Accessed 5 April 2013]
 	\bibitem{ref:api}Wikipedia. Application Programming Interface [online] Available at: \textless\url{http://en.wikipedia.org/wiki/Application_programming_interface}\textgreater [Accessed 7 April 2013]
