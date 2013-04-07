@@ -13,6 +13,7 @@
 %   read geometry.pdf for detailed page layout information
 
 \usepackage{graphicx} % support the \includegraphics command and options
+\usepackage{hyperref}
 
 % \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
 
@@ -56,19 +57,15 @@
 \listoffigures
 \newpage
 \section{Introduction}
-To quote Hughes~\cite{hughes:why}
-\begin{quote}
-	As software becomes more and more complex, it is more and more important to structure it well. Well-structured software is easy to write and to debug, and provides a collection of modules that can be reused to reduce future programming costs
-\end{quote}
-These collections of modules, or components as I will call them, will interact with each other to make the complete system. When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
+As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components.  This is a sentiment mentioned by Turner~\cite{turner:why}  He calls these components ``collections of modules'', These components will interact with each other to make the complete system. 
 
-The system that I plan to create in this project is inspired by Jeliot, which is a tool that is used as an aid in the teaching of Java. %REFERENCE
-The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
+When you have control over the development of more than one of these components it is traditional to use a single programming paradigm for your components. There is, however, no reason that you cannot use different languages and paradigms for these components. The goal of this project is to create a relatively complex system that is made up of multiple components where each component uses the most appropriate programming paradigm for each component.
 
-In his seminal work The Art of Computer Programming Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Dr. Knuth updated this machine language, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
+The system that I plan to create in this project is inspired by Jeliot~\cite{jeliot:ref}, which is a tool that is used as an aid in the teaching of Java. The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying virtual machine is doing when it runs the code.
+
+In his seminal work The Art of Computer Programming Dr. Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Dr. Knuth updated this machine architecture, which he calls MMIX. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
 
 % Is it Dr or Prof?
-% Is it language or architecture?
 % Reference of book
 
 \section{Existing Implementations}
@@ -86,7 +83,7 @@ The MMIX simulator application will consists of three separate components. The t
 
 One question that needs to be answered is what is the target platform for this application. The application will initially be written for Mac OS X but if there is time available at the end of the development process I would like to make sure this  application will run on other platforms.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
 	\begin{picture}(200,300)(10,10)
 		\put(10,  130){\framebox(150, 50){User Interface}}
 		\put(230, 130){\framebox(150, 50){Assembler}}
@@ -110,47 +107,35 @@ One question that needs to be answered is what is the target platform for this a
 		\put(130, 95) {\circle{15}}
 		\put(127, 92) {6}
 	\end{picture}
+	\begin{enumerate}
+		\item Source Text
+		\item Binary Representation
+		\item Binary Representation
+		\item Current State
+		\item Process Next Step
+		\item Change of State
+	\end{enumerate}
 	\caption{Component Interactions}
 	\label{fig:interactionsDiagram}
 \end{figure}
 
-\begin{enumerate}
-	\item Source Text
-	\item Binary Representation
-	\item Binary Representation
-	\item Current State
-	\item Process Next Step
-	\item Change of State
-\end{enumerate}
-
 \subsection{Assembler}
 % Haskell
 % 
-The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional language.
-
-To quote 
+The purpose of the assembler component is that it will take in MMIX assembly language source code contained in a source file and convert it into a binary representation of the application.  The first thing that I need to decide upon, for each component, is what is the most appropriate programming paradigm.  The production of an assembler is a fairly well defined process.  There should be little, or preferably, no ambiguity in the translations.  These requirements make me think that this would be an ideal candidate to be written in a functional language, which to quote Turner~\cite{turner:why}
 \begin{quote}Functional programming is so called because its fundamental operation is the application of functions to arguments. A main program itself is written as a function that receives the program’s input as its argument and delivers the program’s output as its result.\end{quote}
-There are many functional languages available so determining which one to use requires some consideration.  One way to classify functional languages is to determine how easily they allow users to create side effects.
 
-\subsection{Virtual Machine}
-% Erlang
-%
-Reset Simulator
-Load Program
-Reset Program
-Process Next Statement
+There are many functional languages available so determining which one to use requires some consideration.  One way to classify functional languages is to determine how easily they allow users to create side effects. A procedure performs a ``side effect'' when a procedure does not just return a value it also amends the underlying state of the system.   Functional languages where you have to explicitly declare that code can perform side effects is called ``pure''.  
 
 \subsection{Graphical User Interface}
 % (Scala? F#?)
 %
-The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions with the other components. There are three main forms of user interface commonly used at the present time.  The difference between the three are how the user access the application and where the processing occurs.  The traditional method is an application that is installed on the client machine and runs directly on the machine.  The newer approach 
-
-\subsubsection{Programming Paradigm}
+The main way that users will interact with the simulator is through a graphical user interface (GUI).  The GUI will be responsible for all of the interactions between the other components. The GUI will initially be written to run as a stand alone application.  If there is time at the end of the project I  will investigate how to push the GUI up onto the internet or even a mobile version.
 
 \subsubsection{Initial Design}
-The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{fig:graphicalUserInterface}
+The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{fig:graphicalUserInterface}.  Each of these sections 
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
 	\begin{picture}(200,300)(10,10)
 		\put(0,0){\framebox(450,300){}}
 		\put(10, 10){\framebox(100, 280){Registers}}
@@ -164,18 +149,38 @@ The GUI can be broken up into 4 separate sections as illustrated in figure~\ref{
 \end{figure}
 
 \subsubsection{Memory}
-The memory section of the GUI will contain a representation of the simulators current memory.
+The memory section of the GUI will contain a representation of the simulators current memory.  The memory representation will show both an hexadecimal representation for the values in memory but also an ASCII representation of these values.  An example of what I am planning to include can be found in figure~\ref{fig:memory}.
 
-
-00000000: 8fff 0100 0000 0701 f4ff 0003 0000 0702 ................
-00000010: 0000 0000 2c20 776f 726c 640a 00        ...., world..
+\begin{figure}[ht!]
+	\(
+		\begin{array}{llllllllll}
+			00000000: & 8fff & 0100 & 0000 & 0701 & f4ff & 0003 & 0000 & 0702 & ................ \\
+			00000010: & 0000 & 0000 & 2c20 & 776f & 726c & 640a & 00 & & ...., world.. \\
+		\end{array}
+	\)
+	\caption{Memory Representation}
+	\label{fig:memory}
+\end{figure}
 
 \subsubsection{Registers}
 The registers section of the GUI will display a list of all of the available registers in the simulated MMIX machine.  It will show not only the names of the registers but there current values.  
 \subsubsection{Main Program State}
 \subsubsection{Standard Console}
 There are a number of embedded computers that do not interact directly with a user however it is quite rare for a general purpose computer to have no interactions.  The MMIX simulator have got standard input and output channels.  These are accessed through the standard console area on the GUI.
-\subsection{Simulation Controls}
+\subsubsection{Simulation Controls}
+
+\subsection{Virtual Machine}
+% Erlang
+%
+The Virtual Machine component is the heart of the simulator.  It is this component that actually simulator the MMIX machine.  It will contain a representation of the MMIX machines memory; It will also contain all of the registers that the MMIX machine uses.  The virtual machine will only provide a very small number of processes externally.   
+% API
+\subsubsection{Reset Simulator}
+\subsubsection{Load Program}
+The graphical user interface will pass the binary representation of a program to the virtual machine.
+\subsubsection{Reset Program}
+\subsubsection{Process Next Statement}
+
+% Programming Paradigm
 
 \section{Development Methodology}
 
@@ -193,8 +198,8 @@ There are a number of embedded computers that do not interact directly with a us
 % Are there any metrics that I can use to compare my implementation with the existing implementations.
 
 \begin{thebibliography}{99}
-	\bibitem{hughes:why}John Hughes, The University Glasgow
+	\bibitem{turner:why}Turner, D., 1990. Research Topics in Functional Programming, Addison-Wesley. Available through \textless \url{http://www.cs.utexas.edu/~shmat/courses/cs345/whyfp.pdf}\textgreater [Accessed 2 April 2013]
+	\bibitem{jeliot:ref}University of Joensuu, 2007. Jeliot 3. [online] Available at: \textless\url{http://cs.joensuu.fi/jeliot/}\textgreater [Accessed 5 April 2013]
 \end{thebibliography}
-http://www.cs.utexas.edu/~shmat/courses/cs345/whyfp.pdf
 
 \end{document}
