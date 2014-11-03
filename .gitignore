@@ -11,10 +11,11 @@ cabal-dev
 *.toc
 .dist-buildwrapper/*
 *.aux
-
+cabal_sandbox/
+cabal.sandbox.config
 *.lof
-
+*.iml
 *.out
 
 .DS_Store
-.idea/*
+.idea/
