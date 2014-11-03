@@ -17,3 +17,4 @@ cabal-dev
 *.out
 
 .DS_Store
+.idea/*
