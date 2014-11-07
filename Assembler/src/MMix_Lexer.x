@@ -20,9 +20,17 @@ tokens :-
 <0>[Gg][Rr][Ee][Gg]                     { mkT TGREG }
 <0>[Ll][Oo][Cc]                         { mkT TLOC }
 <0>[Bb][Yy][Tt][Ee]                     { mkT TByte }
+<0>Data_Segment                         { mkT TDataSegment }
 <0>\@                                   { mkT TAtSign }
 <0>\#$hexdigit+                         { mkHex }
 <0>\$$digit+                            { mkRegister }
+<0>[Aa][Dd][Dd]                         { mkT $ TOpCode 0x20 }
+<0>[Ss][Tt][Bb]                         { mkT $ TOpCode 0xA0 }
+<0>[Ll][Dd][Aa]                         { mkT $ TOpCode 0x22 }
+<0>[Tt][Rr][Aa][Pp]                     { mkT $ TOpCode 0x00 }
+<0>Fputs                                { mkT TFputS }
+<0>StdOut                               { mkT TStdOut }
+<0>Halt                                 { mkT THalt }
 <0>$digit+	                            { mkInteger }
 <0>\,                                   { mkT TComma }
 <0>\"                                   { startString `andBegin` string }
@@ -44,6 +52,11 @@ data Token = LEOF
             | TByte
             | TGREG
             | TLOC
+            | TFputS
+            | TStdOut
+            | THalt
+            | TOpCode { toc_value :: Int }
+            | TDataSegment
             | TAtSign
             | TComma
             | TByteLiteral Char
