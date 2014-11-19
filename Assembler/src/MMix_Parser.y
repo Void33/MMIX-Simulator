@@ -1,4 +1,6 @@
 {
+module MMix_Parser where
+
 import Data.Char
 import MMix_Lexer
 }
@@ -33,12 +35,12 @@ AssignmentLines : {- empty -}        {[]}
                 | AssignmentLines AssignmentLine { $2 : $1 }
 
 AssignmentLine :: {Line}
-AssingmentLine : OP_CODE TwoPartOperatorList { PlainOpCodeLine ($1 + 1) $2 }
-               | OP_CODE ThreePartOperatorList { PlainOpCodeLine $1 $2 }
-               | ID OP_CODE TwoPartOperatorList { LabelledOpCodeLine ($2 + 1) $3 $1 }
-               | ID OP_CODE ThreePartOperatorList { LabelledOpCodeLine $2 $3 $1 }
-               | PI { PlainPILine $1 }
-               | ID PI { LabelledPILine $2 $1 }
+AssingmentLine : OP_CODE TwoPartOperatorList { defaultPlainOpCodeLine { pocl_code = ($1 + 1), pocl_ops = $2 } }
+               | OP_CODE ThreePartOperatorList { defaultPlainOpCodeLine { pocl_code = $1, pocl_ops = $2 } }
+               | ID OP_CODE TwoPartOperatorList { defaultLabelledOpCodeLine { lpocl_code = ($2 + 1), lpocl_ops = $3, lpocl_ident = $1} }
+               | ID OP_CODE ThreePartOperatorList { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = $3, lpocl_ident = $1}  }
+               | PI { defaultPlainPILine { ppl_id = $1 } }
+               | ID PI { defaultLabelledPILine { lppl_id = $2, lppl_ident = $1 } }
 
 ThreePartOperatorList : OperatorElement COMMA OperatorElement COMMA OperatorElement { ListElements $1 $3 $5 }
 
@@ -64,10 +66,10 @@ Byte_Array : STR { reverse $1 }
 GlobalVariables : DS { 0x20000000 }
 
 {
-data Line = PlainOpCodeLine Int OperatorList
-          | LabelledOpCodeLine Int OperatorList String
-          | PlainPILine PseudoInstruction
-          | LabelledPILine PseudoInstruction String
+data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: OperatorList, pocl_loc :: Int }
+          | LabelledOpCodeLine { lpocl_code :: Int, lpocl_ops :: OperatorList, lpocl_ident :: String, lpocl_loc :: Int }
+          | PlainPILine { ppl_id :: PseudoInstruction, ppl_loc :: Int }
+          | LabelledPILine { lppl_id :: PseudoInstruction, lppl_ident :: String, lppl_loc :: Int }
           deriving (Eq, Show)
 
 data OperatorList = ListElements OpElement OpElement OpElement
@@ -91,6 +93,11 @@ data PseudoInstruction = LOC Int
 
 -- fullParse "/home/steveedmans/test.mms"
 -- fullParse "/home/steveedmans/hail.mms"
+
+defaultPlainOpCodeLine = PlainOpCodeLine { pocl_loc = -1 }
+defaultLabelledOpCodeLine = LabelledOpCodeLine { lpocl_loc = -1 }
+defaultPlainPILine = PlainPILine { ppl_loc = -1 }
+defaultLabelledPILine = LabelledPILine { lppl_loc = -1 }
 
 parseError m = alexError $ "WHY! " ++ show m
 
