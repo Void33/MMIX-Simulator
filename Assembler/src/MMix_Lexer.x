@@ -147,8 +147,7 @@ mkError input length =
 getStr (_, _, _, remaining) length = take length remaining
 
 mkT :: (Monad m) => Token -> t -> t1 -> m Token
-mkT token _ _ = trace ("Tracing: " ++ show token )
-                                        return $ token
+mkT token _ _ = return $ token
 
 alexEOF = return LEOF
 
@@ -167,7 +166,7 @@ endString input length =
 tokens str = runAlex str $ do
                let loop = do tok <- alexMonadScan
                              if tok == LEOF
-                               then return []
+                               then return [ LEOF ]
                                else do toks <- loop
                                        return $ tok : toks
                loop
