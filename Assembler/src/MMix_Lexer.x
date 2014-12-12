@@ -71,15 +71,15 @@ state_initial = 0
 
 data AlexUserState = AlexUserState
                    {
-                     lexerStringState   :: Bool
-                     , lexerStringValue   :: String
+                     lexerStringState    :: Bool
+                     , lexerStringValue  :: String
                    }
 
 alexInitUserState :: AlexUserState
 alexInitUserState = AlexUserState
                    {
-                     lexerStringState   = False
-                     , lexerStringValue   = ""
+                     lexerStringState    = False
+                     , lexerStringValue  = ""
                    }
 
 setLexerStringState :: Bool -> Alex ()

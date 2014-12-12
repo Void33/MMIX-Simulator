@@ -12,21 +12,21 @@ import MMix_Lexer
 %lexer { lexwrap } { LEOF }
 
 %token
-    OP_CODE     { TOpCode $$ }
-    COMMA       { TComma }
-    HALT        { THalt }
-    FPUTS       { TFputS }
-    STDOUT      { TStdOut }
-    BYTE_LIT    { TByteLiteral $$ }
-    ID          { TIdentifier $$ }
-    REG         { TRegister $$ }
-    LOC         { TLOC }
-    GREG        { TGREG }
-    AT          { TAtSign }
-    DS          { TDataSegment }
-    BYTE        { TByte }
-    STR         { TStringLiteral $$ }
-    HEX         { THexLiteral $$ }
+    OP_CODE      { TOpCode $$ }
+    COMMA        { TComma }
+    HALT         { THalt }
+    FPUTS        { TFputS }
+    STDOUT       { TStdOut }
+    BYTE_LIT     { TByteLiteral $$ }
+    ID           { TIdentifier $$ }
+    REG          { TRegister $$ }
+    LOC          { TLOC }
+    GREG         { TGREG }
+    AT           { TAtSign }
+    DS           { TDataSegment }
+    BYTE         { TByte }
+    STR          { TStringLiteral $$ }
+    HEX          { THexLiteral $$ }
 %%
 
 Program         : AssignmentLines { reverse $1 }
@@ -37,10 +37,10 @@ AssignmentLines : {- empty -}        {[]}
 AssignmentLine :: {Line}
 AssingmentLine : OP_CODE TwoPartOperatorList { defaultPlainOpCodeLine { pocl_code = ($1 + 1), pocl_ops = $2 } }
                | OP_CODE ThreePartOperatorList { defaultPlainOpCodeLine { pocl_code = $1, pocl_ops = $2 } }
+               | ID PI { defaultLabelledPILine { lppl_id = $2, lppl_ident = $1 } }
                | ID OP_CODE TwoPartOperatorList { defaultLabelledOpCodeLine { lpocl_code = ($2 + 1), lpocl_ops = $3, lpocl_ident = $1} }
                | ID OP_CODE ThreePartOperatorList { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = $3, lpocl_ident = $1}  }
                | PI { defaultPlainPILine { ppl_id = $1 } }
-               | ID PI { defaultLabelledPILine { lppl_id = $2, lppl_ident = $1 } }
 
 ThreePartOperatorList : OperatorElement COMMA OperatorElement COMMA OperatorElement { ListElements $1 $3 $5 }
 
@@ -48,15 +48,17 @@ TwoPartOperatorList   : OperatorElement COMMA Identifier { ListElementId $1 $3 }
 
 OperatorElement : BYTE_LIT { ByteLiteral $1 }
                 | HALT     { PseudoCode 0 }
-                | FPUTS    { PseudoCode 7 }
+                | FPUTS    { fputs }
                 | STDOUT   { PseudoCode 1 }
                 | REG      { Register $1 }
+                | Identifier { Ident $1 }
 
 Identifier : ID { Id $1 }
 
 PI : LOC GlobalVariables { LOC $2 }
    | LOC HEX             { LOC $2 }
    | GREG AT             { GregAuto }
+   | GREG BYTE_LIT       { GregSpecific $2 }
    | BYTE Byte_Array     { ByteArray (reverse $2) }
 
 Byte_Array : STR { reverse $1 }
@@ -83,11 +85,12 @@ data Identifier = Id String
 data OpElement = ByteLiteral Char
                | PseudoCode Int
                | Register Int
+               | Ident Identifier
                deriving (Eq, Show)
 
 data PseudoInstruction = LOC Int
                        | GregAuto
-                       | GregSpecific Int
+                       | GregSpecific Char
                        | ByteArray [Char]
                        deriving (Eq, Show)
 
@@ -105,6 +108,8 @@ lexwrap :: (Token -> Alex a) -> Alex a
 lexwrap cont = do
     token <- alexMonadScan
     cont token
+
+fputs = PseudoCode 7
 
 fullParse path = do
     contents <- readFile path
