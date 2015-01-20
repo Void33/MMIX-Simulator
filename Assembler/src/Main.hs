@@ -4,6 +4,7 @@ import MMix_Lexer
 import MMix_Parser
 import Text.Printf
 import qualified Data.Map.Lazy as M
+import Data.Char
 
 main :: IO()
 main = undefined
@@ -33,6 +34,14 @@ contents fs = do
     let s' = setAlexLoc s
     let st = createSymbolTable s'
     print $ M.assocs st
+    return s'
+
+contents' fs = do
+    x <- readFile fs
+    printf "%s\n" x
+    let s = parseStr x
+    --let s1 = setAlexGregAuto s
+    let s' = setAlexGregAuto $ setAlexLoc s
     return s'
 
 -- contents "/home/steveedmans/hail.mms"
@@ -90,15 +99,29 @@ showLoc (LabelledPILine _ _ loc) acc =  loc : acc
 showLoc (PlainOpCodeLine _ _ loc) acc =  loc : acc
 showLoc (LabelledOpCodeLine _ _ _ loc) acc =  loc : acc
 
-setAlexGregAuto11 :: Either String [Line] -> Either String [Line]
-setAlexGregAuto11 (Right lns) = Right $ reverse $ foldl setGregAuto [] lns
-setAlexGregAuto11 m@_ = m
+setAlexGregAuto :: Either String [Line] -> Either String [Line]
+setAlexGregAuto (Right lns) = Right $ setGregAuto (chr 255) [] lns
+setAlexGregAuto msg = msg
 
-setGregAuto11 :: [Line] -> Int -> Line -> [Line]
-setGregAuto11 accumulator line@(LabelledPILine pi@(GregAuto) ident address) = line : accumulator
-setGregAuto11 accumulator line = line : accumulator
+setGregAuto :: Char -> [Line] -> [Line] -> [Line]
+setGregAuto _ acc [] = reverse acc
+setGregAuto currentRegister acc (x:xs) =
+    let (newLine, nextRegister) = specifyGregAuto x currentRegister
+        newAcc = newLine : acc
+    in setGregAuto nextRegister newAcc xs
 
-specifyGregAuto :: Line -> Int -> (Line, Int)
-specifyGregAuto line, nxt = (line, nxt)
+specifyGregAuto :: Line -> Char -> (Line, Char)
+specifyGregAuto ln@(PlainPILine GregAuto _) nxt = (ln{ppl_id = GregSpecific nxt}, (decrement nxt))
+specifyGregAuto ln@(LabelledPILine GregAuto _ _) nxt = (ln{lppl_id = GregSpecific nxt}, (decrement nxt))
+specifyGregAuto line nxt = (line, nxt)
+
+decrement :: Char -> Char
+decrement val = chr decreased
+          where decreased = (ord val) - 1
 
 type RegisterAddress = (Int, Maybe PseudoInstruction)
+
+params = ListElementId (Register 255) (Id "txt")
+samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident="txt"}
+samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
+sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params, pocl_loc=536870912}
