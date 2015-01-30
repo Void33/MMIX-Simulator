@@ -5,6 +5,7 @@ import MMix_Parser
 import Text.Printf
 import qualified Data.Map.Lazy as M
 import Data.Char
+import SymbolTable
 
 main :: IO()
 main = undefined
@@ -31,9 +32,11 @@ contents fs = do
     printf "%s\n" x
     let s = parseStr x
     --let s1 = setAlexGregAuto s
-    let s' = setAlexLoc s
+    let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
-    print $ M.assocs st
+    let regs = createRegisterTable s'
+    print st
+    print regs
     return s'
 
 contents' fs = do
@@ -47,17 +50,6 @@ contents' fs = do
 -- contents "/home/steveedmans/hail.mms"
 -- parseOnly "/home/steveedmans/hail.mms"
 -- contents "/home/steveedmans/test.mms"
-
-createSymbolTable :: Either String [Line] -> M.Map String RegisterAddress
-createSymbolTable (Right lns) = foldl getId M.empty lns
-createSymbolTable m@_ = M.empty
-
-getId :: M.Map String RegisterAddress -> Line -> M.Map String RegisterAddress
-getId a (LabelledPILine pi@(GregAuto) ident address) = M.insert ident (address, Just pi) a
-getId a (LabelledPILine pi@(GregSpecific _) ident address) = M.insert ident (address, Just pi) a
-getId a (LabelledPILine _ ident address) = M.insert ident (address, Nothing) a
-getId a (LabelledOpCodeLine _ _ ident address) = M.insert ident (address, Nothing) a
-getId a _ = a
 
 setAlexLoc :: Either String [Line] -> Either String [Line]
 setAlexLoc (Right lns) = Right $ setLoc 0 lns
@@ -118,8 +110,6 @@ specifyGregAuto line nxt = (line, nxt)
 decrement :: Char -> Char
 decrement val = chr decreased
           where decreased = (ord val) - 1
-
-type RegisterAddress = (Int, Maybe PseudoInstruction)
 
 params = ListElementId (Register 255) (Id "txt")
 samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident="txt"}
