@@ -17,17 +17,49 @@ $hexdigit = [0-9a-eA-E]    -- hexadecimal digits
 tokens :-
 
 <0>$white+		  	                    ;
+<0>[Ii][Ss]                             { mkT TIS }
 <0>[Gg][Rr][Ee][Gg]                     { mkT TGREG }
 <0>[Ll][Oo][Cc]                         { mkT TLOC }
 <0>[Bb][Yy][Tt][Ee]                     { mkT TByte }
+<0>[Ww][Yy][Dd][Ee]                     { mkT TWyde }
+<0>[Tt][Ee][Tt][Rr][Aa]                 { mkT TTetra }
+<0>[Oo][Cc][Tt][Aa]                     { mkT TOcta }
+<0>[Ss][Ee][Tt]                         { mkT TSet }
 <0>Data_Segment                         { mkT TDataSegment }
 <0>\@                                   { mkT TAtSign }
+<0>\+                                   { mkT TPlus }
+<0>\-                                   { mkT TMinus }
+<0>\*                                   { mkT TMult }
+<0>\\                                   { mkT TDivide }
 <0>\#$hexdigit+                         { mkHex }
 <0>\$$digit+                            { mkRegister }
-<0>[Aa][Dd][Dd]                         { mkT $ TOpCode 0x20 }
-<0>[Ss][Tt][Bb]                         { mkT $ TOpCode 0xA0 }
-<0>[Ll][Dd][Aa]                         { mkT $ TOpCode 0x22 }
 <0>[Tt][Rr][Aa][Pp]                     { mkT $ TOpCode 0x00 }
+<0>[Ff][Cc][Mm][Pp]                     { mkT $ TOpCode 0x01 }
+<0>[Ff][Uu][Nn]                         { mkT $ TOpCode 0x02 }
+<0>[Ff][Ee][Qq][Ll]                     { mkT $ TOpCode 0x03 }
+<0>[Ff][Aa][Dd][Dd]                     { mkT $ TOpCode 0x04 }
+<0>[Ff][Ii][Xx]                         { mkT $ TOpCode 0x05 }
+<0>[Ff][Ss][Uu][Bb]                     { mkT $ TOpCode 0x06 }
+<0>[Ff][Ii][Xx][Uu]                     { mkT $ TOpCode 0x07 }
+<0>[Ff][Ll][Oo][Tt]                     { mkT $ TOpCode 0x08 }
+<0>[Ff][Ll][Oo][Tt][Uu]                 { mkT $ TOpCode 0x0A }
+<0>[Ss][Ff][Ll][Oo][Tt]                 { mkT $ TOpCode 0x0C }
+<0>[Ss][Ff][Ll][Oo][Tt][Uu]             { mkT $ TOpCode 0x0E }
+<0>[Ff][Mm][Uu][Ll]                     { mkT $ TOpCode 0x10 }
+<0>[Ff][Cc][Mm][Pp][Ee]                 { mkT $ TOpCode 0x11 }
+<0>[Ff][Uu][Nn][Ee]                     { mkT $ TOpCode 0x12 }
+<0>[Ff][Ee][Qq][Ll][Ee]                 { mkT $ TOpCode 0x13 }
+<0>[Ff][Dd][Ii][Vv]                     { mkT $ TOpCode 0x14 }
+<0>[Ff][Ss][Qq][Rr][Tt]                 { mkT $ TOpCode 0x15 }
+<0>[Ff][Rr][Ee][Mm]                     { mkT $ TOpCode 0x16 }
+<0>[Ff][Ii][Nn][Tt]                     { mkT $ TOpCode 0x17 }
+<0>[Mm][Uu][Ll]                         { mkT $ TOpCode 0x18 }
+<0>[Mm][Uu][Ll][Uu]                     { mkT $ TOpCode 0x1A }
+<0>[Dd][Ii][Vv]                         { mkT $ TOpCode 0x1C }
+<0>[Dd][Ii][Vv][Uu]                     { mkT $ TOpCode 0x1E }
+<0>[Aa][Dd][Dd]                         { mkT $ TOpCode 0x20 }
+<0>[Ll][Dd][Aa]                         { mkT $ TOpCode 0x22 }
+<0>[Ss][Tt][Bb]                         { mkT $ TOpCode 0xA0 }
 <0>Fputs                                { mkT TFputS }
 <0>StdOut                               { mkT TStdOut }
 <0>Halt                                 { mkT THalt }
@@ -49,9 +81,14 @@ data Token = LEOF
             | THexLiteral { thex_value :: Int }
             | TRegister { treg_value :: Int }
             | TStringLiteral { tsl_text :: String }
+            | TIS
             | TByte
             | TGREG
             | TLOC
+            | TWyde
+            | TTetra
+            | TOcta
+            | TSet
             | TFputS
             | TStdOut
             | THalt
@@ -59,6 +96,10 @@ data Token = LEOF
             | TDataSegment
             | TAtSign
             | TComma
+            | TPlus
+            | TMult
+            | TMinus
+            | TDivide
             | TByteLiteral Char
             | W String
             | CommentStart

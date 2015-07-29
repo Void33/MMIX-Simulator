@@ -13,6 +13,7 @@ import MMix_Lexer
 
 %token
     OP_CODE      { TOpCode $$ }
+    SET          { TSet }
     COMMA        { TComma }
     HALT         { THalt }
     FPUTS        { TFputS }
@@ -20,8 +21,17 @@ import MMix_Lexer
     BYTE_LIT     { TByteLiteral $$ }
     ID           { TIdentifier $$ }
     REG          { TRegister $$ }
+    INT          { TInteger $$ }
     LOC          { TLOC }
+    IS           { TIS }
+    WYDE         { TWyde }
+    TETRA        { TTetra }
+    OCTA         { TOcta }
     GREG         { TGREG }
+    PLUS         { TPlus }
+    MINUS        { TMinus }
+    MULTIPLY     { TMult }
+    DIVIDE       { TDivide }
     AT           { TAtSign }
     DS           { TDataSegment }
     BYTE         { TByte }
@@ -57,15 +67,43 @@ Identifier : ID { Id $1 }
 
 PI : LOC GlobalVariables { LOC $2 }
    | LOC HEX             { LOC $2 }
+   | LOC Loc_Exp         { LocEx $2 }
    | GREG AT             { GregAuto }
    | GREG BYTE_LIT       { GregSpecific $2 }
+   | GREG Loc_Exp        { GregEx $2 }
+   | SET OperatorElement COMMA OperatorElement { Set ($2, $4) }
    | BYTE Byte_Array     { ByteArray (reverse $2) }
+   | WYDE Byte_Array     { WydeArray (reverse $2) }
+   | WYDE BYTE_LIT       { WydeArray [$2] }
+   | TETRA Byte_Array    { TetraArray (reverse $2) }
+   | TETRA BYTE_LIT      { TetraArray [$2] }
+   | OCTA Byte_Array     { OctaArray (reverse $2) }
+   | OCTA BYTE_LIT       { OctaArray [$2] }
+   | IS INT              { IsNumber $2 }
+   | IS REG              { IsRegister $2 }
+   | IS Identifier       { IsIdentifier $2 }
 
 Byte_Array : STR { reverse $1 }
            | Byte_Array COMMA STR { (reverse $3) ++ $1 }
            | Byte_Array COMMA BYTE_LIT { $3 : $1 }
 
 GlobalVariables : DS { 0x20000000 }
+
+Loc_Exp : Identifier { (ExpressionIdentifier $1) : [] }
+        | BYTE_LIT   { (ExpressionNumber $ digitToInt $1) : [] }
+        | AT { ExpressionAT : [] }
+        | Loc_Exp PLUS BYTE_LIT { (ExpressionNumber (digitToInt $3)) : ExpressionPlus : $1 }
+        | Loc_Exp PLUS Identifier { (ExpressionIdentifier $3) : ExpressionPlus : $1 }
+        | Loc_Exp PLUS AT { ExpressionAT : ExpressionPlus : $1 }
+        | Loc_Exp MINUS BYTE_LIT { (ExpressionNumber (digitToInt $3)) : ExpressionMinus : $1 }
+        | Loc_Exp MINUS Identifier { (ExpressionIdentifier $3) : ExpressionMinus : $1 }
+        | Loc_Exp MINUS AT { ExpressionAT : ExpressionMinus : $1 }
+        | Loc_Exp MULTIPLY BYTE_LIT { (ExpressionNumber (digitToInt $3)) : ExpressionMultiply : $1 }
+        | Loc_Exp MULTIPLY Identifier { (ExpressionIdentifier $3) : ExpressionMultiply : $1 }
+        | Loc_Exp MULTIPLY AT { ExpressionAT : ExpressionMultiply : $1 }
+        | Loc_Exp DIVIDE BYTE_LIT { (ExpressionNumber (digitToInt $3)) : ExpressionDivide : $1 }
+        | Loc_Exp DIVIDE Identifier { (ExpressionIdentifier $3) : ExpressionDivide : $1 }
+        | Loc_Exp DIVIDE AT { ExpressionAT : ExpressionDivide : $1 }
 
 {
 data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: OperatorList, pocl_loc :: Int }
@@ -88,10 +126,30 @@ data OpElement = ByteLiteral Char
                | Ident Identifier
                deriving (Eq, Show)
 
+data LocExpressionEntry = ExpressionNumber Int
+                        | ExpressionRegister Int
+                        | ExpressionIdentifier Identifier
+                        | ExpressionGV Int
+                        | ExpressionAT
+                        | ExpressionPlus
+                        | ExpressionMinus
+                        | ExpressionMultiply
+                        | ExpressionDivide
+                        deriving (Eq, Show)
+
 data PseudoInstruction = LOC Int
+                       | LocEx [LocExpressionEntry]
                        | GregAuto
                        | GregSpecific Char
+                       | GregEx [LocExpressionEntry]
                        | ByteArray [Char]
+                       | WydeArray [Char]
+                       | TetraArray [Char]
+                       | OctaArray [Char]
+                       | IsRegister Int
+                       | IsNumber Int
+                       | IsIdentifier Identifier
+                       | Set (OpElement, OpElement)
                        deriving (Eq, Show)
 
 -- fullParse "/home/steveedmans/test.mms"

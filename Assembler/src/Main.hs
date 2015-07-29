@@ -6,6 +6,7 @@ import Text.Printf
 import qualified Data.Map.Lazy as M
 import Data.Char
 import SymbolTable
+import CodeGen
 
 main :: IO()
 main = undefined
@@ -35,8 +36,10 @@ contents fs = do
     let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
     let regs = createRegisterTable s'
+    let code = acg st regs s'
     print st
     print regs
+    print code
     return s'
 
 contents' fs = do
@@ -73,10 +76,10 @@ setInnerLoc nextLoc acc (ln@(LabelledPILine _ _ _):lns) = setInnerLoc nextLoc ne
                                                  where newAcc = ln { lppl_loc = nextLoc } : acc
 setInnerLoc nextLoc acc (ln@(PlainOpCodeLine _ _ _):lns) = setInnerLoc newLoc newAcc lns
                                                  where newAcc = ln { pocl_loc = nextLoc } : acc
-                                                       newLoc = nextLoc + 3
+                                                       newLoc = nextLoc + 4
 setInnerLoc nextLoc acc (ln@(LabelledOpCodeLine _ _ _ _):lns) = setInnerLoc newLoc newAcc lns
                                                  where newAcc = ln { lpocl_loc = nextLoc } : acc
-                                                       newLoc = nextLoc + 3
+                                                       newLoc = nextLoc + 4
 
 showAlexLocs :: Either String [Line] -> Either String [Int]
 showAlexLocs (Right lns) = Right $ showLocs lns
@@ -111,14 +114,27 @@ decrement :: Char -> Char
 decrement val = chr decreased
           where decreased = (ord val) - 1
 
+acg (Right sym) (Right regs) (Right lns) = Right $ cg sym regs [] lns
+acg _ _ _ = Left "Something is missing!!!"
+
+--cg :: (M.Map String RegisterAddress) -> (M.Map Char Int) -> [Line] -> [Line]
+cg _ _ acc [] = acc
+cg s r acc (ln:lns) = cg s r newAcc lns
+    where cgl = genCodeForLine s r ln
+          newAcc = case cgl of
+              Just(a, s, ba) -> (a, s, ba) : acc
+              Nothing -> acc
+
 params = ListElementId (Register 255) (Id "txt")
 params2 = ListElementId (Register 255) (Id "txt2")
 samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident="txt"}
 samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
+samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident="txt"}
 sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params, pocl_loc=536870912}
 sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = "txt2", lpocl_loc=536870912}
 sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params2, lpocl_ident = "txt2", lpocl_loc=536870912}
+sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = ListElements (ByteLiteral '\NUL') (PseudoCode 7) (PseudoCode 1), pocl_loc = 259}
 
 sampleBaseTable :: M.Map Char Int
 sampleBaseTable = M.insert (chr 254) 100 M.empty
