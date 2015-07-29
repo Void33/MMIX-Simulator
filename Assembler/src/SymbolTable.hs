@@ -10,7 +10,10 @@ type RegisterAddress = (Int, Maybe PseudoInstruction)
 
 createSymbolTable :: Either String [Line] -> Either String (M.Map String RegisterAddress)
 createSymbolTable (Left msg) = Left msg
-createSymbolTable (Right lines) = foldl getSymbol (Right M.empty) lines
+createSymbolTable (Right lines) =
+        let symbols = foldl getSymbol (Right M.empty) lines
+            regs = createRegisterTable $ Right lines
+        in symbols
 
 getSymbol :: Either String (M.Map String RegisterAddress) -> Line -> Either String (M.Map String RegisterAddress)
 getSymbol (Left errorMsg) _ = Left errorMsg
@@ -42,16 +45,33 @@ getRegister (Right table) (PlainPILine pi@(GregAuto) address) = Left "Nonspecifi
 getRegister (Right table) (PlainPILine pi@(GregSpecific register) address)
         | M.member register table = Left $ "Duplicate register definition " ++ (show register)
         | otherwise = Right $ M.insert register address table
+getRegister (Right table) (LabelledOpCodeLine _ _ "Main" address)
+        | M.member (chr 255) table = Left $ "Duplicate Main section definition"
+        | otherwise = Right $ M.insert (chr 255) address table
 getRegister (Right table) _ = Right $ table
 
-findRegister :: RegisterAddress -> (M.Map Char Int) -> Int
-findRegister (address, Nothing) regs = 0
-findRegister _ _ = -1
+registersFromAddresses :: (M.Map Char Int) -> (M.Map Int Char)
+registersFromAddresses orig = M.foldrWithKey addNextRegister M.empty orig
 
-sr :: M.Map Char Int
-sr = M.singleton (chr 255) 256
+addNextRegister :: Char -> Int -> (M.Map Int Char) -> (M.Map Int Char)
+addNextRegister k v orig = M.insert v k orig
 
-aa :: RegisterAddress -> (M.Map Char Int) -> Maybe Char
-aa (address, Nothing) lst = initial $ M.keys $ M.filter (\ v -> v == address) lst
-            where initial [] = Nothing
-                  initial (reg:regs) = Just reg
+determineBaseAddressAndOffset :: (M.Map Int Char) -> RegisterAddress -> Maybe(Char, Int)
+determineBaseAddressAndOffset rfa (a, Nothing) =
+  case (M.lookupLE a rfa) of
+    Just(address, register) -> Just(register, a - address)
+    _ -> Nothing
+determineBaseAddressAndOffset _ _ = Nothing
+
+mapSymbolToAddress :: (M.Map String RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Char, Int)
+mapSymbolToAddress symbols table (PlainOpCodeLine _ (ListElementId r (Id t)) _)
+     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+     | otherwise = Nothing
+     where registersByAddress = registersFromAddresses table
+           requiredAddress = symbols M.! t
+mapSymbolToAddress symbols table (LabelledOpCodeLine _ (ListElementId r (Id t)) _ _)
+     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+     | otherwise = Nothing
+     where registersByAddress = registersFromAddresses table
+           requiredAddress = symbols M.! t
+mapSymbolToAddress _ _ _ = Nothing

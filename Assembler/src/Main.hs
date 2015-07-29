@@ -92,7 +92,7 @@ showLoc (PlainOpCodeLine _ _ loc) acc =  loc : acc
 showLoc (LabelledOpCodeLine _ _ _ loc) acc =  loc : acc
 
 setAlexGregAuto :: Either String [Line] -> Either String [Line]
-setAlexGregAuto (Right lns) = Right $ setGregAuto (chr 255) [] lns
+setAlexGregAuto (Right lns) = Right $ setGregAuto (chr 254) [] lns
 setAlexGregAuto msg = msg
 
 setGregAuto :: Char -> [Line] -> [Line] -> [Line]
@@ -112,6 +112,19 @@ decrement val = chr decreased
           where decreased = (ord val) - 1
 
 params = ListElementId (Register 255) (Id "txt")
+params2 = ListElementId (Register 255) (Id "txt2")
 samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident="txt"}
 samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
 sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params, pocl_loc=536870912}
+sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = "txt2", lpocl_loc=536870912}
+sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
+sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params2, lpocl_ident = "txt2", lpocl_loc=536870912}
+
+sampleBaseTable :: M.Map Char Int
+sampleBaseTable = M.insert (chr 254) 100 M.empty
+
+sampleSymbolTable :: M.Map String RegisterAddress
+sampleSymbolTable = M.insert "txt" (110, Nothing) M.empty
+
+sampleRA :: RegisterAddress
+sampleRA = (110, Nothing)
