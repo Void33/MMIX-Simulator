@@ -8,26 +8,26 @@ type Table = M.Map String Int
 
 type RegisterAddress = (Int, Maybe PseudoInstruction)
 
-createSymbolTable :: Either String [Line] -> Either String (M.Map String RegisterAddress)
+createSymbolTable :: Either String [Line] -> Either String (M.Map Identifier RegisterAddress)
 createSymbolTable (Left msg) = Left msg
 createSymbolTable (Right lines) =
         let symbols = foldl getSymbol (Right M.empty) lines
             regs = createRegisterTable $ Right lines
         in symbols
 
-getSymbol :: Either String (M.Map String RegisterAddress) -> Line -> Either String (M.Map String RegisterAddress)
+getSymbol :: Either String (M.Map Identifier RegisterAddress) -> Line -> Either String (M.Map Identifier RegisterAddress)
 getSymbol (Left errorMsg) _ = Left errorMsg
 getSymbol (Right table) (LabelledPILine pi@(GregAuto) ident address)
-          | M.member ident table = Left $ "Identifier already present " ++ ident
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Just pi) table
 getSymbol (Right table) (LabelledPILine pi@(GregSpecific _) ident address)
-          | M.member ident table = Left $ "Identifier already present " ++ ident
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Just pi) table
 getSymbol (Right table) (LabelledPILine _ ident address)
-          | M.member ident table = Left $ "Identifier already present " ++ ident
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Nothing) table
 getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
-          | M.member ident table = Left $ "Identifier already present " ++ ident
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Nothing) table
 getSymbol (Right table) _ = Right $ table
 
@@ -45,7 +45,7 @@ getRegister (Right table) (PlainPILine pi@(GregAuto) address) = Left "Nonspecifi
 getRegister (Right table) (PlainPILine pi@(GregSpecific register) address)
         | M.member register table = Left $ "Duplicate register definition " ++ (show register)
         | otherwise = Right $ M.insert register address table
-getRegister (Right table) (LabelledOpCodeLine _ _ "Main" address)
+getRegister (Right table) (LabelledOpCodeLine _ _ (Id "Main") address)
         | M.member (chr 255) table = Left $ "Duplicate Main section definition"
         | otherwise = Right $ M.insert (chr 255) address table
 getRegister (Right table) _ = Right $ table
@@ -63,15 +63,15 @@ determineBaseAddressAndOffset rfa (a, Nothing) =
     _ -> Nothing
 determineBaseAddressAndOffset _ _ = Nothing
 
-mapSymbolToAddress :: (M.Map String RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Char, Int)
-mapSymbolToAddress symbols table (PlainOpCodeLine _ (ListElementId r (Id t)) _)
-     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
-     | otherwise = Nothing
-     where registersByAddress = registersFromAddresses table
-           requiredAddress = symbols M.! t
-mapSymbolToAddress symbols table (LabelledOpCodeLine _ (ListElementId r (Id t)) _ _)
-     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
-     | otherwise = Nothing
-     where registersByAddress = registersFromAddresses table
-           requiredAddress = symbols M.! t
+mapSymbolToAddress :: (M.Map Identifier RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Char, Int)
+--mapSymbolToAddress symbols table (PlainOpCodeLine _ (ListElementId r t) _)
+--     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+--     | otherwise = Nothing
+--     where registersByAddress = registersFromAddresses table
+--           requiredAddress = symbols M.! t
+--mapSymbolToAddress symbols table (LabelledOpCodeLine _ (ListElementId r t) _ _)
+--     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+--     | otherwise = Nothing
+--     where registersByAddress = registersFromAddresses table
+--           requiredAddress = symbols M.! t
 mapSymbolToAddress _ _ _ = Nothing

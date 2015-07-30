@@ -33,7 +33,9 @@ tokens :-
 <0>\+                                   { mkT TPlus }
 <0>\-                                   { mkT TMinus }
 <0>\*                                   { mkT TMult }
-<0>\\                                   { mkT TDivide }
+<0>\/                                   { mkT TDivide }
+<0>\(                                   { mkT TOpenParen }
+<0>\)                                   { mkT TCloseParen }
 <0>\#$hexdigit+                         { mkHex }
 <0>\$$digit+                            { mkRegister }
 <0>[Tt][Rr][Aa][Pp]                     { mkT $ TOpCode 0x00 }
@@ -194,6 +196,7 @@ tokens :-
 <string>\\\\                            { addCharToString '\\' }
 <string>\"                              { endString `andBegin` state_initial }
 <string>.                               { addCurrentToString }
+<0>\'.\'                                { mkChar }
 <0>$alpha [$alpha $digit \_ \']*        { mkIdentifier }
 <0>.                                    { mkError }
 
@@ -227,6 +230,8 @@ data Token = LEOF
             | TMult
             | TMinus
             | TDivide
+            | TOpenParen
+            | TCloseParen
             | TByteLiteral Char
             | W String
             | CommentStart
@@ -292,6 +297,9 @@ mkHex input length =
 
 mkLocalLabel input length = mkT (TLocalLabel val) input length
     where val = read (getStr input 1) :: Int
+
+mkChar input length = mkT (TByteLiteral val) input length
+    where val = (getStr input 2) !! 1 :: Char
 
 mkLocalForwardOperand input length = mkT (TLocalForwardOperand val) input length
     where val = read (getStr input 1) :: Int

@@ -125,22 +125,24 @@ cg s r acc (ln:lns) = cg s r newAcc lns
               Just(a, s, ba) -> (a, s, ba) : acc
               Nothing -> acc
 
-params = ListElementId (Register 255) (Id "txt")
-params2 = ListElementId (Register 255) (Id "txt2")
-samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident="txt"}
+params = [(Register 255), Ident (Id "txt")]
+params2 =  [LocalBackward 2,Ident (Id "t")]
+samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident=(Id "txt")}
 samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
-samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident="txt"}
-sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params, pocl_loc=536870912}
-sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = "txt2", lpocl_loc=536870912}
+samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident=(Id "txt")}
+sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
+sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
-sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params2, lpocl_ident = "txt2", lpocl_loc=536870912}
-sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = ListElements (ByteLiteral '\NUL') (PseudoCode 7) (PseudoCode 1), pocl_loc = 259}
+sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
+sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = params2, pocl_loc = 259}
 
 sampleBaseTable :: M.Map Char Int
 sampleBaseTable = M.insert (chr 254) 100 M.empty
 
-sampleSymbolTable :: M.Map String RegisterAddress
-sampleSymbolTable = M.insert "txt" (110, Nothing) M.empty
+sampleSymbolTable :: M.Map Identifier RegisterAddress
+sampleSymbolTable = M.insert (Id "txt") (110, Nothing) M.empty
 
 sampleRA :: RegisterAddress
 sampleRA = (110, Nothing)
+
+testLine = "j0     GREG  PRIME1+2-@"
