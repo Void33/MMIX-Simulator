@@ -125,7 +125,7 @@ happyReduce_4 = happySpecReduce_2  2# happyReduction_4
 happyReduction_4 (HappyAbsSyn7  happy_var_2)
 	(HappyTerminal (TOpCode happy_var_1))
 	 =  HappyAbsSyn6
-		 (defaultPlainOpCodeLine { pocl_code = happy_var_1, pocl_ops = happy_var_2 }
+		 (defaultPlainOpCodeLine { pocl_code = happy_var_1, pocl_ops = (reverse happy_var_2) }
 	)
 happyReduction_4 _ _  = notHappyAtAll 
 
@@ -142,7 +142,7 @@ happyReduction_6 (HappyAbsSyn7  happy_var_3)
 	(HappyTerminal (TOpCode happy_var_2))
 	(HappyAbsSyn9  happy_var_1)
 	 =  HappyAbsSyn6
-		 (defaultLabelledOpCodeLine { lpocl_code = happy_var_2, lpocl_ops = happy_var_3, lpocl_ident = happy_var_1 }
+		 (defaultLabelledOpCodeLine { lpocl_code = happy_var_2, lpocl_ops = (reverse happy_var_3), lpocl_ident = happy_var_1 }
 	)
 happyReduction_6 _ _ _  = notHappyAtAll 
 
@@ -211,7 +211,7 @@ happyReduction_15 _  = notHappyAtAll
 happyReduce_16 = happySpecReduce_1  4# happyReduction_16
 happyReduction_16 (HappyAbsSyn13  happy_var_1)
 	 =  HappyAbsSyn8
-		 (Expr happy_var_1
+		 (Expr (reverse happy_var_1)
 	)
 happyReduction_16 _  = notHappyAtAll 
 
@@ -443,7 +443,7 @@ happyReduction_46 _
 	(HappyAbsSyn13  happy_var_2)
 	_
 	 =  HappyAbsSyn15
-		 (happy_var_2
+		 ([ExpressionClose] ++ happy_var_2 ++ [ExpressionOpen]
 	)
 happyReduction_46 _ _ _  = notHappyAtAll 
 
@@ -557,6 +557,8 @@ data ExpressionEntry = ExpressionNumber Int
                         | ExpressionMinus
                         | ExpressionMultiply
                         | ExpressionDivide
+                        | ExpressionOpen
+                        | ExpressionClose
                         deriving (Eq, Show)
 
 data PseudoInstruction = LOC Int

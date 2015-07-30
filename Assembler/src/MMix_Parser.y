@@ -50,13 +50,13 @@ AssignmentLines : {- empty -}        {[]}
                 | AssignmentLines AssignmentLine { $2 : $1 }
 
 AssignmentLine :: {Line}
-AssingmentLine : OP_CODE Ops { defaultPlainOpCodeLine { pocl_code = $1, pocl_ops = $2 } }
+AssingmentLine : OP_CODE OperatorList { defaultPlainOpCodeLine { pocl_code = $1, pocl_ops = (reverse $2) } }
                | Identifier PI { defaultLabelledPILine { lppl_id = $2, lppl_ident = $1 } }
-               | Identifier OP_CODE Ops { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = $3, lpocl_ident = $1 }  }
+               | Identifier OP_CODE OperatorList { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = (reverse $3), lpocl_ident = $1 }  }
                | PI { defaultPlainPILine { ppl_id = $1 } }
 
-Ops : OperatorElement { $1 : [] }
-    | Ops COMMA OperatorElement { $3 : $1 }
+OperatorList : OperatorElement { $1 : [] }
+    | OperatorList COMMA OperatorElement { $3 : $1 }
 
 OperatorElement : HALT       { PseudoCode 0 }
                 | FPUTS      { fputs }
@@ -64,7 +64,7 @@ OperatorElement : HALT       { PseudoCode 0 }
                 | REG        { Register $1 }
                 | FORWARD    { LocalForward $1 }
                 | BACKWARD   { LocalBackward $1 }
-                | Expression { Expr $1 }
+                | Expression { Expr (reverse $1) }
 
 Identifier : ID { Id $1 }
            | LOCAL_LABEL { LocalLabel $1 }
@@ -101,7 +101,7 @@ Primary_Expression : INT                   { (ExpressionNumber $1) : [] }
                    | AT                    { ExpressionAT : [] }
                    | HEX                   { (ExpressionNumber $1) : [] }
                    | GlobalVariables       { (ExpressionNumber $1) : [] }
-                   | OPEN Expression CLOSE { $2 }
+                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
 
 Strong_Operator : MULTIPLY { ExpressionMultiply }
                 | DIVIDE   { ExpressionDivide }
@@ -139,6 +139,8 @@ data ExpressionEntry = ExpressionNumber Int
                         | ExpressionMinus
                         | ExpressionMultiply
                         | ExpressionDivide
+                        | ExpressionOpen
+                        | ExpressionClose
                         deriving (Eq, Show)
 
 data PseudoInstruction = LOC Int

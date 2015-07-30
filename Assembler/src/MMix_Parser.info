@@ -10,12 +10,12 @@ Grammar
 	Program -> AssignmentLines                         (1)
 	AssignmentLines ->                                 (2)
 	AssignmentLines -> AssignmentLines AssignmentLine   (3)
-	AssignmentLine -> OP_CODE Ops                      (4)
+	AssignmentLine -> OP_CODE OperatorList             (4)
 	AssignmentLine -> Identifier PI                    (5)
-	AssignmentLine -> Identifier OP_CODE Ops           (6)
+	AssignmentLine -> Identifier OP_CODE OperatorList   (6)
 	AssignmentLine -> PI                               (7)
-	Ops -> OperatorElement                             (8)
-	Ops -> Ops COMMA OperatorElement                   (9)
+	OperatorList -> OperatorElement                    (8)
+	OperatorList -> OperatorList COMMA OperatorElement   (9)
 	OperatorElement -> HALT                            (10)
 	OperatorElement -> FPUTS                           (11)
 	OperatorElement -> STDOUT                          (12)
@@ -99,7 +99,7 @@ Non-terminals
 	Program         rule  1
 	AssignmentLines rules 2, 3
 	AssignmentLine  rules 4, 5, 6, 7
-	Ops             rules 8, 9
+	OperatorList    rules 8, 9
 	OperatorElement rules 10, 11, 12, 13, 14, 15, 16
 	Identifier      rules 17, 18
 	PI              rules 19, 20, 21, 22, 23, 24, 25, 26, 27, 28
@@ -189,7 +189,7 @@ State 4
 State 5
 
 	AssignmentLine -> Identifier . PI                   (rule 5)
-	AssignmentLine -> Identifier . OP_CODE Ops          (rule 6)
+	AssignmentLine -> Identifier . OP_CODE OperatorList    (rule 6)
 
 	OP_CODE        shift, and enter state 51
 	SET            shift, and enter state 8
@@ -223,7 +223,7 @@ State 6
 
 State 7
 
-	AssignmentLine -> OP_CODE . Ops                     (rule 4)
+	AssignmentLine -> OP_CODE . OperatorList            (rule 4)
 
 	HALT           shift, and enter state 42
 	FPUTS          shift, and enter state 43
@@ -240,7 +240,7 @@ State 7
 	HEX            shift, and enter state 31
 	OPEN           shift, and enter state 32
 
-	Ops            goto state 48
+	OperatorList   goto state 48
 	OperatorElementgoto state 49
 	Identifier     goto state 22
 	GlobalVariablesgoto state 23
@@ -1039,8 +1039,8 @@ State 47
 
 State 48
 
-	AssignmentLine -> OP_CODE Ops .                     (rule 4)
-	Ops -> Ops . COMMA OperatorElement                  (rule 9)
+	AssignmentLine -> OP_CODE OperatorList .            (rule 4)
+	OperatorList -> OperatorList . COMMA OperatorElement    (rule 9)
 
 	OP_CODE        reduce using rule 4
 	SET            reduce using rule 4
@@ -1059,7 +1059,7 @@ State 48
 
 State 49
 
-	Ops -> OperatorElement .                            (rule 8)
+	OperatorList -> OperatorElement .                   (rule 8)
 
 	OP_CODE        reduce using rule 8
 	SET            reduce using rule 8
@@ -1096,7 +1096,7 @@ State 50
 
 State 51
 
-	AssignmentLine -> Identifier OP_CODE . Ops          (rule 6)
+	AssignmentLine -> Identifier OP_CODE . OperatorList    (rule 6)
 
 	HALT           shift, and enter state 42
 	FPUTS          shift, and enter state 43
@@ -1113,7 +1113,7 @@ State 51
 	HEX            shift, and enter state 31
 	OPEN           shift, and enter state 32
 
-	Ops            goto state 52
+	OperatorList   goto state 52
 	OperatorElementgoto state 49
 	Identifier     goto state 22
 	GlobalVariablesgoto state 23
@@ -1123,8 +1123,8 @@ State 51
 
 State 52
 
-	AssignmentLine -> Identifier OP_CODE Ops .          (rule 6)
-	Ops -> Ops . COMMA OperatorElement                  (rule 9)
+	AssignmentLine -> Identifier OP_CODE OperatorList .    (rule 6)
+	OperatorList -> OperatorList . COMMA OperatorElement    (rule 9)
 
 	OP_CODE        reduce using rule 6
 	SET            reduce using rule 6
@@ -1143,7 +1143,7 @@ State 52
 
 State 53
 
-	Ops -> Ops COMMA . OperatorElement                  (rule 9)
+	OperatorList -> OperatorList COMMA . OperatorElement    (rule 9)
 
 	HALT           shift, and enter state 42
 	FPUTS          shift, and enter state 43
@@ -1457,7 +1457,7 @@ State 69
 
 State 70
 
-	Ops -> Ops COMMA OperatorElement .                  (rule 9)
+	OperatorList -> OperatorList COMMA OperatorElement .    (rule 9)
 
 	OP_CODE        reduce using rule 9
 	SET            reduce using rule 9
