@@ -12,7 +12,7 @@ import qualified Debug.Trace as Happy_Debug_Trace
 
 -- parser produced by Happy Version 1.19.0
 
-data HappyAbsSyn t4 t5 t7 t8 t9 t10 t11 t12 t13 t14
+data HappyAbsSyn t4 t5 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19
 	= HappyTerminal (Token)
 	| HappyErrorToken Int
 	| HappyAbsSyn4 t4
@@ -26,6 +26,11 @@ data HappyAbsSyn t4 t5 t7 t8 t9 t10 t11 t12 t13 t14
 	| HappyAbsSyn12 t12
 	| HappyAbsSyn13 t13
 	| HappyAbsSyn14 t14
+	| HappyAbsSyn15 t15
+	| HappyAbsSyn16 t16
+	| HappyAbsSyn17 t17
+	| HappyAbsSyn18 t18
+	| HappyAbsSyn19 t19
 
 happyActOffsets :: HappyAddr
 happyActOffsets = HappyA# "\x00\x00\x00\x00\x21\x00\x63\x00\x00\x00\x00\x00\x4b\x00\x4b\x00\x31\x00\x2d\x00\x65\x00\x0d\x00\xff\xff\xfe\xff\x46\x00\x5f\x00\x79\x00\x00\x00\x00\x00\x58\x00\x11\x00\x00\x00\x01\x00\x79\x00\x00\x00\x79\x00\x00\x00\x79\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x58\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x4b\x00\x78\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x77\x00\x4b\x00\x4b\x00\x00\x00\x00\x00\x44\x00\x42\x00\x32\x00\x2f\x00\xfd\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x76\x00\x75\x00\x4b\x00\x00\x00\x00\x00"#
@@ -42,7 +47,7 @@ happyCheck = HappyA# "\xff\xff\x06\x00\x01\x00\x02\x00\x07\x00\x07\x00\x07\x00\x
 happyTable :: HappyAddr
 happyTable = HappyA# "\x00\x00\x3d\x00\xd5\xff\xd5\xff\x3c\x00\x19\x00\x1b\x00\x4d\x00\x29\x00\xd5\xff\x49\x00\x29\x00\xd5\xff\xd5\xff\xd5\xff\xd5\xff\xd5\xff\xd5\xff\xd6\xff\xd6\xff\x1d\x00\x3d\x00\x12\x00\x12\x00\xd5\xff\xd6\xff\x40\x00\xd5\xff\xd6\xff\xd6\xff\xd6\xff\xd6\xff\xd6\xff\xd6\xff\x07\x00\x08\x00\x43\x00\x12\x00\x12\x00\x10\x00\xd6\xff\x09\x00\x13\x00\xd6\xff\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x0f\x00\x28\x00\x08\x00\x23\x00\x16\x00\x3f\x00\x16\x00\x10\x00\x42\x00\x16\x00\x46\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x0f\x00\x24\x00\x25\x00\x40\x00\x17\x00\x26\x00\x43\x00\x10\x00\x45\x00\x16\x00\x48\x00\x16\x00\x15\x00\x16\x00\x2b\x00\x2c\x00\x2d\x00\x2e\x00\x16\x00\x2f\x00\x04\x00\x19\x00\x46\x00\x1b\x00\x49\x00\x05\x00\x17\x00\x12\x00\x03\x00\x02\x00\x20\x00\x21\x00\x34\x00\x35\x00\x31\x00\x29\x00\x2f\x00\x30\x00\x31\x00\x29\x00\x37\x00\x38\x00\x39\x00\x3a\x00\x16\x00\x1f\x00\x20\x00\x4a\x00\x4b\x00\x28\x00\x29\x00\x1d\x00\x02\x00\x26\x00\x12\x00\xee\xff\x4d\x00\x33\x00\x34\x00\x3b\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
-happyReduceArr = Happy_Data_Array.array (1, 54) [
+happyReduceArr = Happy_Data_Array.array (1, 66) [
 	(1 , happyReduce_1),
 	(2 , happyReduce_2),
 	(3 , happyReduce_3),
@@ -96,11 +101,23 @@ happyReduceArr = Happy_Data_Array.array (1, 54) [
 	(51 , happyReduce_51),
 	(52 , happyReduce_52),
 	(53 , happyReduce_53),
-	(54 , happyReduce_54)
+	(54 , happyReduce_54),
+	(55 , happyReduce_55),
+	(56 , happyReduce_56),
+	(57 , happyReduce_57),
+	(58 , happyReduce_58),
+	(59 , happyReduce_59),
+	(60 , happyReduce_60),
+	(61 , happyReduce_61),
+	(62 , happyReduce_62),
+	(63 , happyReduce_63),
+	(64 , happyReduce_64),
+	(65 , happyReduce_65),
+	(66 , happyReduce_66)
 	]
 
 happy_n_terms = 27 :: Int
-happy_n_nonterms = 11 :: Int
+happy_n_nonterms = 16 :: Int
 
 happyReduce_1 = happySpecReduce_1  0# happyReduction_1
 happyReduction_1 (HappyAbsSyn5  happy_var_1)
@@ -532,6 +549,89 @@ happyReduction_54 _
 		 (ExpressionAT : ExpressionDivide : happy_var_1
 	)
 happyReduction_54 _ _ _  = notHappyAtAll 
+
+happyReduce_55 = happySpecReduce_1  11# happyReduction_55
+happyReduction_55 (HappyAbsSyn16  happy_var_1)
+	 =  HappyAbsSyn15
+		 (happy_var_1
+	)
+happyReduction_55 _  = notHappyAtAll 
+
+happyReduce_56 = happySpecReduce_3  11# happyReduction_56
+happyReduction_56 (HappyAbsSyn16  happy_var_3)
+	(HappyAbsSyn19  happy_var_2)
+	(HappyAbsSyn16  happy_var_1)
+	 =  HappyAbsSyn15
+		 (happy_var_3 ++ [happy_var_2] ++ happy_var_1
+	)
+happyReduction_56 _ _ _  = notHappyAtAll 
+
+happyReduce_57 = happySpecReduce_1  12# happyReduction_57
+happyReduction_57 (HappyAbsSyn17  happy_var_1)
+	 =  HappyAbsSyn16
+		 (happy_var_1 : []
+	)
+happyReduction_57 _  = notHappyAtAll 
+
+happyReduce_58 = happySpecReduce_3  12# happyReduction_58
+happyReduction_58 (HappyAbsSyn17  happy_var_3)
+	(HappyAbsSyn18  happy_var_2)
+	(HappyAbsSyn16  happy_var_1)
+	 =  HappyAbsSyn16
+		 (happy_var_3 : happy_var_2 : happy_var_1
+	)
+happyReduction_58 _ _ _  = notHappyAtAll 
+
+happyReduce_59 = happySpecReduce_1  13# happyReduction_59
+happyReduction_59 (HappyTerminal (TInteger happy_var_1))
+	 =  HappyAbsSyn17
+		 (ExpressionNumber happy_var_1
+	)
+happyReduction_59 _  = notHappyAtAll 
+
+happyReduce_60 = happySpecReduce_1  13# happyReduction_60
+happyReduction_60 (HappyAbsSyn10  happy_var_1)
+	 =  HappyAbsSyn17
+		 (ExpressionIdentifier happy_var_1
+	)
+happyReduction_60 _  = notHappyAtAll 
+
+happyReduce_61 = happySpecReduce_1  13# happyReduction_61
+happyReduction_61 (HappyTerminal (TByteLiteral happy_var_1))
+	 =  HappyAbsSyn17
+		 (ExpressionNumber $ digitToInt happy_var_1
+	)
+happyReduction_61 _  = notHappyAtAll 
+
+happyReduce_62 = happySpecReduce_1  13# happyReduction_62
+happyReduction_62 _
+	 =  HappyAbsSyn17
+		 (ExpressionAT
+	)
+
+happyReduce_63 = happySpecReduce_1  14# happyReduction_63
+happyReduction_63 _
+	 =  HappyAbsSyn18
+		 (ExpressionMultiply
+	)
+
+happyReduce_64 = happySpecReduce_1  14# happyReduction_64
+happyReduction_64 _
+	 =  HappyAbsSyn18
+		 (ExpressionDivide
+	)
+
+happyReduce_65 = happySpecReduce_1  15# happyReduction_65
+happyReduction_65 _
+	 =  HappyAbsSyn19
+		 (ExpressionPlus
+	)
+
+happyReduce_66 = happySpecReduce_1  15# happyReduction_66
+happyReduction_66 _
+	 =  HappyAbsSyn19
+		 (ExpressionMinus
+	)
 
 happyNewToken action sts stk
 	= lexwrap(\tk -> 

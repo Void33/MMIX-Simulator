@@ -7,6 +7,18 @@ state 22 contains 11 reduce/reduce conflicts.
 
 rule 22 is unused
 rule 23 is unused
+rule 55 is unused
+rule 56 is unused
+rule 57 is unused
+rule 58 is unused
+rule 59 is unused
+rule 60 is unused
+rule 61 is unused
+rule 62 is unused
+rule 63 is unused
+rule 64 is unused
+rule 65 is unused
+rule 66 is unused
 
 -----------------------------------------------------------------------------
 Grammar
@@ -66,6 +78,18 @@ Grammar
 	Loc_Exp -> Loc_Exp DIVIDE BYTE_LIT                 (52)
 	Loc_Exp -> Loc_Exp DIVIDE Identifier               (53)
 	Loc_Exp -> Loc_Exp DIVIDE AT                       (54)
+	Expression -> Term                                 (55)
+	Expression -> Term Weak_Operator Term              (56)
+	Term -> Primary_Expression                         (57)
+	Term -> Term Strong_Operator Primary_Expression    (58)
+	Primary_Expression -> INT                          (59)
+	Primary_Expression -> Identifier                   (60)
+	Primary_Expression -> BYTE_LIT                     (61)
+	Primary_Expression -> AT                           (62)
+	Strong_Operator -> MULTIPLY                        (63)
+	Strong_Operator -> DIVIDE                          (64)
+	Weak_Operator -> PLUS                              (65)
+	Weak_Operator -> MINUS                             (66)
 
 -----------------------------------------------------------------------------
 Terminals
@@ -111,6 +135,11 @@ Non-terminals
 	Byte_Array      rules 36, 37, 38
 	GlobalVariables rule  39
 	Loc_Exp         rules 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54
+	Expression      rules 55, 56
+	Term            rules 57, 58
+	Primary_Expression rules 59, 60, 61, 62
+	Strong_Operator rules 63, 64
+	Weak_Operator   rules 65, 66
 
 -----------------------------------------------------------------------------
 States
@@ -1494,7 +1523,7 @@ State 77
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 55
+Number of rules: 67
 Number of terminals: 25
-Number of non-terminals: 12
+Number of non-terminals: 17
 Number of states: 78

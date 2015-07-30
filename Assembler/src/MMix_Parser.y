@@ -105,6 +105,23 @@ Loc_Exp : Identifier { (ExpressionIdentifier $1) : [] }
         | Loc_Exp DIVIDE Identifier { (ExpressionIdentifier $3) : ExpressionDivide : $1 }
         | Loc_Exp DIVIDE AT { ExpressionAT : ExpressionDivide : $1 }
 
+Expression : Term { $1 }
+           | Term Weak_Operator Term { $3 ++ [$2] ++ $1 }
+
+Term : Primary_Expression { $1 : [] }
+     | Term Strong_Operator Primary_Expression { $3 : $2 : $1 }
+
+Primary_Expression : INT        { ExpressionNumber $1 }
+                   | Identifier { ExpressionIdentifier $1 }
+                   | BYTE_LIT   { ExpressionNumber $ digitToInt $1 }
+                   | AT         { ExpressionAT }
+
+Strong_Operator : MULTIPLY { ExpressionMultiply }
+                | DIVIDE   { ExpressionDivide }
+
+Weak_Operator : PLUS   { ExpressionPlus }
+              | MINUS  { ExpressionMinus }
+
 {
 data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: OperatorList, pocl_loc :: Int }
           | LabelledOpCodeLine { lpocl_code :: Int, lpocl_ops :: OperatorList, lpocl_ident :: String, lpocl_loc :: Int }
