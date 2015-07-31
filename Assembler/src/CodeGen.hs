@@ -40,3 +40,11 @@ genCodeForLine _ _ _ = Nothing
 formatElement (ByteLiteral b) = b
 formatElement (PseudoCode pc) = chr pc
 formatElement (Register r) = r
+
+data CodeLine = CodeLine { cl_address :: Int, cl_size :: Int, cl_code :: [Char] }
+                deriving(Show)
+
+instance Eq CodeLine where
+    (CodeLine address1 _ _) == (CodeLine address2 _ _) = address1 == address2
+instance Ord CodeLine where
+    (CodeLine address1 _ _) `compare` (CodeLine address2 _ _) = address1 `compare` address2

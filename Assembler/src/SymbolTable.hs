@@ -7,15 +7,16 @@ import Data.Char (chr)
 
 type Table = M.Map String Int
 type BaseTable = M.Map Char Int
+type SymbolTable = M.Map Identifier RegisterAddress
 
-createSymbolTable :: Either String [Line] -> Either String (M.Map Identifier RegisterAddress)
+createSymbolTable :: Either String [Line] -> Either String SymbolTable
 createSymbolTable (Left msg) = Left msg
 createSymbolTable (Right lines) =
         let symbols = foldl getSymbol (Right M.empty) lines
             regs = createRegisterTable $ Right lines
         in symbols
 
-getSymbol :: Either String (M.Map Identifier RegisterAddress) -> Line -> Either String (M.Map Identifier RegisterAddress)
+getSymbol :: Either String SymbolTable -> Line -> Either String SymbolTable
 getSymbol (Left errorMsg) _ = Left errorMsg
 getSymbol (Right table) (LabelledPILine pi@(GregAuto) ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)

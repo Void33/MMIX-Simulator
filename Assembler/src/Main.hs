@@ -4,6 +4,7 @@ import MMix_Lexer
 import MMix_Parser
 import Text.Printf
 import qualified Data.Map.Lazy as M
+import qualified Data.List.Ordered as O
 import Data.Char
 import SymbolTable
 import CodeGen
@@ -34,14 +35,13 @@ contents fs = do
     x <- readFile fs
     printf "%s\n" x
     let s = parseStr x
-    --let s1 = setAlexGregAuto s
     let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
     let regs = createRegisterTable s'
-    --let code = acg st regs s'
+    let code = acg st regs s'
     print st
     print regs
-    --print code
+    print code
     return s'
 
 contents' fs = do
