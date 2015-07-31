@@ -7,6 +7,7 @@ import qualified Data.Map.Lazy as M
 import Data.Char
 import SymbolTable
 import CodeGen
+import Locations
 
 main :: IO()
 main = undefined
@@ -35,11 +36,11 @@ contents fs = do
     --let s1 = setAlexGregAuto s
     let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
-    let regs = createRegisterTable s'
-    let code = acg st regs s'
+    --let regs = createRegisterTable s'
+    --let code = acg st regs s'
     print st
-    print regs
-    print code
+    --print regs
+    --print code
     return s'
 
 contents' fs = do
@@ -56,30 +57,10 @@ contents' fs = do
 
 setAlexLoc :: Either String [Line] -> Either String [Line]
 setAlexLoc (Right lns) = Right $ setLoc 0 lns
-setAlexLoc m@_ = m
+setAlexLoc m = m
 
 setLoc :: Int -> [Line] -> [Line]
-setLoc startLoc lns = setInnerLoc startLoc [] lns
-
-setInnerLoc :: Int -> [Line] -> [Line] -> [Line]
-setInnerLoc nextLoc acc [] = reverse acc
-setInnerLoc nextLoc acc (ln@(PlainPILine (LOC loc) _):lns) = setInnerLoc loc newAcc lns
-                                                 where newAcc = ln { ppl_loc = loc } : acc
-setInnerLoc nextLoc acc (ln@(LabelledPILine (LOC loc) _ _):lns) = setInnerLoc loc newAcc lns
-                                                 where newAcc = ln { ppl_loc = loc } : acc
-setInnerLoc nextLoc acc (ln@(LabelledPILine (ByteArray arr) _ _):lns) = setInnerLoc newLoc newAcc lns
-                                                 where newLoc = nextLoc + (length arr)
-                                                       newAcc = ln { lppl_loc = nextLoc } : acc
-setInnerLoc nextLoc acc (ln@(PlainPILine _ _):lns) = setInnerLoc nextLoc newAcc lns
-                                                 where newAcc = ln { ppl_loc = nextLoc } : acc
-setInnerLoc nextLoc acc (ln@(LabelledPILine _ _ _):lns) = setInnerLoc nextLoc newAcc lns
-                                                 where newAcc = ln { lppl_loc = nextLoc } : acc
-setInnerLoc nextLoc acc (ln@(PlainOpCodeLine _ _ _):lns) = setInnerLoc newLoc newAcc lns
-                                                 where newAcc = ln { pocl_loc = nextLoc } : acc
-                                                       newLoc = nextLoc + 4
-setInnerLoc nextLoc acc (ln@(LabelledOpCodeLine _ _ _ _):lns) = setInnerLoc newLoc newAcc lns
-                                                 where newAcc = ln { lpocl_loc = nextLoc } : acc
-                                                       newLoc = nextLoc + 4
+setLoc startLoc lns = setInnerLocation startLoc [] lns
 
 showAlexLocs :: Either String [Line] -> Either String [Int]
 showAlexLocs (Right lns) = Right $ showLocs lns
@@ -130,6 +111,8 @@ params2 =  [LocalBackward 2,Ident (Id "t")]
 samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident=(Id "txt")}
 samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
 samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident=(Id "txt")}
+samplePILine4 = defaultPlainPILine {ppl_id = LocEx [ExpressionNumber 536870912], ppl_loc = 0}
+samplePILine5 = defaultLabelledPILine {lppl_id = LocEx [ExpressionNumber 536870912], lppl_loc = 0, lppl_ident=(Id "txt")}
 sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}

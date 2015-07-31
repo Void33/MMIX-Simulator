@@ -5,6 +5,7 @@ import qualified Data.Map.Lazy as M
 import Data.Char (chr)
 
 type Table = M.Map String Int
+type BaseTable = M.Map Char Int
 
 type RegisterAddress = (Int, Maybe PseudoInstruction)
 
