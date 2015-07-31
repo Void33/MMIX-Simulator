@@ -1,9 +1,7 @@
 module Locations where
 
 import MMix_Parser
---import Text.Printf
---import qualified Data.Map.Lazy as M
---import Data.Char
+import Expressions
 
 setInnerLocation nextLoc acc [] = reverse acc
 setInnerLocation nextLoc acc (ln:lns) = setInnerLocation newLoc newAcc lns
@@ -27,6 +25,3 @@ setLocation nextLoc ln@(PlainOpCodeLine _ _ _) = (newLoc, ln { pocl_loc = nextLo
     where newLoc = nextLoc + 4
 setLocation nextLoc ln@(LabelledOpCodeLine _ _ _ _) = (newLoc, ln { lpocl_loc = nextLoc })
     where newLoc = nextLoc + 4
-
-isSingleExprNumber ((ExpressionNumber val):[]) = Just val
-isSingleExprNumber _ = Nothing

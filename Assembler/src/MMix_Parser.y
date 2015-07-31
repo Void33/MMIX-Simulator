@@ -61,7 +61,7 @@ OperatorList : OperatorElement { $1 : [] }
 OperatorElement : HALT       { PseudoCode 0 }
                 | FPUTS      { fputs }
                 | STDOUT     { PseudoCode 1 }
-                | REG        { Register $1 }
+                | REG        { Register (chr $1) }
                 | FORWARD    { LocalForward $1 }
                 | BACKWARD   { LocalBackward $1 }
                 | Expression { Expr (reverse $1) }
@@ -122,7 +122,7 @@ data Identifier = Id String
 
 data OperatorElement = ByteLiteral Char
                | PseudoCode Int
-               | Register Int
+               | Register Char
                | Ident Identifier
                | LocalForward Int
                | LocalBackward Int
@@ -130,7 +130,7 @@ data OperatorElement = ByteLiteral Char
                deriving (Eq, Show)
 
 data ExpressionEntry = ExpressionNumber Int
-                        | ExpressionRegister Int
+                        | ExpressionRegister Char
                         | ExpressionIdentifier Identifier
                         | ExpressionGV Int
                         | Expression

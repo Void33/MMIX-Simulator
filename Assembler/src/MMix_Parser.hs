@@ -190,7 +190,7 @@ happyReduction_12 _
 happyReduce_13 = happySpecReduce_1  4# happyReduction_13
 happyReduction_13 (HappyTerminal (TRegister happy_var_1))
 	 =  HappyAbsSyn8
-		 (Register happy_var_1
+		 (Register (chr happy_var_1)
 	)
 happyReduction_13 _  = notHappyAtAll 
 
@@ -540,7 +540,7 @@ data Identifier = Id String
 
 data OperatorElement = ByteLiteral Char
                | PseudoCode Int
-               | Register Int
+               | Register Char
                | Ident Identifier
                | LocalForward Int
                | LocalBackward Int
@@ -548,7 +548,7 @@ data OperatorElement = ByteLiteral Char
                deriving (Eq, Show)
 
 data ExpressionEntry = ExpressionNumber Int
-                        | ExpressionRegister Int
+                        | ExpressionRegister Char
                         | ExpressionIdentifier Identifier
                         | ExpressionGV Int
                         | Expression

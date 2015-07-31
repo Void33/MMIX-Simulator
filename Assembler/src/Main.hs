@@ -8,6 +8,7 @@ import Data.Char
 import SymbolTable
 import CodeGen
 import Locations
+import Registers
 
 main :: IO()
 main = undefined
@@ -36,10 +37,10 @@ contents fs = do
     --let s1 = setAlexGregAuto s
     let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
-    --let regs = createRegisterTable s'
+    let regs = createRegisterTable s'
     --let code = acg st regs s'
     print st
-    --print regs
+    print regs
     --print code
     return s'
 
@@ -75,25 +76,6 @@ showLoc (LabelledPILine _ _ loc) acc =  loc : acc
 showLoc (PlainOpCodeLine _ _ loc) acc =  loc : acc
 showLoc (LabelledOpCodeLine _ _ _ loc) acc =  loc : acc
 
-setAlexGregAuto :: Either String [Line] -> Either String [Line]
-setAlexGregAuto (Right lns) = Right $ setGregAuto (chr 254) [] lns
-setAlexGregAuto msg = msg
-
-setGregAuto :: Char -> [Line] -> [Line] -> [Line]
-setGregAuto _ acc [] = reverse acc
-setGregAuto currentRegister acc (x:xs) =
-    let (newLine, nextRegister) = specifyGregAuto x currentRegister
-        newAcc = newLine : acc
-    in setGregAuto nextRegister newAcc xs
-
-specifyGregAuto :: Line -> Char -> (Line, Char)
-specifyGregAuto ln@(PlainPILine GregAuto _) nxt = (ln{ppl_id = GregSpecific nxt}, (decrement nxt))
-specifyGregAuto ln@(LabelledPILine GregAuto _ _) nxt = (ln{lppl_id = GregSpecific nxt}, (decrement nxt))
-specifyGregAuto line nxt = (line, nxt)
-
-decrement :: Char -> Char
-decrement val = chr decreased
-          where decreased = (ord val) - 1
 
 acg (Right sym) (Right regs) (Right lns) = Right $ cg sym regs [] lns
 acg _ _ _ = Left "Something is missing!!!"
@@ -106,20 +88,23 @@ cg s r acc (ln:lns) = cg s r newAcc lns
               Just(a, s, ba) -> (a, s, ba) : acc
               Nothing -> acc
 
-params = [(Register 255), Ident (Id "txt")]
+params = [(Register (chr 255)), Ident (Id "txt")]
 params2 =  [LocalBackward 2,Ident (Id "t")]
-samplePILine = defaultLabelledPILine {lppl_id = GregAuto, lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine2 = defaultPlainPILine {ppl_id = GregAuto, ppl_loc=536870912}
+samplePILine = defaultLabelledPILine {lppl_id = (GregEx [ExpressionAT]), lppl_loc=536870912, lppl_ident=(Id "txt")}
+samplePILine2 = defaultPlainPILine {ppl_id = (GregEx [ExpressionAT]), ppl_loc=536870912}
 samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident=(Id "txt")}
 samplePILine4 = defaultPlainPILine {ppl_id = LocEx [ExpressionNumber 536870912], ppl_loc = 0}
 samplePILine5 = defaultLabelledPILine {lppl_id = LocEx [ExpressionNumber 536870912], lppl_loc = 0, lppl_ident=(Id "txt")}
+samplePILine6 = defaultLabelledPILine {lppl_id = (GregEx [ExpressionNumber 0]), lppl_loc=536870912, lppl_ident=(Id "txt")}
+samplePILine7 = defaultPlainPILine {ppl_id = (GregEx [ExpressionNumber 0]), ppl_loc=536870912}
 sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = params2, pocl_loc = 259}
+sampleMainLine = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr [ExpressionIdentifier (Id "txt")]], lpocl_ident = Id "Main", lpocl_loc = 256}
 
-sampleBaseTable :: M.Map Char Int
+sampleBaseTable :: RegisterTable
 sampleBaseTable = M.insert (chr 254) 100 M.empty
 
 sampleSymbolTable :: M.Map Identifier RegisterAddress

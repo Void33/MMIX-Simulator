@@ -4,6 +4,7 @@ import SymbolTable
 import qualified Data.Map.Lazy as M
 import MMix_Parser
 import Data.Char (chr)
+import Registers
 
 genCodeForLine :: (M.Map Identifier RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Int, Int, [Char])
 --genCodeForLine symbols registers ln@(PlainOpCodeLine opcode (ListElementId (Register r) _) address) =
@@ -38,4 +39,4 @@ genCodeForLine _ _ _ = Nothing
 
 formatElement (ByteLiteral b) = b
 formatElement (PseudoCode pc) = chr pc
-formatElement (Register r) = chr r
+formatElement (Register r) = r
