@@ -64,7 +64,7 @@ OperatorElement : HALT       { PseudoCode 0 }
                 | REG        { Register (chr $1) }
                 | FORWARD    { LocalForward $1 }
                 | BACKWARD   { LocalBackward $1 }
-                | Expression { Expr (reverse $1) }
+                | Expression { Expr $1 }
 
 Identifier : ID { Id $1 }
            | LOCAL_LABEL { LocalLabel $1 }
@@ -90,24 +90,20 @@ Byte_Array : STR { reverse $1 }
 GlobalVariables : DS { 0x20000000 }
 
 Expression : Term { $1 }
-           | Expression Weak_Operator Term { $3 ++ [$2] ++ $1 }
+           | Expression PLUS Term { ExpressionPlus $1 $3 }
+           | Expression MINUS Term { ExpressionMinus $1 $3 }
 
 Term : Primary_Expression { $1 }
-     | Term Strong_Operator Primary_Expression { $3 ++ [$2] ++ $1 }
+     | Term MULTIPLY Primary_Expression { ExpressionMultiply $1 $3 }
+     | Term DIVIDE Primary_Expression { ExpressionDivide $1 $3 }
 
-Primary_Expression : INT                   { (ExpressionNumber $1) : [] }
-                   | Identifier            { (ExpressionIdentifier $1) : [] }
-                   | BYTE_LIT              { (ExpressionNumber (ord $1)) : [] }
-                   | AT                    { ExpressionAT : [] }
-                   | HEX                   { (ExpressionNumber $1) : [] }
-                   | GlobalVariables       { (ExpressionNumber $1) : [] }
-                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
+Primary_Expression : INT                   { ExpressionNumber $1 }
+                   | Identifier            { ExpressionIdentifier $1 }
+                   | BYTE_LIT              { ExpressionNumber (ord $1) }
+                   | AT                    { ExpressionAT }
+                   | HEX                   { ExpressionNumber $1 }
+                   | GlobalVariables       { ExpressionNumber $1 }
 
-Strong_Operator : MULTIPLY { ExpressionMultiply }
-                | DIVIDE   { ExpressionDivide }
-
-Weak_Operator : PLUS   { ExpressionPlus }
-              | MINUS  { ExpressionMinus }
 
 {
 data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: [OperatorElement], pocl_loc :: Int }
@@ -115,6 +111,8 @@ data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: [OperatorElement], p
           | PlainPILine { ppl_id :: PseudoInstruction, ppl_loc :: Int }
           | LabelledPILine { lppl_id :: PseudoInstruction, lppl_ident :: Identifier, lppl_loc :: Int }
           deriving (Eq, Show)
+
+--                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
 
 data Identifier = Id String
                 | LocalLabel Int
@@ -126,28 +124,28 @@ data OperatorElement = ByteLiteral Char
                | Ident Identifier
                | LocalForward Int
                | LocalBackward Int
-               | Expr [ExpressionEntry]
+               | Expr ExpressionEntry
                deriving (Eq, Show)
 
 data ExpressionEntry = ExpressionNumber Int
-                        | ExpressionRegister Char
+                        | ExpressionRegister Char Int
                         | ExpressionIdentifier Identifier
                         | ExpressionGV Int
                         | Expression
                         | ExpressionAT
-                        | ExpressionPlus
-                        | ExpressionMinus
-                        | ExpressionMultiply
-                        | ExpressionDivide
+                        | ExpressionPlus ExpressionEntry ExpressionEntry
+                        | ExpressionMinus ExpressionEntry ExpressionEntry
+                        | ExpressionMultiply ExpressionEntry ExpressionEntry
+                        | ExpressionDivide ExpressionEntry ExpressionEntry
                         | ExpressionOpen
                         | ExpressionClose
                         deriving (Eq, Show)
 
 data PseudoInstruction = LOC Int
-                       | LocEx [ExpressionEntry]
+                       | LocEx ExpressionEntry
                        | GregAuto
                        | GregSpecific Char
-                       | GregEx [ExpressionEntry]
+                       | GregEx ExpressionEntry
                        | ByteArray [Char]
                        | WydeArray [Char]
                        | TetraArray [Char]

@@ -8,6 +8,7 @@ import Data.Char (chr)
 type Table = M.Map String Int
 type BaseTable = M.Map Char Int
 type SymbolTable = M.Map Identifier RegisterAddress
+type RegisterOffset = (Char, Int)
 
 createSymbolTable :: Either String [Line] -> Either String SymbolTable
 createSymbolTable (Left msg) = Left msg
@@ -33,14 +34,14 @@ getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
 getSymbol (Right table) _ = Right $ table
 
 
-determineBaseAddressAndOffset :: (M.Map Int Char) -> RegisterAddress -> Maybe(Char, Int)
+determineBaseAddressAndOffset :: (M.Map Int Char) -> RegisterAddress -> Maybe(RegisterOffset)
 determineBaseAddressAndOffset rfa (a, Nothing) =
   case (M.lookupLE a rfa) of
     Just(address, register) -> Just(register, a - address)
     _ -> Nothing
 determineBaseAddressAndOffset _ _ = Nothing
 
-mapSymbolToAddress :: (M.Map Identifier RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Char, Int)
+--mapSymbolToAddress :: (M.Map Identifier RegisterAddress) -> (M.Map Char Int) -> Line -> Maybe(Char, Int)
 --mapSymbolToAddress symbols table (PlainOpCodeLine _ (ListElementId r t) _)
 --     | M.member t symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
 --     | otherwise = Nothing
@@ -51,4 +52,12 @@ mapSymbolToAddress :: (M.Map Identifier RegisterAddress) -> (M.Map Char Int) -> 
 --     | otherwise = Nothing
 --     where registersByAddress = registersFromAddresses table
 --           requiredAddress = symbols M.! t
+--mapSymbolToAddress _ _ _ = Nothing
+
+mapSymbolToAddress :: SymbolTable -> RegisterTable -> Identifier -> Maybe(RegisterOffset)
+mapSymbolToAddress symbols registers identifier@(Id _)
+    | M.member identifier symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+    | otherwise = Just('b', 2)
+     where registersByAddress = registersFromAddresses registers
+           requiredAddress = symbols M.! identifier
 mapSymbolToAddress _ _ _ = Nothing

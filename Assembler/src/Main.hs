@@ -41,7 +41,12 @@ contents fs = do
     let code = acg st regs s'
     print st
     print regs
-    print code
+    case code of
+        Left error -> print error
+        Right code -> print $ O.sort code
+    case code of
+        Right code -> print $ blocks code
+        Left error -> print error
     return s'
 
 contents' fs = do
@@ -85,25 +90,28 @@ cg _ _ acc [] = acc
 cg s r acc (ln:lns) = cg s r newAcc lns
     where cgl = genCodeForLine s r ln
           newAcc = case cgl of
-              Just(a, s, ba) -> (a, s, ba) : acc
+              Just(codeline) -> codeline : acc
               Nothing -> acc
 
 params = [(Register (chr 255)), Ident (Id "txt")]
 params2 =  [LocalBackward 2,Ident (Id "t")]
-samplePILine = defaultLabelledPILine {lppl_id = (GregEx [ExpressionAT]), lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine2 = defaultPlainPILine {ppl_id = (GregEx [ExpressionAT]), ppl_loc=536870912}
+samplePILine = defaultLabelledPILine {lppl_id = (GregEx ExpressionAT), lppl_loc=536870912, lppl_ident=(Id "txt")}
+samplePILine2 = defaultPlainPILine {ppl_id = (GregEx ExpressionAT), ppl_loc=536870912}
 samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine4 = defaultPlainPILine {ppl_id = LocEx [ExpressionNumber 536870912], ppl_loc = 0}
-samplePILine5 = defaultLabelledPILine {lppl_id = LocEx [ExpressionNumber 536870912], lppl_loc = 0, lppl_ident=(Id "txt")}
-samplePILine6 = defaultLabelledPILine {lppl_id = (GregEx [ExpressionNumber 0]), lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine7 = defaultPlainPILine {ppl_id = (GregEx [ExpressionNumber 0]), ppl_loc=536870912}
+samplePILine4 = defaultPlainPILine {ppl_id = LocEx (ExpressionNumber 536870912), ppl_loc = 0}
+samplePILine5 = defaultLabelledPILine {lppl_id = LocEx (ExpressionNumber 536870912), lppl_loc = 0, lppl_ident=(Id "txt")}
+samplePILine6 = defaultLabelledPILine {lppl_id = (GregEx (ExpressionNumber 0)), lppl_loc=536870912, lppl_ident=(Id "txt")}
+samplePILine7 = defaultPlainPILine {ppl_id = (GregEx (ExpressionNumber 0)), ppl_loc=536870912}
 sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
 sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
 sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = params2, pocl_loc = 259}
-sampleMainLine = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr [ExpressionIdentifier (Id "txt")]], lpocl_ident = Id "Main", lpocl_loc = 256}
+sampleMainLine = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))], lpocl_ident = Id "Main", lpocl_loc = 256}
+sampleTrapLine = PlainOpCodeLine {pocl_code = 0, pocl_ops = [Expr (ExpressionNumber 0),PseudoCode 0,Expr (ExpressionNumber 0)], pocl_loc = 264}
+sampleProgram = [CodeLine {cl_address = 256, cl_size = 4, cl_code = "#\255\254\NUL"},CodeLine {cl_address = 260, cl_size = 4, cl_code = "\NUL\NUL\a\NUL"},CodeLine {cl_address = 264, cl_size = 4, cl_code = "\NUL\NUL\NUL\NUL"},CodeLine {cl_address = 536870912, cl_size = 14, cl_code = "Hello world!\n\NUL"}]
 
+sampleOperands = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))]
 sampleBaseTable :: RegisterTable
 sampleBaseTable = M.insert (chr 254) 100 M.empty
 

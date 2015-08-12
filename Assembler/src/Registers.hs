@@ -29,13 +29,13 @@ setGregAuto currentRegister acc (x:xs) =
 specifyGregAuto :: Line -> Int -> (Line, Int)
 specifyGregAuto ln@(PlainPILine (GregEx lst) loc) nxt =
     case (isSingleExprAT lst, isSingleExprNumber lst) of
-        (True, _) -> (ln{ppl_id = GregEx [ExpressionRegister (chr nxt), ExpressionNumber loc]}, nxt - 1)
-        (False, Just (val)) -> (ln{ppl_id = GregEx [ExpressionRegister (chr nxt), ExpressionNumber val]}, nxt - 1)
+        (True, _) -> (ln{ppl_id = GregEx (ExpressionRegister (chr nxt) loc) }, nxt - 1)
+        (False, Just (val)) -> (ln{ppl_id = GregEx (ExpressionRegister (chr nxt) val)}, nxt - 1)
         _ -> (ln, nxt)
 specifyGregAuto ln@(LabelledPILine (GregEx lst) _ loc) nxt =
     case (isSingleExprAT lst, isSingleExprNumber lst) of
-        (True, _) -> (ln{lppl_id = GregEx [ExpressionRegister (chr nxt), ExpressionNumber loc]}, nxt - 1)
-        (False, Just (val)) -> (ln{lppl_id = GregEx [ExpressionRegister (chr nxt), ExpressionNumber val]}, nxt - 1)
+        (True, _) -> (ln{lppl_id = GregEx (ExpressionRegister (chr nxt) loc)}, nxt - 1)
+        (False, Just (val)) -> (ln{lppl_id = GregEx (ExpressionRegister (chr nxt) val)}, nxt - 1)
         _ -> (ln, nxt)
 specifyGregAuto line nxt = (line, nxt)
 
@@ -71,12 +71,10 @@ addNextRegister k v orig = M.insert v k orig
 getRegisterDetails :: [ExpressionEntry] -> Maybe(Char, Int)
 getRegisterDetails _ = Nothing
 
-firstRegister :: [ExpressionEntry] -> Maybe(Char)
-firstRegister [] = Nothing
-firstRegister ((ExpressionRegister reg): _) = Just(reg)
-fristRegister (_:rest) = firstRegister rest
+firstRegister :: ExpressionEntry -> Maybe(Char)
+firstRegister (ExpressionRegister reg _) = Just(reg)
+firstRegister _ = Nothing
 
-firstNumber :: [ExpressionEntry] -> Maybe(Int)
-firstNumber [] = Nothing
-firstNumber ((ExpressionNumber val): _) = Just(val)
-firstNumber (_:rest) = firstNumber rest
+firstNumber :: ExpressionEntry -> Maybe(Int)
+firstNumber (ExpressionRegister _ val) = Just(val)
+firstNumber _ = Nothing
