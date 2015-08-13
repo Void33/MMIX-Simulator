@@ -31,22 +31,22 @@ parseOnly fs = do
     let s = parseStr x
     return s
 
-contents fs = do
-    x <- readFile fs
+contents ifs ofs = do
+    x <- readFile ifs
     printf "%s\n" x
     let s = parseStr x
     let s' = setAlexGregAuto $ setAlexLoc s
     let st = createSymbolTable s'
     let regs = createRegisterTable s'
     let code = acg st regs s'
-    print st
-    print regs
-    case code of
-        Left error -> print error
-        Right code -> print $ O.sort code
-    case code of
-        Right code -> print $ blocks code
-        Left error -> print error
+    --print st
+    --print regs
+    --print code
+    let pg = encodeProgram code regs
+    case pg of
+        Right encoded_program -> writeFile ofs encoded_program
+        Left error            -> print error
+    print pg
     return s'
 
 contents' fs = do
