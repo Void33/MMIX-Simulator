@@ -11,7 +11,7 @@
 -author("Steve Edmans").
 
 %% API
--export([init/0, contents/0, set_register/2, query_register/1]).
+-export([init/0, contents/0, set_register/2, query_register/1, stop/0]).
 
 %% Create a new ETS table and populate it with all of the available
 %% registers.
@@ -24,6 +24,9 @@ init() ->
   Registers_Table = create_table(),
   create_user_defined_registers(Registers_Table),
   create_mmix_specific_registers(Registers_Table).
+
+stop() ->
+  ets:delete(registers).
 
 contents() ->
   ets:tab2list(registers).

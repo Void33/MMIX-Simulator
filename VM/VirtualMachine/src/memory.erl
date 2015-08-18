@@ -11,9 +11,11 @@
 
 %% API
 -export([start_link/0,
-  store_program/2,
+  stop/0,
+  store_program/1,
   get_byte/1,
-  get_octabyte/1]).
+  get_octabyte/1,
+  contents/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -44,20 +46,22 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-store_program(Program, StartLocation) ->
-  erlang:display("External Function"),
-  erlang:display(Program),
-  erlang:display(StartLocation),
-  gen_server:call(?MEMORY_SERVER, {store_program, Program, StartLocation}).
+store_program([]) ->
+  erlang:display("STORED PROGRAM");
+store_program([{StartLocation, Program}|Rest]) ->
+  gen_server:call(?MEMORY_SERVER, {store_program, Program, StartLocation}),
+  store_program(Rest).
+
+stop() ->
+  gen_server:call(?MEMORY_SERVER, stop_program).
+
+contents() ->
+  gen_server:call(?MEMORY_SERVER, get_contents).
 
 get_byte(Location) ->
-  erlang:display("Get Byte"),
-  erlang:display(Location),
   gen_server:call(?MEMORY_SERVER, {get_byte, Location}).
 
 get_octabyte(Location) ->
-  erlang:display("Get Octabyte"),
-  erlang:display(Location),
   gen_server:call(?MEMORY_SERVER, {get_octabyte, Location}).
 
 %%%===================================================================
@@ -79,9 +83,7 @@ get_octabyte(Location) ->
   {ok, State :: term()} | {ok, State :: term(), timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([]) ->
-  erlang:display("Init has run!"),
   TableId = ets:new(?MEMORY_TABLE, [set, public]),
-  erlang:display(TableId),
   {ok, TableId}.
 
 %%--------------------------------------------------------------------
@@ -99,20 +101,17 @@ init([]) ->
   {noreply, NewState :: term(), timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
   {stop, Reason :: term(), NewState :: term()}).
+handle_call(reset_memory, _From, TableId) ->
+  clear_memory(TableId);
 handle_call({store_program, Program, StartLocation}, _From, TableId) ->
-  erlang:display("Call Handler"),
-  erlang:display(Program),
-  erlang:display(StartLocation),
-  erlang:display(contents(TableId)),
-  clear_memory(TableId),
-  erlang:display(contents(TableId)),
   store_program(Program, StartLocation, TableId),
-  erlang:display(contents(TableId)),
   {reply, ok, TableId};
 handle_call({get_byte, Location}, _From, TableId) ->
-  erlang:display("Call Handler"),
-  erlang:display(Location),
   {reply, get_memory_location_byte(Location, TableId), TableId};
+handle_call(stop_program, _From, _TableId) ->
+  {stop, normal};
+handle_call(get_contents, _From, TableId) ->
+  erlang:display(contents(TableId));
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -190,13 +189,8 @@ clear_memory(TableId) ->
   ets:delete_all_objects(TableId).
 
 store_program([], _Location, State) ->
-  erlang:display("Store Program with EMPTY List"),
   {ok, State};
 store_program([Entry|Rest], Location, TableId) ->
-  erlang:display("Store Program with List"),
-  erlang:display(Entry),
-  erlang:display(Rest),
-  erlang:display(Location),
   ets:insert(TableId, {Location, Entry}),
   store_program(Rest, (Location + 1), TableId).
 
