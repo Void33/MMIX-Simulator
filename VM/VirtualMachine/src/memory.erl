@@ -7,6 +7,7 @@
 
 -include("memory.hrl").
 -define(MEMORY_TABLE, memory_table).
+-define(MEMORY_SERVER, memory_server).
 
 %% API
 -export([start_link/0,

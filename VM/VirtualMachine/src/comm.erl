@@ -25,7 +25,29 @@ test() ->
 
 start_vm () ->
   registers:init(),
-  memory:start_link().
+  memory:start_link(),
+  start_server().
+
+start_server() ->
+  case gen_udp:open(?PORT, [binary]) of
+    {ok, Socket} -> loop(Socket);
+    Error -> erlang:display(Error)
+  end.
+
+loop(Socket) ->
+  receive
+    {udp, Socket, _Host, _Port, Bin} ->
+      N = binary_to_term(Bin),
+      process_message(N),
+      loop(Socket);
+    stop ->
+      gen_udp:close(Socket)
+  end.
+
+process_message(stop) ->
+  self() ! stop;
+process_message(N) ->
+  erlang:display(N).
 
 process_next_statement() ->
   next_statement(),
