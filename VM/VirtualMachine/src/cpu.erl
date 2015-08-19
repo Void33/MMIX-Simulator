@@ -172,9 +172,19 @@ execute(OpCode, _PC) ->
 addi(PC) ->
   io:format("ADDUI ~w~n",[PC]),
   {RX, RY, RZ} = three_operands(PC),
-  NewValue = immediate_address(RY, RZ),
-  registers:set_register(RX, NewValue),
-  registers:set_register(pc, (PC + 4)).
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  {Overflow, NewValue} = immediate_address(RY, RZ),
+  io:format("Registers ~w - ~w~n",[Overflow, NewValue]),
+  Updates = [{RX, NewValue}, {pc, (PC + 4)}],
+  io:format("Updates ~w~n",[Updates]),
+  NewList = case Overflow of
+    overflow ->
+      [{rA, 1} | Updates];
+    _ ->
+      Updates
+  end,
+  io:format("New List ~w~n",[NewList]),
+  NewList.
 
 three_operands(PC) ->
   First = operand(PC+1),
@@ -183,37 +193,27 @@ three_operands(PC) ->
   {First, Second, Third}.
 
 operand(Location) ->
-  erlang:display(Location),
   memory:get_byte(Location).
-%%  case FullValue of
-%%    {ok, Value} -> Value
-%%  end.
 
 ldou(PC) ->
-  erlang:display("LDOU"),
-  {RX, RY, RZ} = three_operands(PC),
-  erlang:display(RX),
-  erlang:display(RY),
-  erlang:display(RZ),
-  A = address_two_registers(RY, RZ),
-  erlang:display("Address"),
-  erlang:display(A).
+  {_RX, RY, RZ} = three_operands(PC),
+  {_Overflow, _A} = address_two_registers(RY, RZ).
 
 address_two_registers(RX, RY) ->
-  erlang:display("Determine address from two registers"),
   R1 = registers:query_register(RX),
-  erlang:display(R1),
   R2 = registers:query_register(RY),
-  erlang:display(R2),
-  A = (R1 + R2),
+  add_values(R1, R2).
+
+add_values(V1, V2) ->
+  A = (V1 + V2),
   MaxMemory = math:pow(2, 64),
   if
     A > MaxMemory
-      -> (A - MaxMemory);
+      -> {overflow,(A - MaxMemory)};
     true
-      -> A
+      -> {no_overflow, A}
   end.
 
 immediate_address(RY, RZ) ->
   R1 = registers:query_register(RY),
-  R1 + RZ.
+  add_values(R1, RZ).

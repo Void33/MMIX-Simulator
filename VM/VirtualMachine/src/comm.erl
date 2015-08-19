@@ -28,9 +28,16 @@ start_server() ->
 
 loop(Socket) ->
   receive
-    {udp, Socket, _Host, _Port, Bin} ->
+    {udp, Socket, Host, Port, Bin} ->
       N = binary_to_term(Bin),
-      process_message(N),
+      case process_message(N) of
+        {updates, Updates} ->
+          gen_udp:send(Socket, Host, Port, term_to_binary({updates, Updates}));
+        {all_registers, Registers} ->
+          gen_udp:send(Socket, Host, Port, term_to_binary({all_registers, Registers}));
+        _ ->
+          gen_udp:send(Socket, Host, Port, term_to_binary(finished))
+      end,
       loop(Socket);
     stop ->
       gen_udp:close(Socket),
@@ -41,30 +48,31 @@ loop(Socket) ->
   end.
 
 process_message(process_next) ->
-  process_next_statement();
+  {updates, process_next_statement()};
 process_message(stop) ->
-  self() ! stop;
+  self() ! stop,
+  stopping;
 process_message({program, Code}) ->
-  memory:store_program(Code);
+  memory:store_program(Code),
+  storing;
 process_message({registers, Registers}) ->
   lists:map(fun({X, Y}) -> {registers:set_register(X, Y)} end, Registers),
   Pc = registers:query_register(255),
-  registers:set_register(pc, Pc);
+  registers:set_register(pc, Pc),
+  updating;
+process_message(get_all_registers) ->
+  {all_registers, registers:contents()};
 process_message(N) ->
-  erlang:display(N).
+  erlang:display(N),
+  unknown.
 
 process_next_statement() ->
-  next_statement(),
-  erlang:display("Finished").
+  next_statement().
 
 next_statement() ->
-  erlang:display("Next Statement"),
   PC = registers:query_register(pc),
-  erlang:display(PC),
   FullOpCode = memory:get_byte(PC),
-  erlang:display(FullOpCode),
-  cpu:execute(FullOpCode, PC).
-%%  case FullOpCode of
-%%    {ok, OpCode} -> execute(OpCode, PC)
-%%  end.
+  Updates = cpu:execute(FullOpCode, PC),
+  lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, Updates),
+  Updates.
 

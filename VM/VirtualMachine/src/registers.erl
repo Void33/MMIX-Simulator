@@ -45,4 +45,5 @@ create_user_defined_registers(Registers) ->
   lists:map(fun(X) -> {ets:insert(Registers,{X, 0})} end, lists:seq(0, 255)).
 
 create_mmix_specific_registers(Registers) ->
-  ets:insert(Registers, {pc, 0}).
+  Mmix_registers = [pc,rA, rB, rC, rD, rE, rF, rG, rH, rI, rJ, rK, rL, rM, rN, rO, rP, rQ, rR, rS, rT, rU, rV, rW, rX, rY, rZ, rBB, rTT, rWW, rXX, rYY, rZZ],
+  lists:map(fun(X) -> {ets:insert(Registers,{X, 0})} end, Mmix_registers).
