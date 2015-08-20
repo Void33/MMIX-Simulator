@@ -15,6 +15,7 @@
   store_program/1,
   get_byte/1,
   get_octabyte/1,
+  get_nstring/1,
   contents/0]).
 
 %% gen_server callbacks
@@ -64,6 +65,9 @@ get_byte(Location) ->
 get_octabyte(Location) ->
   gen_server:call(?MEMORY_SERVER, {get_octabyte, Location}).
 
+get_nstring(Location) ->
+  gen_server:call(?MEMORY_SERVER, {get_nstring, Location}).
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -108,6 +112,8 @@ handle_call({store_program, Program, StartLocation}, _From, TableId) ->
   {reply, ok, TableId};
 handle_call({get_byte, Location}, _From, TableId) ->
   {reply, get_memory_location_byte(Location, TableId), TableId};
+handle_call({get_nstring, Location}, _From, TableId) ->
+  {reply, get_memory_location_nstring(Location, TableId), TableId};
 handle_call(stop_program, _From, _TableId) ->
   {stop, normal};
 handle_call(get_contents, _From, TableId) ->
@@ -197,3 +203,13 @@ store_program([Entry|Rest], Location, TableId) ->
 get_memory_location_byte(Location, TableId) ->
   [{Location, Value}] = ets:lookup(TableId, Location),
   Value.
+
+get_memory_location_nstring(Location, TableId) ->
+  get_memory_location_nstring(Location, TableId, []).
+
+get_memory_location_nstring(Location, TableId, Accumulator) ->
+  CurrentByte = get_memory_location_byte(Location, TableId),
+  case CurrentByte of
+    0 -> lists:reverse(Accumulator);
+    _ -> get_memory_location_nstring((Location + 1), TableId, [CurrentByte | Accumulator])
+  end.

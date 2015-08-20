@@ -161,6 +161,8 @@
 %% API
 -export([execute/2]).
 
+execute(?TRAP, PC) ->
+  trap(PC);
 execute(?ADDUI, PC) ->
   addi(PC);
 execute(?LDOU, PC) ->
@@ -169,6 +171,12 @@ execute(OpCode, _PC) ->
   erlang:display("Execute"),
   erlang:display(OpCode).
 
+trap(PC) ->
+  io:format("TRAP~n"),
+  {RX, RY, RZ} = three_operands(PC),
+  Msgs = trap:process_trap(RX, RY, RZ),
+  Updates = [{pc, (PC + 4)}],
+  {Updates, Msgs}.
 addi(PC) ->
   io:format("ADDUI ~w~n",[PC]),
   {RX, RY, RZ} = three_operands(PC),
@@ -184,7 +192,7 @@ addi(PC) ->
       Updates
   end,
   io:format("New List ~w~n",[NewList]),
-  NewList.
+  {NewList, []}.
 
 three_operands(PC) ->
   First = operand(PC+1),

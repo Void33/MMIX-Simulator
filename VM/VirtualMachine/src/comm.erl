@@ -72,7 +72,7 @@ process_next_statement() ->
 next_statement() ->
   PC = registers:query_register(pc),
   FullOpCode = memory:get_byte(PC),
-  Updates = cpu:execute(FullOpCode, PC),
+  {Updates, Msgs} = cpu:execute(FullOpCode, PC),
   lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, Updates),
-  Updates.
+  {Updates, Msgs}.
 
