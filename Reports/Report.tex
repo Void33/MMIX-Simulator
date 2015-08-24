@@ -1,68 +1,93 @@
-% !TEX TS-program = pdflatex
-% !TEX encoding = UTF-8 Unicode
-
-\documentclass[11pt]{article} % use larger type; default would be 10pt
-
-\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
-
-%%% PAGE DIMENSIONS
-\usepackage{geometry} % to change the page dimensions
-\geometry{a4paper} % or letterpaper (US) or a5paper or....
-% \geometry{margin=2in} % for example, change the margins to 2 inches all round
-% \geometry{landscape} % set up the page for landscape
-%   read geometry.pdf for detailed page layout information
-
-\usepackage{graphicx} % support the \includegraphics command and options
-
-% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
-
-%%% PACKAGES
-\usepackage{booktabs} % for much better looking tables
-\usepackage{array} % for better arrays (eg matrices) in maths
-\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
-\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
-\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
-% These packages are all incorporated in the memoir class to one degree or another...
-
-%%% HEADERS & FOOTERS
-\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
-\pagestyle{fancy} % options: empty , plain , fancy
-\renewcommand{\headrulewidth}{0pt} % customise the layout...
-\lhead{}\chead{}\rhead{}
-\lfoot{}\cfoot{\thepage}\rfoot{}
-
-%%% SECTION TITLE APPEARANCE
-\usepackage{sectsty}
-\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
-% (This matches ConTeXt defaults)
-
-%%% ToC (table of contents) APPEARANCE
-\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
-\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
-\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
-\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
-
-%%% END Article customizations
-
-\title{Component Based MMIX Simulator using Multiple Programming Paradigms}
-\author{Stephen Edmans}
-%\date{} % Activate to display a given date or no date (if empty),
-
+\documentclass[a4paper,11pt]{report}
+\usepackage{appendix}
+%\title{Component Based MMIX Simulator using Multiple Programming Paradigms}
+%\subtitle{A dissertation submitted in partial fulfilment of the requirements for the MSc in Advanced Computing Technologies}
+%\author{Stephen Edmans}
+%\date{14 September 2015} % Activate to display a given date or no date (if empty),
 \begin{document}
-\maketitle
+\begin{titlepage}
+	\centering
+	{\bfseries Component Based MMIX Simulator using Multiple Programming Paradigms \par}
+	\vspace{1cm}
+	{A dissertation submitted in partial fulfilment of the requirements for the MSc in Advanced Computing Technologies\par}
+	\vspace{1.5cm}
+	{by Stephen Edmans\par}
+	\vspace{2cm}
+	{Department of Computer Science and Information Systems\par}
+	{Birkbeck College, University of London\par}
+	\vspace{2cm}
+	{\large September 2015\par}
+\end{titlepage}
 \newpage
+\chapter*{} % Academic Declaration
+{This report is substantially the result of my own work except where explicitly
+indicated in the text. I give my permission for it to be submitted to the JISC
+Plagiarism Detection Service. I have read and understood the sections on plagiarism
+in the Programme Handbook and the College website.\par}
+\vspace{1cm}
+{\noindent The report may be freely copied and distributed provided the source is explicitly
+acknowledged.}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\newpage
+\addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
 \newpage
-\section{Abstract}
+\listoffigures
+\newpage
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+\chapter{Introduction}
+\chapter{Assembler}
 \section{Introduction}
-\section{Background}
-Professor Donald Knuth of Stanford University has designed aa
-\section{Outline Design}
-\subsection{Assembler}
-\subsection{Simulation Engine}
-\subsection{User Interface}
-\section{Testing}
-\section{Timetable}
-\section{Summary}
-
+\section{Executable}
+%% HOW WE RUN THE ASSEMBLER, WHAT THE PARAMETERS ARE & WHAT THE OUTPUT IS
+\section{Lexer}
+\section{Parser}
+\section{Code Generation}
+\subsection{Symbol Table}
+\subsection{Automatically Assigned Registers}
+\subsection{Local Symbols}
+\subsection{Handling Operands}
+\subsection{Assembler Directives}
+\subsection{Generating the Output}
+\section{Component Testing}
+%% DO I NEED A SECTION HERE TO TALK ABOUT ANY ISSUES AND THOUGHTS RESULTING IN THE DEVELOPMENT, ALONG WITH THE INTEGRATION OF THE PARTS
+\chapter{Graphical User Interface}
+\section{Introduction}
+\section{User Interface Design}
+\subsection{Console Panel}
+\subsection{Controls Panel}
+\subsection{Main State Panel}
+\subsection{Memory Panel}
+\subsection{Registers Panel}
+\section[Asynchronous UI Programming with Actors]{Asynchronous User Interface Programming with Actors}
+\section{Communication}
+\section{Component Testing}
+\chapter{Virtual Machine}
+\section{Introduction}
+\section{Memory}
+\section{Registers}
+\section{Central Processing Unit}
+\section{Calling the Operating System}
+\section{Communication}
+\section{Component Testing}
+\chapter{Simulator Application}
+\section{Introduction}
+%% HOW THE APPLICATION AS A WHOLE WORKS
+\section{Integration Testing}
+\subsection{Generate Prime Numbers Sample Application}
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
+\chapter*{References}
+\addcontentsline{toc}{chapter}{References}
+\begin{appendices}
+\noappendicestocpagenum
+\addappheadtotoc 
+\chapter{Source Code}
+\section{Assembler}
+\section{Graphical User Interface}
+\section{Virtual Machine}
+\end{appendices}
 \end{document}
+
