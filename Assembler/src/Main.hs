@@ -49,12 +49,23 @@ contents ifs ofs = do
     print pg
     return s'
 
-contents' fs = do
-    x <- readFile fs
+contents' ifs = do
+    x <- readFile ifs
     printf "%s\n" x
     let s = parseStr x
-    --let s1 = setAlexGregAuto s
     let s' = setAlexGregAuto $ setAlexLoc s
+    let s2 = setLocalSymbolLabelAuto s'
+    let st = createSymbolTable s'
+    let regs = createRegisterTable s'
+    let code = acg st regs s'
+    print s2
+    --print regs
+    --print code
+    --let pg = encodeProgram code regs
+    --case pg of
+    --    Right encoded_program -> print encoded_program
+    --    Left error            -> print error
+    --print pg
     return s'
 
 -- contents "/home/steveedmans/hail.mms"
@@ -110,6 +121,11 @@ sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = params2, pocl_lo
 sampleMainLine = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))], lpocl_ident = Id "Main", lpocl_loc = 256}
 sampleTrapLine = PlainOpCodeLine {pocl_code = 0, pocl_ops = [Expr (ExpressionNumber 0),PseudoCode 0,Expr (ExpressionNumber 0)], pocl_loc = 264}
 sampleProgram = [CodeLine {cl_address = 256, cl_size = 4, cl_code = "#\255\254\NUL"},CodeLine {cl_address = 260, cl_size = 4, cl_code = "\NUL\NUL\a\NUL"},CodeLine {cl_address = 264, cl_size = 4, cl_code = "\NUL\NUL\NUL\NUL"},CodeLine {cl_address = 536870912, cl_size = 14, cl_code = "Hello world!\n\NUL"}]
+sampleLocalSymbolLabelLine = LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = LocalLabel 2, lpocl_loc = 0}
+s1 = LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = Id "??3H0", lpocl_loc = 264}
+ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2]
+prog =  [LabelledPILine {lppl_id = IsNumber 500, lppl_ident = Id "L", lppl_loc = 0},LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = LocalLabel 2, lpocl_loc = 0},PlainOpCodeLine {pocl_code = 231, pocl_ops = [Expr (ExpressionIdentifier (Id "jj")),Expr (ExpressionNumber 2)], pocl_loc = 4},LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = LocalLabel 3, lpocl_loc = 8},PlainOpCodeLine {pocl_code = 76, pocl_ops = [Expr (ExpressionIdentifier (Id "t")),LocalBackward 2], pocl_loc = 12},LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Expr (ExpressionIdentifier (Id "t")),Expr (ExpressionIdentifier (Id "Title"))], lpocl_ident = LocalLabel 2, lpocl_loc = 16}]
+p1 = [LabelledPILine {lppl_id = IsNumber 500, lppl_ident = Id "L", lppl_loc = 0},LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = Id "??2H0", lpocl_loc = 0},PlainOpCodeLine {pocl_code = 231, pocl_ops = [Expr (ExpressionIdentifier (Id "jj")),Expr (ExpressionNumber 2)], pocl_loc = 4},LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = Id "??3H0", lpocl_loc = 8},PlainOpCodeLine {pocl_code = 76, pocl_ops = [Expr (ExpressionIdentifier (Id "t")),LocalBackward 2], pocl_loc = 12},LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Expr (ExpressionIdentifier (Id "t")),Expr (ExpressionIdentifier (Id "Title"))], lpocl_ident = Id "??2H1", lpocl_loc = 16}]
 
 sampleOperands = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))]
 sampleBaseTable :: RegisterTable
