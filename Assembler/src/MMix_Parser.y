@@ -89,6 +89,9 @@ Byte_Array : STR { reverse $1 }
 
 GlobalVariables : DS { 0x20000000 }
 
+
+--                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
+
 Expression : Term { $1 }
            | Expression PLUS Term { ExpressionPlus $1 $3 }
            | Expression MINUS Term { ExpressionMinus $1 $3 }
@@ -103,6 +106,7 @@ Primary_Expression : INT                   { ExpressionNumber $1 }
                    | AT                    { ExpressionAT }
                    | HEX                   { ExpressionNumber $1 }
                    | GlobalVariables       { ExpressionNumber $1 }
+                   | OPEN Expression CLOSE { $2 }
 
 
 {
@@ -111,8 +115,6 @@ data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: [OperatorElement], p
           | PlainPILine { ppl_id :: PseudoInstruction, ppl_loc :: Int }
           | LabelledPILine { lppl_id :: PseudoInstruction, lppl_ident :: Identifier, lppl_loc :: Int }
           deriving (Eq, Show)
-
---                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
 
 data Identifier = Id String
                 | LocalLabel Int
@@ -128,7 +130,7 @@ data OperatorElement = ByteLiteral Char
                deriving (Eq, Show)
 
 data ExpressionEntry = ExpressionNumber Int
-                        | ExpressionRegister Char Int
+                        | ExpressionRegister Char ExpressionEntry
                         | ExpressionIdentifier Identifier
                         | ExpressionGV Int
                         | Expression

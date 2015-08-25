@@ -10,6 +10,7 @@ import Data.Char (chr, ord)
 import Registers
 import Expressions as E
 import Numeric (showHex)
+import DataTypes
 
 type AdjustedOperands = (Int, String)
 
@@ -38,11 +39,11 @@ genOpCodeOutput symbols registers opcode operands address =
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
         _ -> Nothing
 
-formatElement :: OperatorElement -> Char
-formatElement (ByteLiteral b) = b
-formatElement (PseudoCode pc) = chr pc
-formatElement (Register r) = r
-formatElement (Expr x) = chr (E.evaluate x)
+formatElement :: SymbolTable -> OperatorElement -> Char
+formatElement _ (ByteLiteral b) = b
+formatElement _ (PseudoCode pc) = chr pc
+formatElement _ (Register r) = r
+formatElement st (Expr x) = chr (E.evaluate x 0 st)
 
 splitOperands :: SymbolTable -> RegisterTable -> [OperatorElement] -> Maybe(AdjustedOperands)
 splitOperands symbols registers ((Register x):(Expr (ExpressionIdentifier y)):[]) =
@@ -51,7 +52,7 @@ splitOperands symbols registers ((Register x):(Expr (ExpressionIdentifier y)):[]
         otherwise -> Nothing
         where ro = mapSymbolToAddress symbols registers y
 splitOperands symbols registers (x : y : z : []) = Just(0, output)
-    where output = (formatElement x) : (formatElement y) : (formatElement x) : []
+    where output = (formatElement symbols x) : (formatElement symbols y) : (formatElement symbols x) : []
 splitOperands _ _ _ = Nothing
 
 type BlockSummary = (Int, Int, [Int]) -- Starting Address, Size, Data in block

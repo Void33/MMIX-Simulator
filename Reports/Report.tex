@@ -1,9 +1,7 @@
 \documentclass[a4paper,11pt]{report}
+\usepackage{hyperref}
 \usepackage{appendix}
-%\title{Component Based MMIX Simulator using Multiple Programming Paradigms}
-%\subtitle{A dissertation submitted in partial fulfilment of the requirements for the MSc in Advanced Computing Technologies}
-%\author{Stephen Edmans}
-%\date{14 September 2015} % Activate to display a given date or no date (if empty),
+\renewcommand{\bibname}{References}
 \begin{document}
 \begin{titlepage}
 	\centering
@@ -29,6 +27,7 @@ in the Programme Handbook and the College website.\par}
 acknowledged.}
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
+MMIX was first proposed by Donald E. Knuth in \cite{knuth:aocp1}
 \newpage
 \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
@@ -48,6 +47,10 @@ acknowledged.}
 \subsection{Symbol Table}
 \subsection{Automatically Assigned Registers}
 \subsection{Local Symbols}
+%What is a local symbol
+%How do we achieve this?
+%Convert all #H statements with system generated labels that cannot be used by the user (??LS#H*) Where # is the local label number and * is a counter
+%Unclear what to do if local symbol defined on line where it could be used.
 \subsection{Handling Operands}
 \subsection{Assembler Directives}
 \subsection{Generating the Output}
@@ -79,7 +82,9 @@ acknowledged.}
 \subsection{Generate Prime Numbers Sample Application}
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
-\chapter*{References}
+\nocite{*}
+\bibliographystyle{acm}
+\bibliography{bibtex}
 \addcontentsline{toc}{chapter}{References}
 \begin{appendices}
 \noappendicestocpagenum

@@ -3,12 +3,12 @@ module SymbolTable where
 import MMix_Parser
 import Registers
 import qualified Data.Map.Lazy as M
-import Data.Char (chr)
+import Data.Char (chr, ord)
 import Text.Regex.Posix
+import DataTypes
 
 type Table = M.Map String Int
 type BaseTable = M.Map Char Int
-type SymbolTable = M.Map Identifier RegisterAddress
 type RegisterOffset = (Char, Int)
 type CounterMap = M.Map Int Int
 
@@ -27,18 +27,24 @@ getSymbol (Right table) (LabelledPILine pi@(GregAuto) ident address)
 getSymbol (Right table) (LabelledPILine pi@(GregSpecific _) ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Just pi) table
-getSymbol (Right table) (LabelledPILine _ ident address)
+getSymbol (Right table) (LabelledPILine pi@(GregEx (ExpressionRegister reg _)) ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
-          | otherwise = Right $ M.insert ident (address, Nothing) table
+          | otherwise = Right $ M.insert ident (address, Just (IsRegister (ord reg))) table
+getSymbol (Right table) (LabelledPILine val@(IsNumber _) ident address)
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
+          | otherwise = Right $ M.insert ident (address, Just val) table
+getSymbol (Right table) (LabelledPILine val@(IsRegister _) ident address)
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
+          | otherwise = Right $ M.insert ident (address, Just val) table
 getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Nothing) table
 getSymbol (Right table) _ = Right $ table
 
 
-determineBaseAddressAndOffset :: (M.Map Int Char) -> RegisterAddress -> Maybe(RegisterOffset)
+determineBaseAddressAndOffset :: (M.Map ExpressionEntry Char) -> RegisterAddress -> Maybe(RegisterOffset)
 determineBaseAddressAndOffset rfa (a, Nothing) =
-  case (M.lookupLE a rfa) of
+  case (M.lookupLE (ExpressionNumber a) rfa) of
     Just(address, register) -> Just(register, a - address)
     _ -> Nothing
 determineBaseAddressAndOffset _ _ = Nothing
@@ -81,7 +87,7 @@ setLocalSymbolLabel current_counters acc (x:xs) =
 setLocalSymbolLabelAuto :: Either String [Line] -> Either String [Line]
 setLocalSymbolLabelAuto (Right lns) = Right $ operands_set
     where labels_set = setLocalSymbolLabel localSymbolCounterMap [] lns
-          operands_set = transformLocalSymbolLines initialForwardSymbolMap initialBackwardSymbolMap [] labels_set
+          operands_set = transformLocalSymbolLines initialForwardSymbolMap initialBackwardSymbolMap labels_set []
 setLocalSymbolLabelAuto msg = msg
 
 localSymbolCounterMap :: CounterMap
@@ -151,10 +157,13 @@ transformLocalSymbolElement :: M.Map Int Identifier -> M.Map Int (Maybe Identifi
 transformLocalSymbolElement forwards _ (LocalForward label) = Ident (identifier)
     where Just identifier = M.lookup label forwards
 transformLocalSymbolElement _ backwards elem@(LocalBackward label) = v
-    where identifier = M.lookup label backwards
-          v = case identifier of Nothing -> elem
-                                 Just(id) -> (Ident (Id (show id)))
+    where i = M.lookup label backwards
+          v = extractWithDefault i elem
 transformLocalSymbolElement _ _ element = element
+
+extractWithDefault :: Maybe (Maybe Identifier) -> OperatorElement -> OperatorElement
+extractWithDefault (Just (Just v)) _ = Ident v
+extractWithDefault _ d = d
 
 system_id :: String -> Maybe (Int, Int)
 system_id label

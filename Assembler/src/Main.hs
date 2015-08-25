@@ -10,6 +10,8 @@ import SymbolTable
 import CodeGen
 import Locations
 import Registers
+import DataTypes
+import Expressions
 
 main :: IO()
 main = undefined
@@ -36,17 +38,17 @@ contents ifs ofs = do
     printf "%s\n" x
     let s = parseStr x
     let s' = setAlexGregAuto $ setAlexLoc s
-    let st = createSymbolTable s'
-    let regs = createRegisterTable s'
-    let code = acg st regs s'
+    let st = createSymbolTable s
+    let regs = createRegisterTable s
+    --let code = acg st regs s
     --print st
     --print regs
     --print code
-    let pg = encodeProgram code regs
-    case pg of
-        Right encoded_program -> writeFile ofs encoded_program
-        Left error            -> print error
-    print pg
+    --let pg = encodeProgram code regs
+    --case pg of
+    --    Right encoded_program -> writeFile ofs encoded_program
+    --    Left error            -> print error
+    --print pg
     return s'
 
 contents' ifs = do
@@ -55,18 +57,19 @@ contents' ifs = do
     let s = parseStr x
     let s' = setAlexGregAuto $ setAlexLoc s
     let s2 = setLocalSymbolLabelAuto s'
-    let st = createSymbolTable s'
-    let regs = createRegisterTable s'
-    let code = acg st regs s'
-    print s2
-    --print regs
+    let st = createSymbolTable s2
+    let regs = createRegisterTable s2
+    let s3 = evaluateAllExpressions s2 st
+    --let code = acg st regs s2
+    print st
+    print regs
     --print code
     --let pg = encodeProgram code regs
     --case pg of
     --    Right encoded_program -> print encoded_program
     --    Left error            -> print error
     --print pg
-    return s'
+    return s3
 
 -- contents "/home/steveedmans/hail.mms"
 -- parseOnly "/home/steveedmans/hail.mms"

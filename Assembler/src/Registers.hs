@@ -10,10 +10,10 @@ import MMix_Parser
 import qualified Data.Map.Lazy as M
 import Data.Char (chr, ord)
 import Expressions
+import DataTypes
 
-type RegisterAddress = (Int, Maybe PseudoInstruction)
-type RegisterTable = M.Map Char Int
-type AlternativeRegisterTable = M.Map Int Char
+type RegisterTable = M.Map Char ExpressionEntry
+type AlternativeRegisterTable = M.Map ExpressionEntry Char
 
 setAlexGregAuto :: Either String [Line] -> Either String [Line]
 setAlexGregAuto (Right lns) = Right $ setGregAuto 254 [] lns
@@ -27,16 +27,12 @@ setGregAuto currentRegister acc (x:xs) =
     in setGregAuto nextRegister newAcc xs
 
 specifyGregAuto :: Line -> Int -> (Line, Int)
-specifyGregAuto ln@(PlainPILine (GregEx lst) loc) nxt =
-    case (isSingleExprAT lst, isSingleExprNumber lst) of
-        (True, _) -> (ln{ppl_id = GregEx (ExpressionRegister (chr nxt) loc) }, nxt - 1)
-        (False, Just (val)) -> (ln{ppl_id = GregEx (ExpressionRegister (chr nxt) val)}, nxt - 1)
-        _ -> (ln, nxt)
-specifyGregAuto ln@(LabelledPILine (GregEx lst) _ loc) nxt =
-    case (isSingleExprAT lst, isSingleExprNumber lst) of
-        (True, _) -> (ln{lppl_id = GregEx (ExpressionRegister (chr nxt) loc)}, nxt - 1)
-        (False, Just (val)) -> (ln{lppl_id = GregEx (ExpressionRegister (chr nxt) val)}, nxt - 1)
-        _ -> (ln, nxt)
+specifyGregAuto ln@(LabelledPILine (GregEx val) _ loc) nxt = (new_line, new_counter)
+   where new_line = ln{lppl_id = GregEx (ExpressionRegister (chr nxt) val)}
+         new_counter = nxt - 1
+specifyGregAuto ln@(PlainPILine (GregEx val) loc) nxt =  (new_line, new_counter)
+   where new_line = ln{ppl_id = GregEx (ExpressionRegister (chr nxt) val)}
+         new_counter = nxt - 1
 specifyGregAuto line nxt = (line, nxt)
 
 
@@ -48,33 +44,22 @@ getRegister :: Either String RegisterTable -> Line -> Either String RegisterTabl
 getRegister (Left msg) _ = Left msg
 getRegister (Right table) (LabelledOpCodeLine _ _ (Id "Main") address)
         | M.member (chr 255) table = Left $ "Duplicate Main section definition"
-        | otherwise = Right $ M.insert (chr 255) address table
-getRegister (Right table) (PlainPILine pi@(GregEx details) address) = addRegister table r n
-        where r = firstRegister details
-              n = firstNumber details
-getRegister (Right table) (LabelledPILine pi@(GregEx details) _ address) = addRegister table r n
-        where r = firstRegister details
-              n = firstNumber details
+        | otherwise = Right $ M.insert (chr 255) (ExpressionNumber address) table
+--getRegister (Right table) (PlainPILine pi@(GregEx (ExpressionRegister r expr)) address) = addRegister table r n
+--    where n = evaluate expr address st
+--getRegister (Right table) (LabelledPILine pi@(GregEx (ExpressionRegister r expr)) _ address) = addRegister table r n
+--    where n = evaluate expr address st
 getRegister (Right table) _ = Right $ table
 
-addRegister table (Just register) (Just address)
+addRegister table register address
     | M.member register table = Left $ "Duplicate register definition " ++ (show register)
     | otherwise = Right $ M.insert register address table
-addRegister _ _ _ = Left "Incorrect Details Found"
 
 registersFromAddresses :: RegisterTable -> AlternativeRegisterTable
 registersFromAddresses orig = M.foldrWithKey addNextRegister M.empty orig
 
-addNextRegister :: Char -> Int -> AlternativeRegisterTable -> AlternativeRegisterTable
+addNextRegister :: Char -> ExpressionEntry -> AlternativeRegisterTable -> AlternativeRegisterTable
 addNextRegister k v orig = M.insert v k orig
 
 getRegisterDetails :: [ExpressionEntry] -> Maybe(Char, Int)
 getRegisterDetails _ = Nothing
-
-firstRegister :: ExpressionEntry -> Maybe(Char)
-firstRegister (ExpressionRegister reg _) = Just(reg)
-firstRegister _ = Nothing
-
-firstNumber :: ExpressionEntry -> Maybe(Int)
-firstNumber (ExpressionRegister _ val) = Just(val)
-firstNumber _ = Nothing
