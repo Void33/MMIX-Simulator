@@ -36,6 +36,12 @@ getSymbol (Right table) (LabelledPILine val@(IsNumber _) ident address)
 getSymbol (Right table) (LabelledPILine val@(IsRegister _) ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Just val) table
+getSymbol (Right table) (LabelledPILine val@(IsIdentifier _) ident address)
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
+          | otherwise = Right $ M.insert ident (address, Just val) table
+getSymbol (Right table) (LabelledPILine val ident address)
+          | M.member ident table = Left $ "Identifier already present " ++ (show ident)
+          | otherwise = Right $ M.insert ident (address, Just(val)) table
 getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Nothing) table
@@ -43,11 +49,11 @@ getSymbol (Right table) _ = Right $ table
 
 
 determineBaseAddressAndOffset :: (M.Map ExpressionEntry Char) -> RegisterAddress -> Maybe(RegisterOffset)
-determineBaseAddressAndOffset rfa (a, Nothing) =
-  case (M.lookupLE (ExpressionNumber a) rfa) of
-    Just(address, register) -> Just(register, a - address)
+determineBaseAddressAndOffset rfa (required_address, _) =
+  case (M.lookupLE (ExpressionNumber required_address) rfa) of
+    Just((ExpressionNumber address), register) -> Just(register, offset)
+      where offset = required_address - address
     _ -> Nothing
-determineBaseAddressAndOffset _ _ = Nothing
 
 mapSymbolToAddress :: SymbolTable -> RegisterTable -> Identifier -> Maybe(RegisterOffset)
 mapSymbolToAddress symbols registers identifier@(Id _)

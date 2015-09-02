@@ -32,7 +32,20 @@ genCodeForLine symbols registers (LabelledOpCodeLine opcode operands _ address) 
 genCodeForLine symbols registers (PlainOpCodeLine opcode operands address) = genOpCodeOutput symbols registers opcode operands address
 genCodeForLine _ _ (LabelledPILine (ByteArray arr) _ address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = arr})
     where s = length arr
+genCodeForLine symbols registers (LabelledPILine (Set (e1, e2)) _ address) =
+    genPICodeOutput symbols registers address e1 e2
+genCodeForLine symbols registers (PlainPILine (Set (e1, e2)) address) =
+    genPICodeOutput symbols registers address e1 e2
 genCodeForLine _ _ _ = Nothing
+
+genPICodeOutput :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> OperatorElement -> Maybe(CodeLine)
+--genPICodeOutput symbols registers address (ExpressionIdentifier i) n@(ExpressionNumber _) = Just(CodeLine {cl_address = address, cl_size = 4, cl_code=(show n)})
+--genPICodeOutput symbols registers address (ExpressionIdentifier i) n@(ExpressionIdentifier _) = Just(CodeLine {cl_address = address, cl_size = 8, cl_code=(show n)})
+genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address
+    where operands = r1 : r2 : (Expr (ExpressionNumber 0)) : []
+genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address
+    where operands = r1 : r2 : []
+genPICodeOuput _ _ _ _ _ = Nothing
 
 genOpCodeOutput symbols registers opcode operands address =
     case splitOperands symbols registers operands of
@@ -43,13 +56,17 @@ formatElement :: SymbolTable -> OperatorElement -> Char
 formatElement _ (ByteLiteral b) = b
 formatElement _ (PseudoCode pc) = chr pc
 formatElement _ (Register r) = r
+formatElement st (Expr x@(ExpressionIdentifier id)) =
+    case M.lookup id st of
+        (Just (_, Just (IsRegister r))) -> chr r
+        otherwise -> chr (E.evaluate x 0 st)
 formatElement st (Expr x) = chr (E.evaluate x 0 st)
 
 splitOperands :: SymbolTable -> RegisterTable -> [OperatorElement] -> Maybe(AdjustedOperands)
 splitOperands symbols registers ((Register x):(Expr (ExpressionIdentifier y)):[]) =
     case ro of
         Just((base, offset)) -> Just(1, x : base : (chr offset) : [])
-        otherwise -> Nothing
+        otherwise -> Just(-1, [])
         where ro = mapSymbolToAddress symbols registers y
 splitOperands symbols registers (x : y : z : []) = Just(0, output)
     where output = (formatElement symbols x) : (formatElement symbols y) : (formatElement symbols x) : []
@@ -90,8 +107,9 @@ encodeRegisterTable regs = size ++ vals
     where vals = M.foldrWithKey encodeRegister [] regs
           size = char8 $ M.size regs
 
+encodeRegister :: Char -> ExpressionEntry -> [Int] -> [Int]
 encodeRegister r v a = nextPart ++ a
-    where nextPart = (ord r) : char8 v
+    where nextPart = (ord r) : [1] --char8 v
 
 blockDetails :: [BlockSummary] -> [Int] -> [Int]
 blockDetails [] final = final

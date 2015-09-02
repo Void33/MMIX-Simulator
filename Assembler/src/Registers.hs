@@ -45,10 +45,15 @@ getRegister (Left msg) _ = Left msg
 getRegister (Right table) (LabelledOpCodeLine _ _ (Id "Main") address)
         | M.member (chr 255) table = Left $ "Duplicate Main section definition"
         | otherwise = Right $ M.insert (chr 255) (ExpressionNumber address) table
---getRegister (Right table) (PlainPILine pi@(GregEx (ExpressionRegister r expr)) address) = addRegister table r n
---    where n = evaluate expr address st
---getRegister (Right table) (LabelledPILine pi@(GregEx (ExpressionRegister r expr)) _ address) = addRegister table r n
---    where n = evaluate expr address st
+getRegister (Right table) (LabelledPILine _ (Id "Main") address)
+        | M.member (chr 255) table = Left $ "Duplicate Main section definition"
+        | otherwise = Right $ M.insert (chr 255) (ExpressionNumber address) table
+getRegister (Right table) (PlainPILine pi@(GregEx (ExpressionRegister r ExpressionAT)) address) =
+        addRegister table r (ExpressionNumber address)
+getRegister (Right table) (LabelledPILine pi@(GregEx (ExpressionRegister r ExpressionAT)) _ address) =
+        addRegister table r (ExpressionNumber address)
+getRegister (Right table) (LabelledPILine pi@(GregEx (ExpressionRegister r (ExpressionNumber v))) _ address) =
+        addRegister table r (ExpressionNumber v)
 getRegister (Right table) _ = Right $ table
 
 addRegister table register address

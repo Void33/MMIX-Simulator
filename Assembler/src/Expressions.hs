@@ -23,6 +23,14 @@ evaluateLine st ln@(LabelledPILine (GregEx (ExpressionRegister reg expr)) _ addr
    where v = evaluate expr address st
          new_reg = ExpressionRegister reg (ExpressionNumber v)
          new_line = ln{lppl_id = (GregEx new_reg)}
+evaluateLine st ln@(LabelledPILine (IsIdentifier id) _ _) = new_line
+   where reg = case M.lookup id st of
+             (Just (_, (Just v))) -> v
+         new_line = ln{lppl_id = reg}
+evaluateLine st ln@(LabelledPILine (LocEx expr) _ address) = ln{lppl_id = (LocEx (ExpressionNumber v))}
+   where v = evaluate expr address st
+evaluateLine st ln@(PlainPILine (LocEx expr) address) = ln{ppl_id = (LocEx (ExpressionNumber v))}
+   where v = evaluate expr address st
 evaluateLine _ ln = ln
 
 evaluate :: ExpressionEntry -> Int -> SymbolTable -> Int
@@ -34,12 +42,15 @@ evaluate (ExpressionMinus expr1 expr2) loc st = v1 - v2
 evaluate (ExpressionPlus expr1 expr2) loc st = v1 + v2
     where v1 = evaluate expr1 loc st
           v2 = evaluate expr2 loc st
+evaluate (ExpressionMultiply expr1 expr2) loc st = v1 * v2
+    where v1 = evaluate expr1 loc st
+          v2 = evaluate expr2 loc st
 evaluate (ExpressionIdentifier id) _ st
     | M.member id st = v
-        where Just(_, lv) = M.lookup id st
-              Just(v) = evaluatePI lv
+        where Just(val, lv) = M.lookup id st
+              v = evaluatePI lv val
 evaluate _ _ _ = -999999
 
-evaluatePI :: Maybe PseudoInstruction -> Maybe Int
-evaluatePI (Just (IsNumber val)) = Just(val)
-evaluatePI _ = Nothing
+evaluatePI :: Maybe PseudoInstruction -> Int -> Int
+evaluatePI (Just (IsNumber val)) _ = val
+evaluatePI _ val = val

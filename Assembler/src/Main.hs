@@ -36,40 +36,51 @@ parseOnly fs = do
 contents ifs ofs = do
     x <- readFile ifs
     printf "%s\n" x
-    let s = parseStr x
-    let s' = setAlexGregAuto $ setAlexLoc s
-    let st = createSymbolTable s
-    let regs = createRegisterTable s
-    --let code = acg st regs s
-    --print st
-    --print regs
-    --print code
-    --let pg = encodeProgram code regs
-    --case pg of
-    --    Right encoded_program -> writeFile ofs encoded_program
-    --    Left error            -> print error
-    --print pg
-    return s'
+    let s0 = parseStr x
+    let s1 =  setLocalSymbolLabelAuto s0
+    let s2 = setAlexLoc s1
+    let initial_st = createSymbolTable s2
+    let s3 = evaluateAllExpressions s2 initial_st
+    let s4 = setAlexLoc s3
+    let s5 = setAlexGregAuto s4
+    let st = createSymbolTable s5
+    let s6 = evaluateAllExpressions s5 st
+    let regs = createRegisterTable s6
+    let st2 = createSymbolTable s6
+    let code = acg st2 regs s6
+    print code
+    let pg = encodeProgram code regs
+    case pg of
+        Right encoded_program -> writeFile ofs encoded_program
+        Left error            -> print error
+    print pg
+    return s6
 
 contents' ifs = do
     x <- readFile ifs
     printf "%s\n" x
-    let s = parseStr x
-    let s' = setAlexGregAuto $ setAlexLoc s
-    let s2 = setLocalSymbolLabelAuto s'
-    let st = createSymbolTable s2
-    let regs = createRegisterTable s2
-    let s3 = evaluateAllExpressions s2 st
-    --let code = acg st regs s2
-    print st
-    print regs
+    let s0 = parseStr x
+    let s1 =  setLocalSymbolLabelAuto s0
+    let s2 = setAlexLoc s1
+    let initial_st = createSymbolTable s2
+    let s3 = evaluateAllExpressions s2 initial_st
+    let s4 = setAlexLoc s3
+    let s5 = setAlexGregAuto s4
+    let st = createSymbolTable s5
+    let s6 = evaluateAllExpressions s5 st
+    let regs = createRegisterTable s6
+    let st2 = createSymbolTable s6
+    let code = acg st2 regs s6
+    --print s6
+    --print st2
+    --print regs
     --print code
-    --let pg = encodeProgram code regs
+    let pg = encodeProgram code regs
     --case pg of
     --    Right encoded_program -> print encoded_program
     --    Left error            -> print error
-    --print pg
-    return s3
+    print pg
+    return s6
 
 -- contents "/home/steveedmans/hail.mms"
 -- parseOnly "/home/steveedmans/hail.mms"
@@ -106,33 +117,11 @@ cg s r acc (ln:lns) = cg s r newAcc lns
           newAcc = case cgl of
               Just(codeline) -> codeline : acc
               Nothing -> acc
+                  where newline = CodeLine {cl_address = 0, cl_size = 0, cl_code = (show ln)}
 
-params = [(Register (chr 255)), Ident (Id "txt")]
-params2 =  [LocalBackward 2,Ident (Id "t")]
-samplePILine = defaultLabelledPILine {lppl_id = (GregEx ExpressionAT), lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine2 = defaultPlainPILine {ppl_id = (GregEx ExpressionAT), ppl_loc=536870912}
-samplePILine3 = defaultLabelledPILine {lppl_id = ByteArray "Hello World!", lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine4 = defaultPlainPILine {ppl_id = LocEx (ExpressionNumber 536870912), ppl_loc = 0}
-samplePILine5 = defaultLabelledPILine {lppl_id = LocEx (ExpressionNumber 536870912), lppl_loc = 0, lppl_ident=(Id "txt")}
-samplePILine6 = defaultLabelledPILine {lppl_id = (GregEx (ExpressionNumber 0)), lppl_loc=536870912, lppl_ident=(Id "txt")}
-samplePILine7 = defaultPlainPILine {ppl_id = (GregEx (ExpressionNumber 0)), ppl_loc=536870912}
-sampleLine = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
-sampleLine2 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
-sampleLine3 = defaultPlainOpCodeLine {pocl_code = 35, pocl_ops = params2, pocl_loc=536870912}
-sampleLine4 = defaultLabelledOpCodeLine {lpocl_code = 35, lpocl_ops = params, lpocl_ident = (Id "txt2"), lpocl_loc=536870912}
-sampleLine5 = defaultPlainOpCodeLine {pocl_code = 0, pocl_ops = params2, pocl_loc = 259}
-sampleMainLine = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))], lpocl_ident = Id "Main", lpocl_loc = 256}
-sampleTrapLine = PlainOpCodeLine {pocl_code = 0, pocl_ops = [Expr (ExpressionNumber 0),PseudoCode 0,Expr (ExpressionNumber 0)], pocl_loc = 264}
-sampleProgram = [CodeLine {cl_address = 256, cl_size = 4, cl_code = "#\255\254\NUL"},CodeLine {cl_address = 260, cl_size = 4, cl_code = "\NUL\NUL\a\NUL"},CodeLine {cl_address = 264, cl_size = 4, cl_code = "\NUL\NUL\NUL\NUL"},CodeLine {cl_address = 536870912, cl_size = 14, cl_code = "Hello world!\n\NUL"}]
-sampleLocalSymbolLabelLine = LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = LocalLabel 2, lpocl_loc = 0}
-s1 = LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = Id "??3H0", lpocl_loc = 264}
-ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2]
-prog =  [LabelledPILine {lppl_id = IsNumber 500, lppl_ident = Id "L", lppl_loc = 0},LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = LocalLabel 2, lpocl_loc = 0},PlainOpCodeLine {pocl_code = 231, pocl_ops = [Expr (ExpressionIdentifier (Id "jj")),Expr (ExpressionNumber 2)], pocl_loc = 4},LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = LocalLabel 3, lpocl_loc = 8},PlainOpCodeLine {pocl_code = 76, pocl_ops = [Expr (ExpressionIdentifier (Id "t")),LocalBackward 2], pocl_loc = 12},LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Expr (ExpressionIdentifier (Id "t")),Expr (ExpressionIdentifier (Id "Title"))], lpocl_ident = LocalLabel 2, lpocl_loc = 16}]
-p1 = [LabelledPILine {lppl_id = IsNumber 500, lppl_ident = Id "L", lppl_loc = 0},LabelledOpCodeLine {lpocl_code = 166, lpocl_ops = [Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "jj"))], lpocl_ident = Id "??2H0", lpocl_loc = 0},PlainOpCodeLine {pocl_code = 231, pocl_ops = [Expr (ExpressionIdentifier (Id "jj")),Expr (ExpressionNumber 2)], pocl_loc = 4},LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),LocalForward 2], lpocl_ident = Id "??3H0", lpocl_loc = 8},PlainOpCodeLine {pocl_code = 76, pocl_ops = [Expr (ExpressionIdentifier (Id "t")),LocalBackward 2], pocl_loc = 12},LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Expr (ExpressionIdentifier (Id "t")),Expr (ExpressionIdentifier (Id "Title"))], lpocl_ident = Id "??2H1", lpocl_loc = 16}]
 
-sampleOperands = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))]
 sampleBaseTable :: RegisterTable
-sampleBaseTable = M.insert (chr 254) 100 M.empty
+sampleBaseTable = M.insert (chr 254) (ExpressionNumber 100) M.empty
 
 sampleSymbolTable :: M.Map Identifier RegisterAddress
 sampleSymbolTable = M.insert (Id "txt") (110, Nothing) M.empty
@@ -141,3 +130,44 @@ sampleRA :: RegisterAddress
 sampleRA = (110, Nothing)
 
 testLine = "j0     GREG  PRIME1+2-@"
+
+gcfl symbols registers (LabelledOpCodeLine opcode operands _ address) = goco symbols registers opcode operands address
+gcfl symbols registers (PlainOpCodeLine opcode operands address) = goco symbols registers opcode operands address
+
+t1 = LabelledOpCodeLine {lpocl_code = 34, lpocl_ops = [Register '\255',Expr (ExpressionIdentifier (Id "txt"))], lpocl_ident = Id "Main", lpocl_loc = 256}
+t2 = LabelledOpCodeLine {lpocl_code = 134, lpocl_ops = [Expr (ExpressionIdentifier (Id "pk")),Expr (ExpressionIdentifier (Id "ptop")),Expr (ExpressionIdentifier (Id "mm"))], lpocl_ident = Id "??2H2", lpocl_loc = 359}
+t3 = PlainOpCodeLine {pocl_code = 0, pocl_ops = [Expr (ExpressionNumber 0),PseudoCode 0,Expr (ExpressionNumber 0)], pocl_loc = 427}
+
+to1 = Expr (ExpressionIdentifier (Id "pk"))
+to2 = Expr (ExpressionIdentifier (Id "ptop"))
+to3 = Expr (ExpressionIdentifier (Id "mm"))
+to4 = Expr (ExpressionNumber 0)
+to5 = PseudoCode 0
+
+
+tst = M.fromList [(Id "Main",(256,Nothing)),(Id "txt",(536870912,Just (ByteArray "Hello world!\n\NUL")))] :: SymbolTable
+trt = M.fromList [('\254',ExpressionNumber 536870912),('\255',ExpressionNumber 256)]
+
+tst2 = M.fromList [(Id "??0H0",(363,Just (IsRegister 244))),(Id "??1H0",(371,Nothing)),(Id "??2H0",(256,Nothing)),(Id "??2H1",(335,Nothing)),(Id "??2H2",(359,Nothing)),(Id "??3H0",(264,Nothing)),(Id "??3H1",(347,Nothing)),(Id "??4H0",(268,Nothing)),(Id "??5H0",(272,Just (Set (Expr (ExpressionIdentifier (Id "kk")),Expr (ExpressionIdentifier (Id "j0")))))),(Id "??6H0",(272,Nothing)),(Id "??7H0",(288,Nothing)),(Id "??8H0",(296,Nothing)),(Id "BUF",(536871912,Just (OctaArray "\NUL"))),(Id "Blanks",(331,Just (ByteArray "   \NUL"))),(Id "L",(0,Just (IsNumber 500))),(Id "Main",(256,Just (Set (Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionNumber 3))))),(Id "NewLn",(329,Just (ByteArray "\n\NUL"))),(Id "PRIME1",(536870912,Just (WydeArray "\STX"))),(Id "Title",(304,Just (ByteArray "First Five Hundred Primes"))),(Id "j0",(536871912,Just (IsRegister 246))),(Id "jj",(0,Just (IsRegister 251))),(Id "kk",(0,Just (IsRegister 250))),(Id "mm",(0,Just (IsRegister 248))),(Id "n",(0,Just (IsRegister 254))),(Id "pk",(0,Just (IsRegister 249))),(Id "ptop",(536871912,Just (IsRegister 247))),(Id "q",(0,Just (IsRegister 253))),(Id "r",(0,Just (IsRegister 252))),(Id "t",(0,Just (IsRegister 255)))] :: SymbolTable
+trt2 = M.fromList [('\244',ExpressionNumber 2319406791617675264),('\245',ExpressionNumber 304),('\246',ExpressionNumber (-998)),('\247',ExpressionNumber 536871912),('\248',ExpressionNumber 0),('\249',ExpressionNumber 0),('\250',ExpressionNumber 0),('\251',ExpressionNumber 0),('\252',ExpressionNumber 0),('\253',ExpressionNumber 0),('\254',ExpressionNumber 0),('\255',ExpressionNumber 256)]
+
+goco symbols registers opcode operands address =
+    case so symbols registers operands of
+        Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
+        _ -> Nothing
+
+so symbols registers ((Register x):(Expr (ExpressionIdentifier y)):[]) =
+    case ro of
+        Just((base, offset)) -> Just(1, x : base : (chr offset) : [])
+        otherwise -> Just(-1, [])
+        where ro = mapSymbolToAddress symbols registers y
+so symbols registers (x : y : z : []) = Just(0, output)
+--    where output = (show x) ++ (show y) ++ (show z)
+    where output = (formatElement symbols x) : (formatElement symbols y) : (formatElement symbols z) : []
+so _ _ _ = Nothing
+
+fe st (Expr (ExpressionIdentifier id)) =
+    case M.lookup id st of
+        (Just (_, Just (IsRegister r))) -> chr r
+--fe st (Expr x) = chr (evaluate x 0 st)
+--fe _ _ = chr 0
