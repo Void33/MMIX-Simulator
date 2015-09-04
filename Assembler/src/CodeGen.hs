@@ -86,7 +86,7 @@ splitOperands symbols registers ((Ident id1):(Expr (ExpressionIdentifier id2)):[
                      (Just((base1,_)), Just((base2,offset2))) -> base1 : base2 : (chr offset2) : []
                      otherwise -> []
 splitOperands symbols registers (x:(Expr (ExpressionNumber y)):[]) = Just(1, code)
-    where ops = map chr $ drop 2 $ char8 y
+    where ops = map chr $ drop 2 $ char4 y
           formatted_x = formatElement symbols x
           code = formatted_x : ops
 splitOperands symbols registers (x:(Ident id):[]) = Just(1, code)
@@ -148,18 +148,18 @@ encodeProgramInt prog regs = hdr ++ tbl
 header :: [CodeLine] -> [Int]
 header program = details
     where bs = blocks program
-          num_bs = char8 . length $ bs
+          num_bs = char4 . length $ bs
           bh = blockDetails (O.sort bs) []
           details = num_bs ++ bh
 
 encodeRegisterTable :: RegisterTable -> [Int]
 encodeRegisterTable regs = size ++ vals
     where vals = M.foldrWithKey encodeRegister [] regs
-          size = char8 $ M.size regs
+          size = char4 $ M.size regs
 
 encodeRegister :: Char -> ExpressionEntry -> [Int] -> [Int]
-encodeRegister r v a = nextPart ++ a
-    where nextPart = (ord r) : [1] --char8 v
+encodeRegister r (ExpressionNumber v) a = nextPart ++ a
+    where nextPart = (ord r) : char8 v
 
 blockDetails :: [BlockSummary] -> [Int] -> [Int]
 blockDetails [] final = final
@@ -168,15 +168,32 @@ blockDetails (currentBlock:rest) acc = blockDetails rest newAcc
 
 blockDetail :: BlockSummary -> [Int]
 blockDetail (start, size, code) = startc ++ sizec ++ code
-    where startc = char8 start
-          sizec  = char8 size
+    where startc = char4 start
+          sizec  = char4 size
+
+char4 :: Int -> [Int]
+char4 val = char4tail [] val
+
+char4tail :: [Int] -> Int -> [Int]
+char4tail acc val
+    | (val == -1) && ((length acc) == 4) = acc
+    | (val < 0) = case (divMod val 256) of
+                     (m, r) -> char4tail (r : acc) m
+    | (val == 0) && ((length acc) == 4) = acc
+    | (val == 0) = char4tail (0 : acc) val
+    | otherwise = case (divMod val 256) of
+        (m, r) -> char4tail (r : acc) m
 
 char8 :: Int -> [Int]
 char8 val = char8tail [] val
 
 char8tail :: [Int] -> Int -> [Int]
 char8tail acc val
-    | (val == 0) && ((length acc) == 4) = acc
+    | (val == -1) && ((length acc) == 8) = acc
+    | (val < 0) = case (divMod val 256) of
+                     (m, r) -> char8tail (r : acc) m
+    | (val == 0) && ((length acc) == 8) = acc
     | (val == 0) = char8tail (0 : acc) val
     | otherwise = case (divMod val 256) of
         (m, r) -> char8tail (r : acc) m
+

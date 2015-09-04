@@ -70,18 +70,13 @@ contents' ifs = do
     let s6 = evaluateAllExpressions s5 st
     let regs = createRegisterTable s6
     let st2 = createSymbolTable s6
+    print regs
     let code = acg st2 regs s6
-    --print s6
-    --print st2
-    --print regs
---    case code of
---       Right prog -> print $ reverse prog
---       Left error -> print error
+    print code
     let pg = encodeProgram code regs
     case pg of
         Right encoded_program -> print encoded_program
         Left error            -> print error
-    --print pg
     return s6
 
 -- contents "/home/steveedmans/hail.mms"
@@ -163,6 +158,10 @@ trt = M.fromList [('\254',ExpressionNumber 536870912),('\255',ExpressionNumber 2
 tst2 = M.fromList [(Id "??0H0",(375,Just (IsRegister 244))),(Id "??1H0",(383,Nothing)),(Id "??2H0",(264,Nothing)),(Id "??2H1",(347,Nothing)),(Id "??2H2",(371,Nothing)),(Id "??3H0",(272,Nothing)),(Id "??3H1",(359,Nothing)),(Id "??4H0",(276,Nothing)),(Id "??5H0",(280,Just (Set (Expr (ExpressionIdentifier (Id "kk")),Expr (ExpressionIdentifier (Id "j0")))))),(Id "??6H0",(284,Nothing)),(Id "??7H0",(300,Nothing)),(Id "??8H0",(308,Nothing)),(Id "BUF",(536871912,Just (OctaArray "\NUL"))),(Id "Blanks",(343,Just (ByteArray "   \NUL"))),(Id "L",(0,Just (IsNumber 500))),(Id "Main",(256,Just (Set (Expr (ExpressionIdentifier (Id "n")),Expr (ExpressionNumber 3))))),(Id "NewLn",(341,Just (ByteArray "\n\NUL"))),(Id "PRIME1",(536870912,Just (WydeArray "\STX"))),(Id "Title",(316,Just (ByteArray "First Five Hundred Primes"))),(Id "j0",(536871912,Just (IsRegister 246))),(Id "jj",(0,Just (IsRegister 251))),(Id "kk",(0,Just (IsRegister 250))),(Id "mm",(0,Just (IsRegister 248))),(Id "n",(0,Just (IsRegister 254))),(Id "pk",(0,Just (IsRegister 249))),(Id "ptop",(536871912,Just (IsRegister 247))),(Id "q",(0,Just (IsRegister 253))),(Id "r",(0,Just (IsRegister 252))),(Id "t",(0,Just (IsRegister 255)))] :: SymbolTable
 trt2 = M.fromList [('\244',ExpressionNumber 2319406791617675264),('\245',ExpressionNumber 304),('\246',ExpressionNumber (-998)),('\247',ExpressionNumber 536871912),('\248',ExpressionNumber 0),('\249',ExpressionNumber 0),('\250',ExpressionNumber 0),('\251',ExpressionNumber 0),('\252',ExpressionNumber 0),('\253',ExpressionNumber 0),('\254',ExpressionNumber 0),('\255',ExpressionNumber 256)]
 
+r1 = ('\246',ExpressionNumber (-998))
+r1a = fst r1
+r1b = snd r1
+
 goco symbols registers opcode operands address = -- so symbols registers operands
     case so symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
@@ -191,7 +190,7 @@ so symbols registers ((Ident id):[]) = Just(1, code)
           code = case ro of
                      Just((base,offset)) -> (chr 0) : base : (chr offset) : []
 so symbols registers (x:(Expr (ExpressionNumber y)):[]) = Just(1, code)
-    where ops = map chr $ drop 2 $ char8 y
+    where ops = map chr $ drop 2 $ char4 y
           formatted_x = formatElement symbols x
           code = formatted_x : ops
 so symbols registers (x:(Ident id):[]) = Just(1, code)
@@ -221,3 +220,12 @@ fe st (Expr x@(ExpressionIdentifier id)) =
         (Just (_, Just (IsRegister r))) -> chr r
         otherwise -> chr (E.evaluate x 0 st)
 fe st (Expr x) = chr (E.evaluate x 0 st)
+
+c8t acc val
+    | (val == -1) && ((length acc) == 8) = acc
+    | (val < 0) = case (divMod val 256) of
+                     (m, r) -> c8t (r : acc) m
+    | (val == 0) && ((length acc) == 8) = acc
+    | (val == 0) = c8t (0 : acc) val
+    | otherwise = case (divMod val 256) of
+        (m, r) -> c8t (r : acc) m
