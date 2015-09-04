@@ -31,7 +31,26 @@ evaluateLine st ln@(LabelledPILine (LocEx expr) _ address) = ln{lppl_id = (LocEx
    where v = evaluate expr address st
 evaluateLine st ln@(PlainPILine (LocEx expr) address) = ln{ppl_id = (LocEx (ExpressionNumber v))}
    where v = evaluate expr address st
+evaluateLine st ln@(PlainOpCodeLine _ ops _) = ln{pocl_ops = updated_operands}
+   where updated_operands = evaluateOperands st [] ops
+evaluateLine st ln@(LabelledOpCodeLine _ ops _ _) = ln{lpocl_ops = updated_operands}
+   where updated_operands = evaluateOperands st [] ops
 evaluateLine _ ln = ln
+
+evaluateOperands :: SymbolTable -> [OperatorElement] -> [OperatorElement] -> [OperatorElement]
+evaluateOperands st acc [] = reverse acc
+evaluateOperands st acc (op:ops) = evaluateOperands st (new_op : acc) ops
+    where new_op = evaluateOperand st op
+
+evaluateOperand :: SymbolTable -> OperatorElement -> OperatorElement
+evaluateOperand _ op@(Expr (ExpressionNumber _)) = op
+evaluateOperand _ op@(Expr (ExpressionRegister _ _)) = op
+evaluateOperand _ op@(Expr (ExpressionIdentifier _)) = op
+evaluateOperand _ op@(Expr (ExpressionGV _)) = op
+evaluateOperand _ op@(Expr ExpressionAT) = op
+evaluateOperand st (Expr expr) = Expr (ExpressionNumber val)
+    where val = evaluate expr 0 st
+evaluateOperand _ op = op
 
 evaluate :: ExpressionEntry -> Int -> SymbolTable -> Int
 evaluate (ExpressionNumber val) _ _ = val
@@ -43,6 +62,9 @@ evaluate (ExpressionPlus expr1 expr2) loc st = v1 + v2
     where v1 = evaluate expr1 loc st
           v2 = evaluate expr2 loc st
 evaluate (ExpressionMultiply expr1 expr2) loc st = v1 * v2
+    where v1 = evaluate expr1 loc st
+          v2 = evaluate expr2 loc st
+evaluate (ExpressionDivide expr1 expr2) loc st = quot v1 v2
     where v1 = evaluate expr1 loc st
           v2 = evaluate expr2 loc st
 evaluate (ExpressionIdentifier id) _ st

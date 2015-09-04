@@ -47,6 +47,11 @@ getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
           | otherwise = Right $ M.insert ident (address, Nothing) table
 getSymbol (Right table) _ = Right $ table
 
+getRegisterFromSymbol :: SymbolTable -> Identifier -> Int
+getRegisterFromSymbol st id = reg
+    where reg = case M.lookup id st of
+                     Just(_, Just (IsRegister r)) -> r
+                     _                            -> -1
 
 determineBaseAddressAndOffset :: (M.Map ExpressionEntry Char) -> RegisterAddress -> Maybe(RegisterOffset)
 determineBaseAddressAndOffset rfa (required_address, _) =

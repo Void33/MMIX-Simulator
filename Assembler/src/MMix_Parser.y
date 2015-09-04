@@ -149,7 +149,7 @@ data PseudoInstruction = LOC Int
                        | GregSpecific Char
                        | GregEx ExpressionEntry
                        | ByteArray [Char]
-                       | WydeArray [Char]
+                       | WydeArray [Int]
                        | TetraArray [Char]
                        | OctaArray [Char]
                        | IsRegister Int

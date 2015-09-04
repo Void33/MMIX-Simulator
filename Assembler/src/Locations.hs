@@ -21,6 +21,36 @@ setLocation nextLoc ln@(LabelledPILine (ByteArray arr) _ _) = (newLoc, ln { lppl
     where newLoc = nextLoc + (length arr)
 setLocation nextLoc ln@(PlainPILine (ByteArray arr) _) = (newLoc, ln { ppl_loc = nextLoc })
     where newLoc = nextLoc + (length arr)
+setLocation nextLoc ln@(LabelledPILine (WydeArray arr) _ _) = (newLoc, ln { lppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 2) of
+                             0 -> nextLoc
+                             x -> nextLoc + x
+          newLoc = addjusted_loc + ((length arr) * 2)
+setLocation nextLoc ln@(PlainPILine (WydeArray arr) _) = (newLoc, ln { ppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 2) of
+                             0 -> nextLoc
+                             x -> nextLoc + x
+          newLoc = addjusted_loc + ((length arr) * 2)
+setLocation nextLoc ln@(LabelledPILine (TetraArray arr) _ _) = (newLoc, ln { lppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 4) of
+                             0 -> nextLoc
+                             x -> nextLoc + (4 - x)
+          newLoc = addjusted_loc + ((length arr) * 4)
+setLocation nextLoc ln@(PlainPILine (TetraArray arr) _) = (newLoc, ln { ppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 4) of
+                             0 -> nextLoc
+                             x -> nextLoc + (4 - x)
+          newLoc = addjusted_loc + ((length arr) * 4)
+setLocation nextLoc ln@(LabelledPILine (OctaArray arr) _ _) = (newLoc, ln { lppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 8) of
+                             0 -> nextLoc
+                             x -> nextLoc + (8 - x)
+          newLoc = addjusted_loc + ((length arr) * 8)
+setLocation nextLoc ln@(PlainPILine (OctaArray arr) _) = (newLoc, ln { ppl_loc = addjusted_loc })
+    where addjusted_loc = case (rem nextLoc 8) of
+                             0 -> nextLoc
+                             x -> nextLoc + (8 - x)
+          newLoc = addjusted_loc + ((length arr) * 8)
 setLocation nextLoc ln@(LabelledPILine (Set _) _ _) = (newLoc, ln { lppl_loc = nextLoc })
     where newLoc = nextLoc + 4
 setLocation nextLoc ln@(PlainPILine (Set _) _) = (newLoc, ln { ppl_loc = nextLoc })
