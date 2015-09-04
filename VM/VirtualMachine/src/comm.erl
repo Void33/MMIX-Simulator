@@ -26,9 +26,11 @@ start_server() ->
     Error -> erlang:display(Error)
   end.
 
+
 loop(Socket) ->
   receive
     {udp, Socket, Host, Port, Bin} ->
+      erlang:display(Bin),
       N = binary_to_term(Bin),
       case process_message(N) of
         {updates, Updates} ->
