@@ -1,6 +1,17 @@
 \documentclass[a4paper,11pt]{report}
 \usepackage{hyperref}
 \usepackage{appendix}
+\usepackage{listings}
+\usepackage{fancybox}
+\makeatletter
+\newenvironment{CenteredBox}{% 
+\begin{Sbox}}{% Save the content in a box
+\end{Sbox}\centerline{\parbox{\wd\@Sbox}{\TheSbox}}}% And output it centered
+\makeatother
+\lstset{
+	basicstyle=\ttfamily\scriptsize,
+	breaklines=true,
+}
 \renewcommand{\bibname}{References}
 \begin{document}
 \begin{titlepage}
@@ -27,7 +38,14 @@ in the Programme Handbook and the College website.\par}
 acknowledged.}
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-MMIX was first proposed by Donald E. Knuth in \cite{knuth:aocp1}
+
+There are currently over 2,500\footnote{From the language list\cite{numlangs}} different programming languages, with more created every year. These programming languages can get grouped together in numerous different ways.  This makes the decision of what language to use when starting a new project extremely difficult.
+
+There are several ways in which we can reach this decision; choose the language that your team knows best; choose the language that makes the most sense to implement the critical part of your system; choose a simple general purpose language; choose a language that has got an active community. There is no acknowledged best approach to take.
+
+Another approach would be to split your application up into separate components and using a different programming language for each component. This allows us choose the most appropriate programming language for each component.
+
+The purpose of this project is to examine this approach, the application that we will create will be a simulator for an artificial machine language. The artificial machine language that we will use is called MMIX, it was developed by Donald Knuth as part of his seminal work The Art of Computer Programming\cite{knuth:aocp1}.
 \newpage
 \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
@@ -83,7 +101,7 @@ MMIX was first proposed by Donald E. Knuth in \cite{knuth:aocp1}
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
 \nocite{*}
-\bibliographystyle{acm}
+\bibliographystyle{alpha}
 \bibliography{bibtex}
 \addcontentsline{toc}{chapter}{References}
 \begin{appendices}
@@ -93,6 +111,19 @@ MMIX was first proposed by Donald E. Knuth in \cite{knuth:aocp1}
 \section{Assembler}
 \section{Graphical User Interface}
 \section{Virtual Machine}
+\chapter{Intermediate Assembler Representations}
+\section{Definitions}
+\section{Test Application}
+\subsection{Sample Test MMIXAL Code}
+The sample mmixal application I am using to test the system is contained in Fascile 1\cite{knuth:aocp2}.  The complete code listing is
+
+\begin{CenteredBox}
+\lstinputlisting{primes.mms}
+\end{CenteredBox}
+
+\subsection{Parsed Sample File}
+The final version of the parsed source code for the test application is
+\lstinputlisting[language=Haskell]{parsed_example.hs}
 \end{appendices}
 \end{document}
 
