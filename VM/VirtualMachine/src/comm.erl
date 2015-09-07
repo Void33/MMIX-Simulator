@@ -30,7 +30,7 @@ start_server() ->
 loop(Socket) ->
   receive
     {udp, Socket, Host, Port, Bin} ->
-      erlang:display(Bin),
+      io:format("Received Binary ~w~n", [Bin]),
       N = binary_to_term(Bin),
       case process_message(N) of
         {updates, Updates} ->
@@ -65,7 +65,7 @@ process_message({registers, Registers}) ->
 process_message(get_all_registers) ->
   {all_registers, registers:contents()};
 process_message(N) ->
-  erlang:display(N),
+  io:format("Unrecognized Message ~w~n", [N]),
   unknown.
 
 process_next_statement() ->

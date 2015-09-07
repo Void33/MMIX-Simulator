@@ -29,9 +29,16 @@ stop() ->
   ets:delete(registers).
 
 contents() ->
-  ets:tab2list(registers).
+  FL = ets:tab2list(registers),
+  lists:filter(fun(X) -> tst_filter(X) end, FL).
+%%  FL.
+
+tst_filter(X) ->
+  {_, V} = X,
+  V /= 0.
 
 set_register(Register, Value) ->
+  io:format("Set Register ~w to ~w~n",[Register, Value]),
   ets:update_element(registers, Register, {2, Value}).
 
 query_register(Register) ->
