@@ -45,7 +45,7 @@ There are several ways in which we can reach this decision; choose the language 
 
 Another approach would be to split your application up into separate components and using a different programming language for each component. This allows us choose the most appropriate programming language for each component.
 
-The purpose of this project is to examine this approach, the application that we will create will be a simulator for an artificial machine language. The artificial machine language that we will use is called MMIX, it was developed by Donald Knuth as part of his seminal work The Art of Computer Programming\cite{knuth:aocp1}.
+The purpose of this project is to examine this approach. The application that we will create will be a simulator for an artificial machine language. The artificial machine language that we will use is called MMIX, it was developed by Donald Knuth as part of his seminal work The Art of Computer Programming\cite{knuth:aocp1}.
 \newpage
 \addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
@@ -115,12 +115,11 @@ The purpose of this project is to examine this approach, the application that we
 \section{Definitions}
 \section{Test Application}
 \subsection{Sample Test MMIXAL Code}
-The sample mmixal application I am using to test the system is contained in Fascile 1\cite{knuth:aocp2}.  The complete code listing is
+The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is
 
 \begin{CenteredBox}
 \lstinputlisting{primes.mms}
 \end{CenteredBox}
-
 \subsection{Parsed Sample File}
 The final version of the parsed source code for the test application is
 \lstinputlisting[language=Haskell]{parsed_example.hs}
