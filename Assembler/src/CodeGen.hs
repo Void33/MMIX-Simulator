@@ -71,6 +71,7 @@ formatElement _ (Register r) = r
 formatElement st (Expr x@(ExpressionIdentifier id)) =
     case M.lookup id st of
         (Just (_, Just (IsRegister r))) -> chr r
+        (Just (_, Just (IsIdentifier r))) -> formatElement st (Expr (ExpressionIdentifier r))
         otherwise -> chr (E.evaluate x 0 st)
 formatElement st (Expr x) = chr (E.evaluate x 0 st)
 

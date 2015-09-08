@@ -23,10 +23,6 @@ evaluateLine st ln@(LabelledPILine (GregEx (ExpressionRegister reg expr)) _ addr
    where v = evaluate expr address st
          new_reg = ExpressionRegister reg (ExpressionNumber v)
          new_line = ln{lppl_id = (GregEx new_reg)}
-evaluateLine st ln@(LabelledPILine (IsIdentifier id) _ _) = new_line
-   where reg = case M.lookup id st of
-             (Just (_, (Just v))) -> v
-         new_line = ln{lppl_id = reg}
 evaluateLine st ln@(LabelledPILine (LocEx expr) _ address) = ln{lppl_id = (LocEx (ExpressionNumber v))}
    where v = evaluate expr address st
 evaluateLine st ln@(PlainPILine (LocEx expr) address) = ln{ppl_id = (LocEx (ExpressionNumber v))}
