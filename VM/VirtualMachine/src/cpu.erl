@@ -115,6 +115,7 @@
 -define(SYNCID, 16#BC).
 -define(PUSHGO, 16#BE).
 -define(OR,     16#C0).
+-define(ORI,    16#C1).
 -define(ORN,    16#C2).
 -define(NOR,    16#C4).
 -define(XOR,    16#C6).
@@ -161,15 +162,65 @@
 %% API
 -export([execute/2]).
 
+%% 00-0F
 execute(?TRAP, PC) ->
   trap(PC);
+
+%% 10-1F
+
+%% 20-2F
 execute(?ADDUI, PC) ->
   addi(PC);
+%% 30-3F
+%% 40-4F
+%% 50-5F
+%% 60-6F
+%% 70-7F
+%% 80-8F
 execute(?LDOU, PC) ->
   ldou(PC);
+%% 90-9F
+%% A0-AF
+execute(?STWU, PC) ->
+  io:format("STWU ~w~n", [PC]),
+  {[], []};
+%% B0-BF
+%% C0-CF
+execute(?OR, PC) ->
+  mmix_or(PC);
+execute(?ORI, PC) ->
+  ori(PC);
+%% D0-DF
+%% E0-EF
+execute(?SETL, PC) ->
+  setl(PC);
+%% F0-FF
 execute(OpCode, _PC) ->
   erlang:display("Execute"),
   erlang:display(OpCode).
+
+mmix_or(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  ori(PC, RX, RY, RZVal).
+
+ori(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  ori(PC, RX, RY, RZ).
+
+ori(PC, RX, RY, Z) ->
+  RYVal = registers:query_register(RY),
+  NVal = RYVal bor Z,
+  io:format("ORI ~w ~w (~w) ~w = (~w)~n", [RX, RY, RYVal, Z, NVal]),
+  {[{RX, NVal}, {pc, PC + 4}], []}.
+
+setl(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  io:format("SETL~n", []),
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  RVal = (RZ * 256) + RY,
+  Update = registers:set_register_lowwyde(RX, RVal),
+  {[Update, {pc, (PC + 4)}], []}.
 
 trap(PC) ->
   io:format("TRAP~n"),

@@ -11,7 +11,7 @@
 -author("Steve Edmans").
 
 %% API
--export([init/0, contents/0, set_register/2, query_register/1, stop/0]).
+-export([init/0, contents/0, set_register/2, query_register/1, stop/0, set_register_lowwyde/2]).
 
 %% Create a new ETS table and populate it with all of the available
 %% registers.
@@ -30,12 +30,21 @@ stop() ->
 
 contents() ->
   FL = ets:tab2list(registers),
-  lists:filter(fun(X) -> tst_filter(X) end, FL).
-%%  FL.
+%%  lists:filter(fun(X) -> tst_filter(X) end, FL).
+  FL.
 
-tst_filter(X) ->
-  {_, V} = X,
-  V /= 0.
+%%tst_filter(X) ->
+%%  {_, V} = X,
+%%  V /= 0.
+
+set_register_lowwyde(RX, RVal) ->
+  io:format("Set low wyde part of register ~w to ~w~n", [RX, RVal]),
+  CVal = query_register(RX),
+  CQuot = CVal div 16#10000,
+  io:format("The existing value is ~w, which has other wydes of ~w~n", [CVal, CQuot]),
+  NVal = CQuot * 16#10000 + RVal,
+  io:format("The new value is ~w~n", [NVal]),
+  {RX, NVal}.
 
 set_register(Register, Value) ->
   io:format("Set Register ~w to ~w~n",[Register, Value]),

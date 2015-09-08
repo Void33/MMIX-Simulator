@@ -74,6 +74,7 @@ process_next_statement() ->
 next_statement() ->
   PC = registers:query_register(pc),
   FullOpCode = memory:get_byte(PC),
+  io:format("We are processing address ~w containing ~w~n", [PC, FullOpCode]),
   {Updates, Msgs} = cpu:execute(FullOpCode, PC),
   lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, Updates),
   {Updates, Msgs}.
