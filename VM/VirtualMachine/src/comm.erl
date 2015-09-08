@@ -58,7 +58,7 @@ process_message({program, Code}) ->
   memory:store_program(Code),
   storing;
 process_message({registers, Registers}) ->
-  lists:map(fun({X, Y}) -> {registers:set_register(X, Y)} end, Registers),
+  lists:map(fun({X, Y}) -> {set_adjusted_register(X, Y)} end, Registers),
   Pc = registers:query_register(255),
   registers:set_register(pc, Pc),
   updating;
@@ -67,6 +67,10 @@ process_message(get_all_registers) ->
 process_message(N) ->
   io:format("Unrecognized Message ~w~n", [N]),
   unknown.
+
+set_adjusted_register(R, V) ->
+  AY = utilities:signed_integer16(V),
+  registers:set_register(R, AY).
 
 process_next_statement() ->
   next_statement().

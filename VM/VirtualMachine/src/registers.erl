@@ -60,9 +60,6 @@ set_register_lowwyde(RX, RVal) ->
 
 set_register(Register, Value) ->
   io:format("Set Register ~w to ~w~n",[Register, Value]),
-  AV1 = 1, %%integer_to_list(Value, 16),
-  AV2 = 1, %%hex2int(AV1),
-  io:format("Set Register ~w to adjusted ~w ~w~n",[Register, AV1, AV2]),
   ets:update_element(registers, Register, {2, Value}).
 
 query_register(Register) ->
