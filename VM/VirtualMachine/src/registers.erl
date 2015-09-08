@@ -28,6 +28,18 @@ init() ->
 stop() ->
   ets:delete(registers).
 
+%%hex2int(L) ->
+%%  << I:64/signed-integer >> = hex_to_bin(L),
+%%  I.
+
+%%hex_to_bin(L) -> << <<(h2i(X)):4>> || X<-L >>.
+
+%%h2i(X) ->
+%%  case X band 64 of
+%%    64 -> X band 7 + 9;
+%%    _  -> X band 15
+%%  end.
+
 contents() ->
   FL = ets:tab2list(registers),
 %%  lists:filter(fun(X) -> tst_filter(X) end, FL).
@@ -48,6 +60,9 @@ set_register_lowwyde(RX, RVal) ->
 
 set_register(Register, Value) ->
   io:format("Set Register ~w to ~w~n",[Register, Value]),
+  AV1 = 1, %%integer_to_list(Value, 16),
+  AV2 = 1, %%hex2int(AV1),
+  io:format("Set Register ~w to adjusted ~w ~w~n",[Register, AV1, AV2]),
   ets:update_element(registers, Register, {2, Value}).
 
 query_register(Register) ->

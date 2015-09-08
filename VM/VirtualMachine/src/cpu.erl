@@ -102,6 +102,7 @@
 -define(STBU,   16#A2).
 -define(STW,    16#A4).
 -define(STWU,   16#A6).
+-define(STWUI,  16#A7).
 -define(STT,    16#A8).
 -define(STTU,   16#AA).
 -define(STO,    16#AC).
@@ -162,6 +163,8 @@
 %% API
 -export([execute/2]).
 
+%% Determine which function we are executing
+
 %% 00-0F
 execute(?TRAP, PC) ->
   trap(PC);
@@ -182,8 +185,9 @@ execute(?LDOU, PC) ->
 %% 90-9F
 %% A0-AF
 execute(?STWU, PC) ->
-  io:format("STWU ~w~n", [PC]),
-  {[], []};
+  stwu(PC);
+execute(?STWUI, PC) ->
+  stwui(PC);
 %% B0-BF
 %% C0-CF
 execute(?OR, PC) ->
@@ -198,6 +202,90 @@ execute(?SETL, PC) ->
 execute(OpCode, _PC) ->
   erlang:display("Execute"),
   erlang:display(OpCode).
+
+
+%% Execute the individual instructions
+
+%% 00-0F
+
+trap(PC) ->
+  io:format("TRAP~n"),
+  {RX, RY, RZ} = three_operands(PC),
+  Msgs = trap:process_trap(RX, RY, RZ),
+  Updates = [{pc, (PC + 4)}],
+  {Updates, Msgs}.
+
+%% 10-1F
+%% 20-2F
+
+addi(PC) ->
+  io:format("ADDUI ~w~n",[PC]),
+  {RX, RY, RZ} = three_operands(PC),
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  {Overflow, NewValue} = immediate_address(RY, RZ),
+  io:format("Registers ~w - ~w~n",[Overflow, NewValue]),
+  Updates = [{RX, NewValue}, {pc, (PC + 4)}],
+  io:format("Updates ~w~n",[Updates]),
+  NewList = case Overflow of
+              overflow ->
+                [{rA, 1} | Updates];
+              _ ->
+                Updates
+            end,
+  io:format("New List ~w~n",[NewList]),
+  {NewList, []}.
+
+%% 30-3F
+%% 40-4F
+%% 50-5F
+%% 60-6F
+%% 70-7F
+%% 80-8F
+
+ldou(PC) ->
+  {_RX, RY, RZ} = three_operands(PC),
+  {_Overflow, _A} = address_two_registers(RY, RZ).
+
+%% 90-9F
+%% A0-AF
+
+stwu(PC) ->
+  io:format("STWU ~w~n", [PC]),
+  {RX, RY, RZ} = three_operands(PC),
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  RZVal = registers:query_register(RZ),
+  stwui(PC, RX, RY, RZVal).
+
+stwui(PC) ->
+  io:format("STWUI ~w~n", [PC]),
+  {RX, RY, RZVal} = three_operands(PC),
+  stwui(PC, RX, RY, RZVal).
+
+hex2int(L) ->
+  << I:64/signed-integer >> = hex_to_bin(L),
+  I.
+
+hex_to_bin(L) -> << <<(h2i(X)):4>> || X<-L >>.
+
+h2i(X) ->
+  case X band 64 of
+    64 -> X band 7 + 9;
+    _  -> X band 15
+  end.
+
+stwui(_PC, RX, RY, Z) ->
+  io:format("Registers ~w - ~w - ~18.16.0B~n",[RX, RY, Z]),
+  TH = integer_to_list(Z, 16),
+  TR = hex2int(TH),
+  TV = hex2int("7FFFFFFFFFFFFFFF"),
+  io:format("The values are ~w ~w ~w ~n", [TH, TR, TV]),
+  IA = immediate_address(RY, Z),
+  RXVal = registers:query_register(RX),
+  io:format("Set the address ~w to the least significant bits of ~w~n", [IA, RXVal]),
+  {[], []}.
+
+%% B0-BF
+%% C0-CF
 
 mmix_or(PC) ->
   {RX, RY, RZ} = three_operands(PC),
@@ -214,6 +302,9 @@ ori(PC, RX, RY, Z) ->
   io:format("ORI ~w ~w (~w) ~w = (~w)~n", [RX, RY, RYVal, Z, NVal]),
   {[{RX, NVal}, {pc, PC + 4}], []}.
 
+%% D0-DF
+%% E0-EF
+
 setl(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   io:format("SETL~n", []),
@@ -222,28 +313,9 @@ setl(PC) ->
   Update = registers:set_register_lowwyde(RX, RVal),
   {[Update, {pc, (PC + 4)}], []}.
 
-trap(PC) ->
-  io:format("TRAP~n"),
-  {RX, RY, RZ} = three_operands(PC),
-  Msgs = trap:process_trap(RX, RY, RZ),
-  Updates = [{pc, (PC + 4)}],
-  {Updates, Msgs}.
-addi(PC) ->
-  io:format("ADDUI ~w~n",[PC]),
-  {RX, RY, RZ} = three_operands(PC),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
-  {Overflow, NewValue} = immediate_address(RY, RZ),
-  io:format("Registers ~w - ~w~n",[Overflow, NewValue]),
-  Updates = [{RX, NewValue}, {pc, (PC + 4)}],
-  io:format("Updates ~w~n",[Updates]),
-  NewList = case Overflow of
-    overflow ->
-      [{rA, 1} | Updates];
-    _ ->
-      Updates
-  end,
-  io:format("New List ~w~n",[NewList]),
-  {NewList, []}.
+%% F0-FF
+
+%% Utilities
 
 three_operands(PC) ->
   First = operand(PC+1),
@@ -254,14 +326,14 @@ three_operands(PC) ->
 operand(Location) ->
   memory:get_byte(Location).
 
-ldou(PC) ->
-  {_RX, RY, RZ} = three_operands(PC),
-  {_Overflow, _A} = address_two_registers(RY, RZ).
-
 address_two_registers(RX, RY) ->
   R1 = registers:query_register(RX),
   R2 = registers:query_register(RY),
   add_values(R1, R2).
+
+immediate_address(RY, RZ) ->
+  R1 = registers:query_register(RY),
+  add_values(R1, RZ).
 
 add_values(V1, V2) ->
   A = (V1 + V2),
@@ -272,7 +344,3 @@ add_values(V1, V2) ->
     true
       -> {no_overflow, A}
   end.
-
-immediate_address(RY, RZ) ->
-  R1 = registers:query_register(RY),
-  add_values(R1, RZ).
