@@ -14,8 +14,14 @@
   stop/0,
   store_program/1,
   get_byte/1,
+  get_wyde/1,
+  get_tetrabyte/1,
   get_octabyte/1,
   get_nstring/1,
+  set_byte/2,
+  set_wyde/2,
+  set_tetrabyte/2,
+  set_octabyte/2,
   contents/0]).
 
 %% gen_server callbacks
@@ -62,11 +68,29 @@ contents() ->
 get_byte(Location) ->
   gen_server:call(?MEMORY_SERVER, {get_byte, Location}).
 
+get_wyde(Location) ->
+  gen_server:call(?MEMORY_SERVER, {get_wyde, Location}).
+
+get_tetrabyte(Location) ->
+  gen_server:call(?MEMORY_SERVER, {get_tetrabyte, Location}).
+
 get_octabyte(Location) ->
   gen_server:call(?MEMORY_SERVER, {get_octabyte, Location}).
 
 get_nstring(Location) ->
   gen_server:call(?MEMORY_SERVER, {get_nstring, Location}).
+
+set_byte(Location, Value) ->
+  gen_server:call(?MEMORY_SERVER, {set_byte, Location, Value}).
+
+set_wyde(Location, Value) ->
+  gen_server:call(?MEMORY_SERVER, {set_wyde, Location, Value}).
+
+set_tetrabyte(Location, Value) ->
+  gen_server:call(?MEMORY_SERVER, {set_tetrabyte, Location, Value}).
+
+set_octabyte(Location, Value) ->
+  gen_server:call(?MEMORY_SERVER, {set_octabyte, Location, Value}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -114,10 +138,13 @@ handle_call({get_byte, Location}, _From, TableId) ->
   {reply, get_memory_location_byte(Location, TableId), TableId};
 handle_call({get_nstring, Location}, _From, TableId) ->
   {reply, get_memory_location_nstring(Location, TableId), TableId};
+handle_call({set_wyde, Location, Value}, _From, TableId) ->
+  {reply, set_wyde(Location, Value, TableId), TableId};
 handle_call(stop_program, _From, _TableId) ->
   {stop, normal};
 handle_call(get_contents, _From, TableId) ->
-  erlang:display(contents(TableId));
+  erlang:display(contents(TableId)),
+  {reply, ok, TableId};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -213,3 +240,16 @@ get_memory_location_nstring(Location, TableId, Accumulator) ->
     0 -> lists:reverse(Accumulator);
     _ -> get_memory_location_nstring((Location + 1), TableId, [CurrentByte | Accumulator])
   end.
+
+set_byte(Location, Value, TableId) ->
+  io:format("Set the memory location ~w to ~w~n", [Location, Value]),
+  ets:insert(TableId, {Location, Value}),
+  {Location, Value}.
+
+set_wyde(Location, Value, TableId) ->
+  Adjusted_Location = utilities:adjust_location(Location, 2),
+  B0 = utilities:get_0_byte(Value),
+  B1 = utilities:get_1_byte(Value),
+  C0 = set_byte(Adjusted_Location, B1, TableId),
+  C1 = set_byte((Adjusted_Location + 1), B0, TableId),
+  [C0, C1].

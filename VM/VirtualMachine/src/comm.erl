@@ -34,7 +34,11 @@ loop(Socket) ->
       N = binary_to_term(Bin),
       case process_message(N) of
         {updates, Updates} ->
-          gen_udp:send(Socket, Host, Port, term_to_binary({updates, Updates}));
+          RV = {updates, Updates},
+          io:format("The message being returned is ~w~n", [RV]),
+          TTB = term_to_binary(RV),
+          io:format("Sending back ~w~n", [TTB]),
+          gen_udp:send(Socket, Host, Port, TTB);
         {all_registers, Registers} ->
           gen_udp:send(Socket, Host, Port, term_to_binary({all_registers, Registers}));
         _ ->
@@ -58,7 +62,7 @@ process_message({program, Code}) ->
   memory:store_program(Code),
   storing;
 process_message({registers, Registers}) ->
-  lists:map(fun({X, Y}) -> {set_adjusted_register(X, Y)} end, Registers),
+  lists:map(fun({X, Y}) -> {set_unadjusted_register(X, Y)} end, Registers),
   Pc = registers:query_register(255),
   registers:set_register(pc, Pc),
   updating;
@@ -67,6 +71,9 @@ process_message(get_all_registers) ->
 process_message(N) ->
   io:format("Unrecognized Message ~w~n", [N]),
   unknown.
+
+set_unadjusted_register(R, V) ->
+  registers:set_register(R, V).
 
 set_adjusted_register(R, V) ->
   AY = utilities:signed_integer16(V),

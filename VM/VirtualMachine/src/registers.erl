@@ -11,7 +11,7 @@
 -author("Steve Edmans").
 
 %% API
--export([init/0, contents/0, set_register/2, query_register/1, stop/0, set_register_lowwyde/2]).
+-export([init/0, contents/0, set_register/2, query_register/1, query_adjusted_register/1, stop/0, set_register_lowwyde/2]).
 
 %% Create a new ETS table and populate it with all of the available
 %% registers.
@@ -27,18 +27,6 @@ init() ->
 
 stop() ->
   ets:delete(registers).
-
-%%hex2int(L) ->
-%%  << I:64/signed-integer >> = hex_to_bin(L),
-%%  I.
-
-%%hex_to_bin(L) -> << <<(h2i(X)):4>> || X<-L >>.
-
-%%h2i(X) ->
-%%  case X band 64 of
-%%    64 -> X band 7 + 9;
-%%    _  -> X band 15
-%%  end.
 
 contents() ->
   FL = ets:tab2list(registers),
@@ -65,6 +53,10 @@ set_register(Register, Value) ->
 query_register(Register) ->
   [{Register, Value}] = ets:lookup(registers,Register),
   Value.
+
+query_adjusted_register(Register) ->
+  Unadjusted_Value = query_register(Register),
+  utilities:signed_integer16(Unadjusted_Value).
 
 create_table() ->
   ets:new(registers, [set, named_table]).

@@ -253,7 +253,7 @@ stwu(PC) ->
   io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
-  RZVal = registers:query_register(RZ),
+  RZVal = registers:query_adjusted_register(RZ),
   stwui(PC, RX, RY, RZVal).
 
 stwui(PC) ->
@@ -261,28 +261,24 @@ stwui(PC) ->
   {RX, RY, RZVal} = three_operands(PC),
   stwui(PC, RX, RY, RZVal).
 
-hex2int(L) ->
-  << I:64/signed-integer >> = hex_to_bin(L),
-  I.
-
-hex_to_bin(L) -> << <<(h2i(X)):4>> || X<-L >>.
-
-h2i(X) ->
-  case X band 64 of
-    64 -> X band 7 + 9;
-    _  -> X band 15
-  end.
-
-stwui(_PC, RX, RY, Z) ->
-  io:format("Registers ~w - ~w - ~18.16.0B~n",[RX, RY, Z]),
-  TH = integer_to_list(Z, 16),
-  TR = hex2int(TH),
-  TV = hex2int("7FFFFFFFFFFFFFFF"),
-  io:format("The values are ~w ~w ~w ~n", [TH, TR, TV]),
+stwui(PC, RX, RY, Z) ->
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
   IA = immediate_address(RY, Z),
-  RXVal = registers:query_register(RX),
-  io:format("Set the address ~w to the least significant bits of ~w~n", [IA, RXVal]),
-  {[], []}.
+  case IA of
+    {no_overflow, Location} ->
+      RXVal = registers:query_register(RX),
+      io:format("Set the address ~w to the least significant bits of ~w~n", [Location, RXVal]),
+      LSB = utilities:get_0_wyde(RXVal),
+      io:format("Which is ~w~n", [LSB]),
+      MemoryChanges = memory:set_wyde(Location, LSB),
+      io:format("The memory changes are ~w~n", [MemoryChanges]),
+      NewMessages = [{memory_change, MemoryChanges}],
+      io:format("We are sending back ~w~n", [NewMessages]),
+      {[{pc, PC + 4}], NewMessages};
+    {overflow, _} ->
+      io:format("An overflow occured! What do we do!!!!"),
+      {[], []}
+  end.
 
 %% B0-BF
 %% C0-CF
@@ -333,11 +329,13 @@ address_two_registers(RX, RY) ->
 
 immediate_address(RY, RZ) ->
   R1 = registers:query_register(RY),
+  io:format("The other value is ~w~n", [R1]),
   add_values(R1, RZ).
 
 add_values(V1, V2) ->
   A = (V1 + V2),
-  MaxMemory = math:pow(2, 64),
+  io:format("The total is ~w~n", [A]),
+  MaxMemory = utilities:hex2uint("FFFFFFFFFFFFFFFF"),
   if
     A > MaxMemory
       -> {overflow,(A - MaxMemory)};
