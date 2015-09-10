@@ -42,7 +42,7 @@ createRegisterTable (Right lines) = foldl getRegister (Right M.empty) lines
 
 getRegister :: Either String RegisterTable -> Line -> Either String RegisterTable
 getRegister (Left msg) _ = Left msg
-getRegister (Right table) (LabelledOpCodeLine _ _ (Id "Main") address)
+getRegister (Right table) (LabelledOpCodeLine _ _ (Id "Main") address _)
         | M.member (chr 255) table = Left $ "Duplicate Main section definition"
         | otherwise = Right $ M.insert (chr 255) (ExpressionNumber address) table
 getRegister (Right table) (LabelledPILine _ (Id "Main") address)

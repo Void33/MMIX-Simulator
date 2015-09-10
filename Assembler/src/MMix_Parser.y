@@ -12,36 +12,37 @@ import MMix_Lexer
 %lexer { lexwrap } { LEOF }
 
 %token
-    OP_CODE      { TOpCode $$ }
-    SET          { TSet }
-    COMMA        { TComma }
-    HALT         { THalt }
-    FPUTS        { TFputS }
-    STDOUT       { TStdOut }
-    BYTE_LIT     { TByteLiteral $$ }
-    ID           { TIdentifier $$ }
-    REG          { TRegister $$ }
-    INT          { TInteger $$ }
-    LOCAL_LABEL  { TLocalLabel $$ }
-    FORWARD      { TLocalForwardOperand $$ }
-    BACKWARD     { TLocalBackwardOperand $$ }
-    LOC          { TLOC }
-    IS           { TIS }
-    WYDE         { TWyde }
-    TETRA        { TTetra }
-    OCTA         { TOcta }
-    GREG         { TGREG }
-    PLUS         { TPlus }
-    MINUS        { TMinus }
-    MULTIPLY     { TMult }
-    DIVIDE       { TDivide }
-    AT           { TAtSign }
-    DS           { TDataSegment }
-    BYTE         { TByte }
-    STR          { TStringLiteral $$ }
-    HEX          { THexLiteral $$ }
-    OPEN         { TOpenParen }
-    CLOSE        { TCloseParen }
+    OP_CODE        { TOpCode $$ }
+    OP_CODE_SIMPLE { TOpCodeSimple $$ }
+    SET            { TSet }
+    COMMA          { TComma }
+    HALT           { THalt }
+    FPUTS          { TFputS }
+    STDOUT         { TStdOut }
+    BYTE_LIT       { TByteLiteral $$ }
+    ID             { TIdentifier $$ }
+    REG            { TRegister $$ }
+    INT            { TInteger $$ }
+    LOCAL_LABEL    { TLocalLabel $$ }
+    FORWARD        { TLocalForwardOperand $$ }
+    BACKWARD       { TLocalBackwardOperand $$ }
+    LOC            { TLOC }
+    IS             { TIS }
+    WYDE           { TWyde }
+    TETRA          { TTetra }
+    OCTA           { TOcta }
+    GREG           { TGREG }
+    PLUS           { TPlus }
+    MINUS          { TMinus }
+    MULTIPLY       { TMult }
+    DIVIDE         { TDivide }
+    AT             { TAtSign }
+    DS             { TDataSegment }
+    BYTE           { TByte }
+    STR            { TStringLiteral $$ }
+    HEX            { THexLiteral $$ }
+    OPEN           { TOpenParen }
+    CLOSE          { TCloseParen }
 %%
 
 Program         : AssignmentLines { reverse $1 }
@@ -54,6 +55,8 @@ AssingmentLine : OP_CODE OperatorList { defaultPlainOpCodeLine { pocl_code = $1,
                | Identifier PI { defaultLabelledPILine { lppl_id = $2, lppl_ident = $1 } }
                | Identifier OP_CODE OperatorList { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = (reverse $3), lpocl_ident = $1 }  }
                | PI { defaultPlainPILine { ppl_id = $1 } }
+               | OP_CODE_SIMPLE OperatorList { defaultPlainOpCodeLine { pocl_code = $1, pocl_ops = (reverse $2), pocl_sim = True } }
+               | Identifier OP_CODE_SIMPLE OperatorList { defaultLabelledOpCodeLine { lpocl_code = $2, lpocl_ops = (reverse $3), lpocl_ident = $1, lpocl_sim = True }  }
 
 OperatorList : OperatorElement { $1 : [] }
     | OperatorList COMMA OperatorElement { $3 : $1 }
@@ -110,8 +113,8 @@ Primary_Expression : INT                   { ExpressionNumber $1 }
 
 
 {
-data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: [OperatorElement], pocl_loc :: Int }
-          | LabelledOpCodeLine { lpocl_code :: Int, lpocl_ops :: [OperatorElement], lpocl_ident :: Identifier, lpocl_loc :: Int }
+data Line = PlainOpCodeLine { pocl_code :: Int, pocl_ops :: [OperatorElement], pocl_loc :: Int, pocl_sim :: Bool }
+          | LabelledOpCodeLine { lpocl_code :: Int, lpocl_ops :: [OperatorElement], lpocl_ident :: Identifier, lpocl_loc :: Int, lpocl_sim :: Bool }
           | PlainPILine { ppl_id :: PseudoInstruction, ppl_loc :: Int }
           | LabelledPILine { lppl_id :: PseudoInstruction, lppl_ident :: Identifier, lppl_loc :: Int }
           deriving (Eq, Show)
@@ -149,7 +152,7 @@ data PseudoInstruction = LOC Int
                        | GregSpecific Char
                        | GregEx ExpressionEntry
                        | ByteArray [Char]
-                       | WydeArray [Int]
+                       | WydeArray [Char]
                        | TetraArray [Char]
                        | OctaArray [Char]
                        | IsRegister Int
@@ -161,8 +164,8 @@ data PseudoInstruction = LOC Int
 -- fullParse "/home/steveedmans/test.mms"
 -- fullParse "/home/steveedmans/hail.mms"
 
-defaultPlainOpCodeLine = PlainOpCodeLine { pocl_loc = -1 }
-defaultLabelledOpCodeLine = LabelledOpCodeLine { lpocl_loc = -1 }
+defaultPlainOpCodeLine = PlainOpCodeLine { pocl_loc = -1, pocl_sim = False }
+defaultLabelledOpCodeLine = LabelledOpCodeLine { lpocl_loc = -1, lpocl_sim = False }
 defaultPlainPILine = PlainPILine { ppl_loc = -1 }
 defaultLabelledPILine = LabelledPILine { lppl_loc = -1 }
 

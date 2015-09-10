@@ -27,9 +27,9 @@ evaluateLine st ln@(LabelledPILine (LocEx expr) _ address) = ln{lppl_id = (LocEx
    where v = evaluate expr address st
 evaluateLine st ln@(PlainPILine (LocEx expr) address) = ln{ppl_id = (LocEx (ExpressionNumber v))}
    where v = evaluate expr address st
-evaluateLine st ln@(PlainOpCodeLine _ ops _) = ln{pocl_ops = updated_operands}
+evaluateLine st ln@(PlainOpCodeLine _ ops _ _) = ln{pocl_ops = updated_operands}
    where updated_operands = evaluateOperands st [] ops
-evaluateLine st ln@(LabelledOpCodeLine _ ops _ _) = ln{lpocl_ops = updated_operands}
+evaluateLine st ln@(LabelledOpCodeLine _ ops _ _ _) = ln{lpocl_ops = updated_operands}
    where updated_operands = evaluateOperands st [] ops
 evaluateLine _ ln = ln
 

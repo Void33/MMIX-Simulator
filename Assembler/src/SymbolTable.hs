@@ -42,7 +42,7 @@ getSymbol (Right table) (LabelledPILine val@(IsIdentifier _) ident address)
 getSymbol (Right table) (LabelledPILine val ident address)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Just(val)) table
-getSymbol (Right table) (LabelledOpCodeLine _ _ ident address)
+getSymbol (Right table) (LabelledOpCodeLine _ _ ident address _)
           | M.member ident table = Left $ "Identifier already present " ++ (show ident)
           | otherwise = Right $ M.insert ident (address, Nothing) table
 getSymbol (Right table) _ = Right $ table
@@ -78,7 +78,7 @@ updated_label label (Just current_counter)  = Id $ system_symbol label current_c
 updated_label label _  = Id $ "??" ++ (show label) ++ "HMissing"
 
 transformLocalSymbolLabel :: CounterMap -> Line -> (CounterMap, Line)
-transformLocalSymbolLabel counters ln@(LabelledOpCodeLine _ _ (LocalLabel label) _) = (new_counters, ln{lpocl_ident=new_label})
+transformLocalSymbolLabel counters ln@(LabelledOpCodeLine _ _ (LocalLabel label) _ _) = (new_counters, ln{lpocl_ident=new_label})
     where current_counter = M.lookup label counters
           new_label = updated_label label current_counter
           new_counters = update_counter label current_counter 1 counters
@@ -123,14 +123,14 @@ transformLocalSymbol f b l = (f', b', l')
           l' = transformLocalSymbolLine f b l
 
 transformLocalSymbolLine :: M.Map Int Identifier -> M.Map Int (Maybe Identifier) -> Line -> Line
-transformLocalSymbolLine f b ln@(PlainOpCodeLine _ elements _) = ln{pocl_ops = new_elements}
+transformLocalSymbolLine f b ln@(PlainOpCodeLine _ elements _ _) = ln{pocl_ops = new_elements}
     where new_elements = transformLocalSymbolElements f b elements []
-transformLocalSymbolLine f b ln@(LabelledOpCodeLine _ elements _ _) = ln{lpocl_ops = new_elements}
+transformLocalSymbolLine f b ln@(LabelledOpCodeLine _ elements _ _ _) = ln{lpocl_ops = new_elements}
     where new_elements = transformLocalSymbolElements f b elements []
 transformLocalSymbolLine _ _ ln = ln
 
 transformForward :: M.Map Int Identifier -> Line -> M.Map Int Identifier
-transformForward f ln@(LabelledOpCodeLine _ _ (Id label) _)
+transformForward f ln@(LabelledOpCodeLine _ _ (Id label) _ _)
     | is_system_id label = M.insert l new_id f
     | otherwise          = f
        where Just(l, c) = system_id label
@@ -146,7 +146,7 @@ transformForward f _ = f
 
 
 transformBackward :: M.Map Int (Maybe Identifier) -> Line -> M.Map Int (Maybe Identifier)
-transformBackward b ln@(LabelledOpCodeLine _ _ (Id label) _)
+transformBackward b ln@(LabelledOpCodeLine _ _ (Id label) _ _)
     | is_system_id label = M.insert l new_id b
     | otherwise          = b
        where Just(l, _) = system_id label

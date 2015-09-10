@@ -38,26 +38,26 @@ tokens :-
 <0>\)                                   { mkT TCloseParen }
 <0>\#$hexdigit+                         { mkHex }
 <0>\$$digit+                            { mkRegister }
-<0>[Tt][Rr][Aa][Pp]                     { mkT $ TOpCode 0x00 }
-<0>[Ff][Cc][Mm][Pp]                     { mkT $ TOpCode 0x01 }
-<0>[Ff][Uu][Nn]                         { mkT $ TOpCode 0x02 }
-<0>[Ff][Ee][Qq][Ll]                     { mkT $ TOpCode 0x03 }
-<0>[Ff][Aa][Dd][Dd]                     { mkT $ TOpCode 0x04 }
-<0>[Ff][Ii][Xx]                         { mkT $ TOpCode 0x05 }
-<0>[Ff][Ss][Uu][Bb]                     { mkT $ TOpCode 0x06 }
-<0>[Ff][Ii][Xx][Uu]                     { mkT $ TOpCode 0x07 }
+<0>[Tt][Rr][Aa][Pp]                     { mkT $ TOpCodeSimple 0x00 }
+<0>[Ff][Cc][Mm][Pp]                     { mkT $ TOpCodeSimple 0x01 }
+<0>[Ff][Uu][Nn]                         { mkT $ TOpCodeSimple 0x02 }
+<0>[Ff][Ee][Qq][Ll]                     { mkT $ TOpCodeSimple 0x03 }
+<0>[Ff][Aa][Dd][Dd]                     { mkT $ TOpCodeSimple 0x04 }
+<0>[Ff][Ii][Xx]                         { mkT $ TOpCodeSimple 0x05 }
+<0>[Ff][Ss][Uu][Bb]                     { mkT $ TOpCodeSimple 0x06 }
+<0>[Ff][Ii][Xx][Uu]                     { mkT $ TOpCodeSimple 0x07 }
 <0>[Ff][Ll][Oo][Tt]                     { mkT $ TOpCode 0x08 }
 <0>[Ff][Ll][Oo][Tt][Uu]                 { mkT $ TOpCode 0x0A }
 <0>[Ss][Ff][Ll][Oo][Tt]                 { mkT $ TOpCode 0x0C }
 <0>[Ss][Ff][Ll][Oo][Tt][Uu]             { mkT $ TOpCode 0x0E }
-<0>[Ff][Mm][Uu][Ll]                     { mkT $ TOpCode 0x10 }
-<0>[Ff][Cc][Mm][Pp][Ee]                 { mkT $ TOpCode 0x11 }
-<0>[Ff][Uu][Nn][Ee]                     { mkT $ TOpCode 0x12 }
-<0>[Ff][Ee][Qq][Ll][Ee]                 { mkT $ TOpCode 0x13 }
-<0>[Ff][Dd][Ii][Vv]                     { mkT $ TOpCode 0x14 }
-<0>[Ff][Ss][Qq][Rr][Tt]                 { mkT $ TOpCode 0x15 }
-<0>[Ff][Rr][Ee][Mm]                     { mkT $ TOpCode 0x16 }
-<0>[Ff][Ii][Nn][Tt]                     { mkT $ TOpCode 0x17 }
+<0>[Ff][Mm][Uu][Ll]                     { mkT $ TOpCodeSimple 0x10 }
+<0>[Ff][Cc][Mm][Pp][Ee]                 { mkT $ TOpCodeSimple 0x11 }
+<0>[Ff][Uu][Nn][Ee]                     { mkT $ TOpCodeSimple 0x12 }
+<0>[Ff][Ee][Qq][Ll][Ee]                 { mkT $ TOpCodeSimple 0x13 }
+<0>[Ff][Dd][Ii][Vv]                     { mkT $ TOpCodeSimple 0x14 }
+<0>[Ff][Ss][Qq][Rr][Tt]                 { mkT $ TOpCodeSimple 0x15 }
+<0>[Ff][Rr][Ee][Mm]                     { mkT $ TOpCodeSimple 0x16 }
+<0>[Ff][Ii][Nn][Tt]                     { mkT $ TOpCodeSimple 0x17 }
 <0>[Mm][Uu][Ll]                         { mkT $ TOpCode 0x18 }
 <0>[Mm][Uu][Ll][Uu]                     { mkT $ TOpCode 0x1A }
 <0>[Dd][Ii][Vv]                         { mkT $ TOpCode 0x1C }
@@ -159,33 +159,33 @@ tokens :-
 <0>[Ss][Aa][Dd][Dd]                     { mkT $ TOpCode 0xDA }
 <0>[Mm][Oo][Rr]                         { mkT $ TOpCode 0xDC }
 <0>[Mm][Xx][Oo][Rr]                     { mkT $ TOpCode 0xDE }
-<0>[Ss][Ee][Tt][Hh]                     { mkT $ TOpCode 0xE0 }
-<0>[Ss][Ee][Tt][Mm][Hh]                 { mkT $ TOpCode 0xE1 }
-<0>[Ss][Ee][Tt][Mm][Ll]                 { mkT $ TOpCode 0xE2 }
-<0>[Ss][Ee][Tt][Ll]                     { mkT $ TOpCode 0xE3 }
-<0>[Ii][Nn][Cc][Hh]                     { mkT $ TOpCode 0xE4 }
-<0>[Ii][Nn][Cc][Mm][Hh]                 { mkT $ TOpCode 0xE5 }
-<0>[Ii][Nn][Cc][Mm][Ll]                 { mkT $ TOpCode 0xE6 }
-<0>[Ii][Nn][Cc][Ll]                     { mkT $ TOpCode 0xE7 }
-<0>[Oo][Rr][Hh]                         { mkT $ TOpCode 0xE8 }
-<0>[Oo][Rr][Mm][Hh]                     { mkT $ TOpCode 0xE9 }
-<0>[Oo][Rr][Mm][Ll]                     { mkT $ TOpCode 0xEA }
-<0>[Oo][Rr][Ll]                         { mkT $ TOpCode 0xEB }
-<0>[Aa][Nn][Dd][Nn][Hh]                 { mkT $ TOpCode 0xEC }
-<0>[Aa][Nn][Dd][Nn][Mm][Hh]             { mkT $ TOpCode 0xED }
-<0>[Aa][Nn][Dd][Nn][Mm][Ll]             { mkT $ TOpCode 0xEE }
-<0>[Aa][Nn][Dd][Nn][Ll]                 { mkT $ TOpCode 0xEF }
+<0>[Ss][Ee][Tt][Hh]                     { mkT $ TOpCodeSimple 0xE0 }
+<0>[Ss][Ee][Tt][Mm][Hh]                 { mkT $ TOpCodeSimple 0xE1 }
+<0>[Ss][Ee][Tt][Mm][Ll]                 { mkT $ TOpCodeSimple 0xE2 }
+<0>[Ss][Ee][Tt][Ll]                     { mkT $ TOpCodeSimple 0xE3 }
+<0>[Ii][Nn][Cc][Hh]                     { mkT $ TOpCodeSimple 0xE4 }
+<0>[Ii][Nn][Cc][Mm][Hh]                 { mkT $ TOpCodeSimple 0xE5 }
+<0>[Ii][Nn][Cc][Mm][Ll]                 { mkT $ TOpCodeSimple 0xE6 }
+<0>[Ii][Nn][Cc][Ll]                     { mkT $ TOpCodeSimple 0xE7 }
+<0>[Oo][Rr][Hh]                         { mkT $ TOpCodeSimple 0xE8 }
+<0>[Oo][Rr][Mm][Hh]                     { mkT $ TOpCodeSimple 0xE9 }
+<0>[Oo][Rr][Mm][Ll]                     { mkT $ TOpCodeSimple 0xEA }
+<0>[Oo][Rr][Ll]                         { mkT $ TOpCodeSimple 0xEB }
+<0>[Aa][Nn][Dd][Nn][Hh]                 { mkT $ TOpCodeSimple 0xEC }
+<0>[Aa][Nn][Dd][Nn][Mm][Hh]             { mkT $ TOpCodeSimple 0xED }
+<0>[Aa][Nn][Dd][Nn][Mm][Ll]             { mkT $ TOpCodeSimple 0xEE }
+<0>[Aa][Nn][Dd][Nn][Ll]                 { mkT $ TOpCodeSimple 0xEF }
 <0>[Jj][Mm][Pp]                         { mkT $ TOpCode 0xF0 }
 <0>[Pp][Uu][Ss][Hh][Jj]                 { mkT $ TOpCode 0xF2 }
 <0>[Gg][Ee][Tt][Aa]                     { mkT $ TOpCode 0xF4 }
 <0>[Pp][Uu][Tt]                         { mkT $ TOpCode 0xF6 }
-<0>[Pp][Oo][Pp]                         { mkT $ TOpCode 0xF8 }
-<0>[Rr][Ee][Ss][Uu][Mm][Ee]             { mkT $ TOpCode 0xF9 }
-<0>[Ss][Aa][Vv][Ee]                     { mkT $ TOpCode 0xFA }
-<0>[Ss][Yy][Nn][Cc]                     { mkT $ TOpCode 0xFC }
-<0>[Ss][Ww][Yy][Mm]                     { mkT $ TOpCode 0xFD }
-<0>[Gg][Ee][Tt]                         { mkT $ TOpCode 0xFE }
-<0>[Tt][Rr][Ii][Pp]                     { mkT $ TOpCode 0xFF }
+<0>[Pp][Oo][Pp]                         { mkT $ TOpCodeSimple 0xF8 }
+<0>[Rr][Ee][Ss][Uu][Mm][Ee]             { mkT $ TOpCodeSimple 0xF9 }
+<0>[Ss][Aa][Vv][Ee]                     { mkT $ TOpCodeSimple 0xFA }
+<0>[Ss][Yy][Nn][Cc]                     { mkT $ TOpCodeSimple 0xFC }
+<0>[Ss][Ww][Yy][Mm]                     { mkT $ TOpCodeSimple 0xFD }
+<0>[Gg][Ee][Tt]                         { mkT $ TOpCodeSimple 0xFE }
+<0>[Tt][Rr][Ii][Pp]                     { mkT $ TOpCodeSimple 0xFF }
 <0>Fputs                                { mkT TFputS }
 <0>StdOut                               { mkT TStdOut }
 <0>Halt                                 { mkT THalt }
@@ -223,6 +223,7 @@ data Token = LEOF
             | TStdOut
             | THalt
             | TOpCode { toc_value :: Int }
+            | TOpCodeSimple { soc_value :: Int }
             | TDataSegment
             | TAtSign
             | TComma

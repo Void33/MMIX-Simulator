@@ -57,7 +57,7 @@ setLocation nextLoc ln@(PlainPILine (Set _) _) = (newLoc, ln { ppl_loc = nextLoc
     where newLoc = nextLoc + 4
 setLocation nextLoc ln@(PlainPILine _ _) = (nextLoc, ln { ppl_loc = nextLoc })
 setLocation nextLoc ln@(LabelledPILine _ _ _) = (nextLoc, ln { lppl_loc = nextLoc })
-setLocation nextLoc ln@(PlainOpCodeLine _ _ _) = (newLoc, ln { pocl_loc = nextLoc })
+setLocation nextLoc ln@(PlainOpCodeLine _ _ _ _) = (newLoc, ln { pocl_loc = nextLoc })
     where newLoc = nextLoc + 4
-setLocation nextLoc ln@(LabelledOpCodeLine _ _ _ _) = (newLoc, ln { lpocl_loc = nextLoc })
+setLocation nextLoc ln@(LabelledOpCodeLine _ _ _ _ _) = (newLoc, ln { lpocl_loc = nextLoc })
     where newLoc = nextLoc + 4

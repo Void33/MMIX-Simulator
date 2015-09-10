@@ -28,8 +28,8 @@ encodeProgram _ (Left register_error) = Left register_error
 encodeProgram (Right code) (Right regs) = Right $ map chr $ encodeProgramInt code regs
 
 genCodeForLine :: SymbolTable -> RegisterTable -> Line -> Maybe(CodeLine)
-genCodeForLine symbols registers (LabelledOpCodeLine opcode operands _ address) = genOpCodeOutput symbols registers opcode operands address
-genCodeForLine symbols registers (PlainOpCodeLine opcode operands address) = genOpCodeOutput symbols registers opcode operands address
+genCodeForLine symbols registers (LabelledOpCodeLine opcode operands _ address simple_code) = genOpCodeOutput symbols registers opcode operands address simple_code
+genCodeForLine symbols registers (PlainOpCodeLine opcode operands address simple_code) = genOpCodeOutput symbols registers opcode operands address simple_code
 genCodeForLine _ _ (LabelledPILine (ByteArray arr) _ address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = arr})
     where s = length arr
 genCodeForLine _ _ (LabelledPILine (WydeArray arr) _ address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = wyde_array})
@@ -48,20 +48,24 @@ genCodeForLine symbols registers (PlainPILine (Set (e1, e2)) address) =
 genCodeForLine _ _ _ = Nothing
 
 genPICodeOutput :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> OperatorElement -> Maybe(CodeLine)
-genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionIdentifier _)) = genOpCodeOutput symbols registers 193 operands address
+genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionIdentifier _)) = genOpCodeOutput symbols registers 193 operands address False
     where operands = i1 : i2 : (Expr (ExpressionNumber 0)) : []
-genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address
+genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
     where operands = i1 : i2 : (Expr (ExpressionNumber 0)) : []
-genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address
+genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address False
     where operands = r1 : r2 : (Expr (ExpressionNumber 0)) : []
-genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address
+genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
     where operands = r1 : r2 : []
 genPICodeOuput _ _ _ _ _ = Nothing
 
-genOpCodeOutput :: SymbolTable -> RegisterTable -> Int -> [OperatorElement] -> Int -> Maybe CodeLine
-genOpCodeOutput symbols registers opcode operands address =
+genOpCodeOutput :: SymbolTable -> RegisterTable -> Int -> [OperatorElement] -> Int -> Bool -> Maybe CodeLine
+genOpCodeOutput symbols registers opcode operands address False =
     case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
+        _ -> Nothing
+genOpCodeOutput symbols registers opcode operands address True =
+    case splitOperands symbols registers operands of
+        Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr opcode) : params})
         _ -> Nothing
 
 formatElement :: SymbolTable -> OperatorElement -> Char

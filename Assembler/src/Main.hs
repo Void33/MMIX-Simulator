@@ -107,8 +107,8 @@ showLocs lns = foldr showLoc [] lns
 showLoc :: Line -> [Int] -> [Int]
 showLoc (PlainPILine _ loc) acc =  loc : acc
 showLoc (LabelledPILine _ _ loc) acc =  loc : acc
-showLoc (PlainOpCodeLine _ _ loc) acc =  loc : acc
-showLoc (LabelledOpCodeLine _ _ _ loc) acc =  loc : acc
+showLoc (PlainOpCodeLine _ _ loc _) acc =  loc : acc
+showLoc (LabelledOpCodeLine _ _ _ loc _) acc =  loc : acc
 
 
 acg (Right sym) (Right regs) (Right lns) = Right $ cg sym regs [] lns
@@ -135,8 +135,8 @@ sampleRA = (110, Nothing)
 
 testLine = "j0     GREG  PRIME1+2-@"
 
-gcfl symbols registers (LabelledOpCodeLine opcode operands _ address) = goco symbols registers opcode operands address
-gcfl symbols registers (PlainOpCodeLine opcode operands address) = goco symbols registers opcode operands address
+gcfl symbols registers (LabelledOpCodeLine opcode operands _ address _) = goco symbols registers opcode operands address
+gcfl symbols registers (PlainOpCodeLine opcode operands address _) = goco symbols registers opcode operands address
 --gcfl _ _ (LabelledPILine (ByteArray arr) _ address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = arr})
 --    where s = length arr
 --gcfl symbols registers (LabelledPILine (Set (e1, e2)) _ address) =
@@ -154,7 +154,7 @@ gpico :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> OperatorEleme
 --    where operands = r1 : r2 : []
 gpico _ _ _ _ _ = Nothing
 
-t1 = PlainOpCodeLine {pocl_code = 52, pocl_ops = [Expr (ExpressionIdentifier (Id "mm")),Expr (ExpressionNumber 2)], pocl_loc = 355}
+t1 = PlainOpCodeLine {pocl_code = 52, pocl_ops = [Expr (ExpressionIdentifier (Id "mm")),Expr (ExpressionNumber 2)], pocl_loc = 355, pocl_sim = False}
 
 tst = M.fromList [(Id "Main",(256,Nothing)),(Id "txt",(536870912,Just (ByteArray "Hello world!\n\NUL")))] :: SymbolTable
 trt = M.fromList [('\254',ExpressionNumber 536870912),('\255',ExpressionNumber 256)]
