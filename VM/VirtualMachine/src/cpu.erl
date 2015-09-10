@@ -198,6 +198,8 @@ execute(?ORI, PC) ->
 %% E0-EF
 execute(?SETL, PC) ->
   setl(PC);
+execute(?INCL, PC) ->
+  incl(PC);
 execute(?ORH, PC) ->
   orh(PC);
 execute(?ORL, PC) ->
@@ -321,6 +323,13 @@ setl(PC) ->
   Update = registers:set_register_lowwyde(RX, RVal),
   Stmt = lists:flatten(io_lib:format("SETL $~.16B, ~B", [RX, RVal])),
   {Stmt, [Update, {pc, (PC + 4)}], []}.
+
+incl(PC) ->
+  io:format("Process INCL~n"),
+  {RX, RY, RZ} = three_operands(PC),
+  RVal = (RY * 256) + RZ,
+  Stmt = lists:flatten(io_lib:format("INCL $~.16B, ~B", [RX, RVal])),
+  {Stmt, [], []}.
 
 orh(PC) ->
   io:format("Process ORH~n"),
