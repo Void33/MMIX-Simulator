@@ -3,7 +3,11 @@
 \usepackage{appendix}
 \usepackage{listings}
 \usepackage{fancybox}
+\usepackage{parskip}
+\usepackage{index}
+\makeindex
 \makeatletter
+\newcommand{\head}[1]{\textbf{#1}}
 \newenvironment{CenteredBox}{% 
 \begin{Sbox}}{% Save the content in a box
 \end{Sbox}\centerline{\parbox{\wd\@Sbox}{\TheSbox}}}% And output it centered
@@ -55,6 +59,7 @@ The purpose of this project is to examine this approach. The application that we
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 \chapter{Introduction}
+All definition of an MMIX computer come directly from either \cite{knuth:aocp1} or \cite{knuth:aocp2}
 \chapter{Assembler}
 \section{Introduction}
 \section{Executable}
@@ -87,8 +92,81 @@ The purpose of this project is to examine this approach. The application that we
 \section{Component Testing}
 \chapter{Virtual Machine}
 \section{Introduction}
+Arhictecure of a computer  %% FIND QUOTATION
+CPU, ALU, Memory, Secondary Storage, IO Devices
+
+The virtaul machine we are developing will only consist of a CPU and memory.
+
+The way that memory is organised can be considered a hierachy, to quote Aho et al\cite{dragon}
+\begin{quotation}
+A memory hierachy consists of several levels of storage with different sppeds and sizes, with the levels closest to the processor being the fastest but smallest... Memory hierarchies are found in all machines. A processor usually has a small number of registers consisting of hundres of bytes, several levels of caches containing kilobytes to megabytes, physical memory containing megabytes to gigabytes, and finally secondary storage that contains gigabytes and beyond.
+\end{quotation}
+For this project we will only be considering the physical memory and the registers.
+
 \section{Memory}
+Wyde
+
+\begin{math}
+M_2[0] = M_2[1] = M[0]M[1]
+\end{math}
+
+Tetra
+
+\begin{math}
+M_4[4k] = M_4[4k+1] = ... = M_4[4k+3] = M[4k]M[4k+1]...M[4k+3]
+\end{math}
+
+Octa
+
+\begin{math}
+M_8[8k] = M_8[8k+1] = ... = M_8[8k+7] = M[8k]M[8k+1]...M[8k+7]
+\end{math}
+
 \section{Registers}
+An MMIX computer contains two distinct types of registers, 256 general purpose registers and 32 special purpose registers. A complete list of the special registers can be found in Figure~\ref{fig:spec_regs}
+
+\begin{figure}[ht!]
+\begin{center}
+\begin{tabular}{ c l }
+\head{Identifier} & \head{Description}\\
+rA & Arithmetic Status Register\\
+rB & Bootstrap Register\\
+rC & Continuation Register\\
+rD & Dividend Register\\
+rE & Epsilon Register\\
+rF & Failure Location Register\\
+rG & Global Threshold Register\\
+rH & Himult Register\\
+rI & Interval Counter\\
+rJ & Return-Jump Register\\
+rK & Interrupt Mask Register\\
+rL & Local Threshold Register\\
+rM & Multiplex Mask Register\\
+rN & Serial Number\\
+rO & Register Stack Offset\\
+rP & Prediction Register\\
+rQ & Interrupt Request Register\\
+rR & Remainder Register\\
+rS & Register Stack Pointer\\
+rT & Trap Address Register\\
+rU & Usage Counter\\
+rV & Virtual Translation Register\\
+rW & Where Interrupted Register\\
+rX & Execution Register\\
+rY & Y Operand\\
+rZ & Z Operand\\
+rBB & Bootstrap Register\\
+rTT & Dynamic Trap Address Register\\
+rWW & Where Interrupted Register\\
+rXX & Execution Register\\
+rYY & Y Operand\\
+rZZ & Z Operand\\
+\end{tabular}
+\end{center}
+\caption{Special Registers}
+\label{fig:spec_regs}
+\end{figure}
+
 \section{Central Processing Unit}
 \section{Calling the Operating System}
 \section{Communication}
@@ -124,5 +202,8 @@ The sample mmixal application I am using to test the system is taken from Fascil
 The final version of the parsed source code for the test application is
 \lstinputlisting[language=Haskell]{parsed_example.hs}
 \end{appendices}
+\clearpage
+\addcontentsline{toc}{chapter}{Index}
+\printindex
 \end{document}
 
