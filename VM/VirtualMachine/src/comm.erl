@@ -17,6 +17,7 @@
 
 start_vm () ->
   registers:init(),
+  register_ra:start(),
   memory:start_link(),
   start_server().
 
@@ -49,6 +50,7 @@ loop(Socket) ->
       gen_udp:close(Socket),
       erlang:display(registers:contents()),
       registers:stop(),
+      register_ra ! stop,
       memory:contents(),
       memory:stop()
   end.
@@ -82,11 +84,26 @@ set_adjusted_register(R, V) ->
 process_next_statement() ->
   next_statement().
 
+get_special_registers() ->
+  Ra = get_register_ra(),
+  [Ra].
+
+get_register_ra() ->
+  register_ra ! {self(), value},
+  receive
+    Ra ->
+      io:format("We received a message ~w~n",[Ra]),
+      {rA, Ra}
+  end.
+
 next_statement() ->
   PC = registers:query_register(pc),
   FullOpCode = memory:get_byte(PC),
   io:format("We are processing address ~w containing ~w~n", [PC, FullOpCode]),
   {Code, Updates, Msgs} = cpu:execute(FullOpCode, PC),
-  lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, Updates),
-  {Code, Updates, Msgs}.
-
+  Upd = get_special_registers(),
+  io:format("The special registers are ~w~n", [Upd]),
+  FullUpdates = Updates ++ Upd,
+  io:format("The new updates are ~w~n", [FullUpdates]),
+  lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, FullUpdates),
+  {Code, FullUpdates, Msgs}.

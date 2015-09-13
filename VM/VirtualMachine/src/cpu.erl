@@ -371,7 +371,9 @@ add_values(V1, V2) ->
   MaxMemory = utilities:hex2uint("FFFFFFFFFFFFFFFF"),
   if
     A > MaxMemory
-      -> {overflow,(A - MaxMemory)};
+      ->
+        register_ra ! overflow,
+        {overflow,(A - MaxMemory)};
     true
       -> {no_overflow, A}
   end.
