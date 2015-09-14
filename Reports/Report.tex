@@ -166,6 +166,46 @@ rZZ & Z Operand\\
 \caption{Special Registers}
 \label{fig:spec_regs}
 \end{figure}
+rA Arithmetic Status Register
+
+least signficant byte contains eight event bits. DVWIOUZX
+
+\begin{center}
+\begin{tabular}{ c l }
+\head{Register} & \head{Description}\\
+D & Integer Divide Check\\
+V & Integer Overflow\\
+W & Float-to-Fix Overflow\\
+I & Invalid Operation\\
+O & Floating Overflow\\
+U & Floating Underflow\\
+Z & Division by Zero\\
+X & Floating Inexact\\
+\end{tabular}
+\end{center}
+
+The next least significant byte contains eight ``enable'' bits with the same name DVWIOUZX and the same meanings.  
+
+When an exceptional condition occurs, there are two cases: If the corresponding enable bit is 0, the corresponding event bit is set to 1; but if the corresponding enable bit is 1, MMIX interrupts its current instruction stream and execute a special ``exception handler''.  Thus, the event bits record exceptions that have not been ``tripped''.
+
+This leaves six high order bytes.  At present, only  two of those 48 bits are defined. The two bits corresponding to 
+\begin{math}
+2^{17}
+\end{math}
+and 
+\begin{math}
+2^{16}
+\end{math}
+in rA specify a rounding mode, as follows: -
+
+\begin{center}
+\begin{tabular}{ c l }
+00 & Round to the nearest\\
+01 & Round off\\
+10 & Round up\\
+11 & Round down\\
+\end{tabular}
+\end{center}
 
 \section{Central Processing Unit}
 \section{Calling the Operating System}
