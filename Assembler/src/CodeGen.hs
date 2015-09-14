@@ -61,14 +61,21 @@ genPICodeOuput _ _ _ _ _ = Nothing
 genOpCodeOutput :: SymbolTable -> RegisterTable -> Int -> [OperatorElement] -> Int -> Bool -> Maybe CodeLine
 genOpCodeOutput symbols registers 254 operands address _ = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = code})
     where code = splitSpecialRegisters symbols operands
-genOpCodeOutput symbols registers opcode operands address False =
-    case splitOperands symbols registers operands of
+genOpCodeOutput symbols registers opcode operands address False 
+    | opcode >= 60 && opcode <= 95 = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + local_adjustment)) : code})
+    | otherwise = case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
         _ -> Nothing
+      where (local_adjustment, code) = splitLocalOperands symbols operands address
 genOpCodeOutput symbols registers opcode operands address True =
     case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr opcode) : params})
         _ -> Nothing
+
+localLabelOffset :: Int -> Int -> (Int, Int)
+localLabelOffset current required
+    | required < current = (1, (quot (current - required) 4))
+    | otherwise          = (0, (quot (required - current) 4))
 
 formatElement :: SymbolTable -> OperatorElement -> Char
 formatElement _ (ByteLiteral b) = b
@@ -80,6 +87,15 @@ formatElement st (Expr x@(ExpressionIdentifier id)) =
         (Just (_, Just (IsIdentifier r))) -> formatElement st (Expr (ExpressionIdentifier r))
         otherwise -> chr (E.evaluate x 0 st)
 formatElement st (Expr x) = chr (E.evaluate x 0 st)
+
+splitLocalOperands :: SymbolTable -> [OperatorElement] -> Int -> (Int, String)
+splitLocalOperands symbols (x:(Ident id):[]) address = (adjustment, code)
+    where ro = getSymbolAddress symbols id
+          formatted_x = formatElement symbols x
+          (adjustment, offset) = localLabelOffset address ro
+          b1 = chr (quot offset 256)
+          b2 = chr (rem  offset 256)
+          code = formatted_x : b1 : b2 : []
 
 splitOperands :: SymbolTable -> RegisterTable -> [OperatorElement] -> Maybe(AdjustedOperands)
 splitOperands symbols registers ((Ident id):[]) = Just(1, code)

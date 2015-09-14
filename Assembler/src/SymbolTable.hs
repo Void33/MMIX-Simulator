@@ -64,9 +64,13 @@ mapSymbolToAddress :: SymbolTable -> RegisterTable -> Identifier -> Maybe(Regist
 mapSymbolToAddress symbols registers identifier@(Id _)
     | M.member identifier symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
     | otherwise = Just('b', 2)
-     where registersByAddress = registersFromAddresses registers
-           requiredAddress = symbols M.! identifier
+      where registersByAddress = registersFromAddresses registers
+            requiredAddress = symbols M.! identifier
 mapSymbolToAddress _ _ _ = Nothing
+
+getSymbolAddress :: SymbolTable -> Identifier -> Int
+getSymbolAddress symbols identifier = add
+    where Just(add, _) = M.lookup identifier symbols
 
 update_counter :: Int -> Maybe Int -> Int -> CounterMap -> CounterMap
 update_counter label (Just old_counter) adjustment counters = M.insert label new_counter counters
