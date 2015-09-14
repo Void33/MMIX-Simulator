@@ -84,7 +84,7 @@ contents' ifs = do
     --print s3
     --print s4
     --print s5
-    return s6
+    return s0
 
 -- contents "/home/steveedmans/hail.mms"
 -- parseOnly "/home/steveedmans/hail.mms"
