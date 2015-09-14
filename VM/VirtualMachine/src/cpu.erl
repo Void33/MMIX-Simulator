@@ -44,6 +44,7 @@
 -define(ADDU8,  16#2C).
 -define(ADDU16, 16#2E).
 -define(CMP,    16#30).
+-define(CMPI,   16#31).
 -define(CMPU,   16#32).
 -define(NEG,    16#34).
 -define(NEGU,   16#36).
@@ -53,7 +54,6 @@
 -define(SRU,    16#3E).
 -define(BN,     16#40).
 -define(BZ,     16#42).
--define(BZI,    16#43).
 -define(BP,     16#44).
 -define(BOD,    16#46).
 -define(BNN,    16#48).
@@ -183,11 +183,17 @@ execute(?DIVI, PC) ->
 execute(?ADDUI, PC) ->
   addui(PC);
 %% 30-3F
+
+execute(?CMP, PC) ->
+  cmp(PC);
+execute(?CMPI, PC) ->
+  cmpi(PC);
+
 %% 40-4F
 execute(?BZ, PC) ->
   bz(PC);
-execute(?BZI, PC) ->
-  bzi(PC);
+execute(?BNP, PC) ->
+  bnp(PC);
 %% 50-5F
 %% 60-6F
 %% 70-7F
@@ -221,6 +227,9 @@ execute(?ORH, PC) ->
 execute(?ORL, PC) ->
   orl(PC);
 %% F0-FF
+execute(?GET, PC) ->
+  mmix_get(PC);
+
 execute(OpCode, _PC) ->
   erlang:display("Execute"),
   erlang:display(OpCode).
@@ -252,7 +261,20 @@ divi(PC) ->
   Stmt = lists:flatten(io_lib:format("DIVI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   divi(PC, Stmt, RX, RY, RZ).
 divi(PC, Stmt, RX, RY, Z) ->
-  {Stmt, [], []}.
+  RYVal = registers:query_register(RY),
+  Updates = [next_command(PC)],
+  if
+    Z == 0 ->
+      register_ra ! {event, divide_check},
+      XtraUpdates = [{RX, 0}, {rR, RYVal}];
+    true ->
+      Quot  = RYVal div Z,
+      Rem   = RYVal rem Z,
+      io:format("When we divide ~w by ~w we get ~w remainder ~w~n", [RYVal, Z, Quot, Rem]),
+      XtraUpdates = [{RX, Quot}, {rR, Rem}]
+  end,
+  FullUpdates = Updates ++ XtraUpdates,
+  {Stmt, FullUpdates, []}.
 
 %% 20-2F
 
@@ -275,29 +297,48 @@ addui(PC) ->
   {Stmt, NewList, []}.
 
 %% 30-3F
+
+cmp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CMP $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cmpi(PC, Stmt, RX, RY, RZVal).
+cmpi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CMPI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cmpi(PC, Stmt, RX, RY, Z).
+cmpi(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_register(RY),
+  io:format("Compare ~w with ~w~n", [RYVal, Z]),
+  NV = if
+    RYVal <  Z -> minus_one();
+    RYVal >  Z -> 1;
+    RYVal == Z -> 0
+  end,
+  io:format("Compare ~w with ~w which equals~w~n", [RYVal, Z, NV]),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
+
 %% 40-4F
 bz(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   RZVal = registers:query_register(RZ),
-  Stmt = lists:flatten(io_lib:format("BZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
-  bzi(PC, Stmt, RX, RY, RZVal).
-bzi(PC) ->
-  {RX, RY, RZ} = three_operands(PC),
-  Stmt = lists:flatten(io_lib:format("BZI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
-  bzi(PC, Stmt, RX, RY, RZ).
-bzi(PC, Stmt, RX, RY, Z) ->
   RXVal = registers:query_register(RX),
-  io:format("The value stored in the X register is ~w~n", [RXVal]),
+  Stmt = lists:flatten(io_lib:format("BZ $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   case RXVal of
     0 ->
       io:format("We need to branch!!~n"),
-      {_Overflow, NewPC} = immediate_address(RY, Z),
+      {_Overflow, NewPC} = immediate_address(RY, RZVal),
       io:format("The branch location is ~w~n", [NewPC]),
       {Stmt, [{pc, NewPC}], []};
     _ ->
       io:format("We do not need to branch!!~n"),
       {Stmt, [next_command(PC)], []}
   end.
+
+bnp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("BNP $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  {Stmt, [], []}.
 
 %% 50-5F
 %% 60-6F
@@ -387,7 +428,7 @@ setl(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   io:format("SETL~n", []),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
-  RVal = (RZ * 256) + RY,
+  RVal = rval(RY, RZ),
   Update = registers:set_register_lowwyde(RX, RVal),
   Stmt = lists:flatten(io_lib:format("SETL $~.16B, ~B", [RX, RVal])),
   {Stmt, [Update, next_command(PC)], []}.
@@ -395,7 +436,7 @@ setl(PC) ->
 incl(PC) ->
   io:format("Process INCL~n"),
   {RX, RY, RZ} = three_operands(PC),
-  RVal = (RY * 256) + RZ,
+  RVal = rval(RY, RZ),
   Stmt = lists:flatten(io_lib:format("INCL $~.16B, ~B", [RX, RVal])),
   RXVal = registers:query_register(RX),
   {_Overflow, NV} = add_values(RXVal, RVal),
@@ -405,17 +446,60 @@ incl(PC) ->
 orh(PC) ->
   io:format("Process ORH~n"),
   {RX, RY, RZ} = three_operands(PC),
-  RVal = (RZ * 256) + RY,
+  RVal = rval(RY, RZ),
   Stmt = lists:flatten(io_lib:format("ORH $~.16B, ~B", [RX, RVal])),
   {Stmt, [], []}.
 
 orl(PC) ->
-  io:format("Process ORL~n"),
+  io:format("Process ORL ~w~n", [PC]),
   {"ORL", [], []}.
 
 %% F0-FF
 
+mmix_get(PC) ->
+  {RX, _RY, RZ} = three_operands(PC),
+  SR = operand_to_special_register(RZ),
+  RegVal = registers:query_register(SR),
+  Stmt = lists:flatten(io_lib:format("GET $~.16B, ~w", [RX, SR])),
+  {Stmt, [{RX, RegVal}, next_command(PC)], []}.
+
 %% Utilities
+
+operand_to_special_register(0)  -> rB;
+operand_to_special_register(1)  -> rD;
+operand_to_special_register(2)  -> rE;
+operand_to_special_register(3)  -> rH;
+operand_to_special_register(4)  -> rJ;
+operand_to_special_register(5)  -> rM;
+operand_to_special_register(6)  -> rR;
+operand_to_special_register(7)  -> rBB;
+operand_to_special_register(8)  -> rC;
+operand_to_special_register(9)  -> rN;
+operand_to_special_register(10) -> rO;
+operand_to_special_register(11) -> rS;
+operand_to_special_register(12) -> rI;
+operand_to_special_register(13) -> rT;
+operand_to_special_register(14) -> rTT;
+operand_to_special_register(15) -> rK;
+operand_to_special_register(16) -> rQ;
+operand_to_special_register(17) -> rU;
+operand_to_special_register(18) -> rW;
+operand_to_special_register(19) -> rG;
+operand_to_special_register(20) -> rL;
+operand_to_special_register(21) -> rA;
+operand_to_special_register(22) -> rF;
+operand_to_special_register(23) -> rP;
+operand_to_special_register(24) -> rW;
+operand_to_special_register(25) -> rX;
+operand_to_special_register(26) -> rY;
+operand_to_special_register(27) -> rZ;
+operand_to_special_register(28) -> rWW;
+operand_to_special_register(29) -> rXX;
+operand_to_special_register(30) -> rYY;
+operand_to_special_register(31) -> rZZ.
+
+rval(RY, RZ) ->
+  (RY * 256) + RZ.
 
 three_operands(PC) ->
   First = operand(PC+1),
@@ -436,10 +520,12 @@ immediate_address(RY, RZ) ->
   io:format("The other value is ~w~n", [R1]),
   add_values(R1, RZ).
 
+minus_one() -> utilities:hex2uint("FFFFFFFFFFFFFFFF").
+
 add_values(V1, V2) ->
   A = (V1 + V2),
   io:format("The total is ~w~n", [A]),
-  MaxMemory = utilities:hex2uint("FFFFFFFFFFFFFFFF"),
+  MaxMemory = minus_one(),
   if
     A > MaxMemory
       ->
