@@ -15,7 +15,7 @@
 -define(ROUND_TO_DOWN,    3).
 
 %% API
--export([start/0, loop/3]).
+-export([start/0, loop/3, calculate_byte/2]).
 
 start() ->
   register(register_ra, spawn(register_ra, loop, [?ROUND_TO_NEAREST, sets:new(), sets:new()])).
@@ -25,7 +25,8 @@ loop(RoundingMode, EnableBits, EventBits) ->
     stop ->
       true;
     {From, value} ->
-      return_state(From, RoundingMode, EnableBits, EventBits),
+      RAVal = return_state(From, RoundingMode, EnableBits, EventBits),
+      io:format("The rA Value is ~w~n", [RAVal]),
       loop(RoundingMode, EnableBits, sets:new());
     {From, rounding_mode} ->
       From ! {self(), RoundingMode},
@@ -38,8 +39,20 @@ loop(RoundingMode, EnableBits, EventBits) ->
   end.
 
 return_state(From, RoundingMode, EnableBits, EventBits) ->
-  io:format("We need to calculate the current state of the rA register ~w ~w ~w~n", [RoundingMode, sets:to_list(EnableBits), sets:to_list(EventBits)]),
-  From ! RoundingMode.
+  EventValue = calculate_byte(sets:to_list(EventBits), 0),
+  EnableValue = calculate_byte(sets:to_list(EnableBits), 0),
+  Value = ((RoundingMode * 256) + EnableValue) * 256 + EventValue,
+  From ! Value.
+
+calculate_byte([floating_inexact|Rest], Total) -> calculate_byte(Rest, Total + 1);
+calculate_byte([division_by_zero|Rest], Total) -> calculate_byte(Rest, Total + 2);
+calculate_byte([floating_underflow|Rest], Total) -> calculate_byte(Rest, Total + 4);
+calculate_byte([floating_overflow|Rest], Total) -> calculate_byte(Rest, Total + 8);
+calculate_byte([invalid_operation|Rest], Total) -> calculate_byte(Rest, Total + 16);
+calculate_byte([float_to_fix|Rest], Total) -> calculate_byte(Rest, Total + 32);
+calculate_byte([overflow|Rest], Total) -> calculate_byte(Rest, Total + 64);
+calculate_byte([divide_check|Rest], Total) -> calculate_byte(Rest, Total + 128);
+calculate_byte(_, Total) -> Total.
 
 set_flag(EnableBits, EventBits, divide_check) ->
   case sets:is_element(divide_check, EnableBits) of
