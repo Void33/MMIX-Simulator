@@ -32,6 +32,7 @@
 -define(MUL,    16#18).
 -define(MULU,   16#1A).
 -define(DIV,    16#1C).
+-define(DIVI,   16#1D).
 -define(DIVU,   16#1E).
 -define(ADD,    16#20).
 -define(ADDU,   16#22).
@@ -52,6 +53,7 @@
 -define(SRU,    16#3E).
 -define(BN,     16#40).
 -define(BZ,     16#42).
+-define(BZI,    16#43).
 -define(BP,     16#44).
 -define(BOD,    16#46).
 -define(BNN,    16#48).
@@ -86,6 +88,7 @@
 -define(LDBU,   16#82).
 -define(LDW,    16#84).
 -define(LDWU,   16#86).
+-define(LDWUI,  16#87).
 -define(LDT,    16#88).
 -define(LDTU,   16#8A).
 -define(LDO,    16#8C).
@@ -171,15 +174,28 @@ execute(?TRAP, PC) ->
 
 %% 10-1F
 
+execute(?DIV, PC) ->
+  mmix_div(PC);
+execute(?DIVI, PC) ->
+  divi(PC);
+
 %% 20-2F
 execute(?ADDUI, PC) ->
   addui(PC);
 %% 30-3F
 %% 40-4F
+execute(?BZ, PC) ->
+  bz(PC);
+execute(?BZI, PC) ->
+  bzi(PC);
 %% 50-5F
 %% 60-6F
 %% 70-7F
 %% 80-8F
+execute(?LDWU, PC) ->
+  ldwu(PC);
+execute(?LDWUI, PC) ->
+  ldwui(PC);
 execute(?LDOU, PC) ->
   ldou(PC);
 %% 90-9F
@@ -209,6 +225,8 @@ execute(OpCode, _PC) ->
   erlang:display("Execute"),
   erlang:display(OpCode).
 
+next_command(PC) ->
+  {pc, PC + 4}.
 
 %% Execute the individual instructions
 
@@ -218,11 +236,24 @@ trap(PC) ->
   io:format("TRAP~n"),
   {RX, RY, RZ} = three_operands(PC),
   Msgs = trap:process_trap(RX, RY, RZ),
-  Updates = [{pc, (PC + 4)}],
+  Updates = [next_command(PC)],
   Stmt = lists:flatten(io_lib:format("TRAP ~B, ~B, ~B", [RX, RY, RZ])),
   {Stmt, Updates, Msgs}.
 
 %% 10-1F
+
+mmix_div(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("DIV $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  divi(PC, Stmt, RX, RY, RZVal).
+divi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("DIVI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  divi(PC, Stmt, RX, RY, RZ).
+divi(PC, Stmt, RX, RY, Z) ->
+  {Stmt, [], []}.
+
 %% 20-2F
 
 addui(PC) ->
@@ -231,7 +262,7 @@ addui(PC) ->
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   {Overflow, NewValue} = immediate_address(RY, RZ),
   io:format("Registers ~w - ~w~n",[Overflow, NewValue]),
-  Updates = [{RX, NewValue}, {pc, (PC + 4)}],
+  Updates = [{RX, NewValue}, next_command(PC)],
   io:format("Updates ~w~n",[Updates]),
   NewList = case Overflow of
               overflow ->
@@ -245,10 +276,47 @@ addui(PC) ->
 
 %% 30-3F
 %% 40-4F
+bz(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("BZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  bzi(PC, Stmt, RX, RY, RZVal).
+bzi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("BZI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  bzi(PC, Stmt, RX, RY, RZ).
+bzi(PC, Stmt, RX, RY, Z) ->
+  RXVal = registers:query_register(RX),
+  io:format("The value stored in the X register is ~w~n", [RXVal]),
+  case RXVal of
+    0 ->
+      io:format("We need to branch!!~n"),
+      {_Overflow, NewPC} = immediate_address(RY, Z),
+      io:format("The branch location is ~w~n", [NewPC]),
+      {Stmt, [{pc, NewPC}], []};
+    _ ->
+      io:format("We do not need to branch!!~n"),
+      {Stmt, [next_command(PC)], []}
+  end.
+
 %% 50-5F
 %% 60-6F
 %% 70-7F
 %% 80-8F
+
+ldwu(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDWU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldwui(PC, Stmt, RX, RY, RZVal).
+ldwui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDWUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldwui(PC, Stmt, RX, RY, RZ).
+ldwui(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Value} = immediate_address(RY, Z),
+  io:format("Set the register ~w to ~w~n", [RX, Value]),
+  {Stmt, [{RX, Value}, next_command(PC)], []}.
 
 ldou(PC) ->
   {RX, RY, RZ} = three_operands(PC),
@@ -286,7 +354,7 @@ stwui(PC, Stmt, RX, RY, Z) ->
       io:format("The memory changes are ~w~n", [MemoryChanges]),
       NewMessages = [{memory_change, MemoryChanges}],
       io:format("We are sending back ~w~n", [NewMessages]),
-      {Stmt, [{pc, PC + 4}], NewMessages};
+      {Stmt, [next_command(PC)], NewMessages};
     {overflow, _} ->
       io:format("An overflow occured! What do we do!!!!"),
       {Stmt, [], []}
@@ -310,7 +378,7 @@ ori(PC, Stmt, RX, RY, Z) ->
   RYVal = registers:query_register(RY),
   NVal = RYVal bor Z,
   io:format("ORI ~w ~w (~w) ~w = (~w)~n", [RX, RY, RYVal, Z, NVal]),
-  {Stmt, [{RX, NVal}, {pc, PC + 4}], []}.
+  {Stmt, [{RX, NVal}, next_command(PC)], []}.
 
 %% D0-DF
 %% E0-EF
@@ -322,14 +390,17 @@ setl(PC) ->
   RVal = (RZ * 256) + RY,
   Update = registers:set_register_lowwyde(RX, RVal),
   Stmt = lists:flatten(io_lib:format("SETL $~.16B, ~B", [RX, RVal])),
-  {Stmt, [Update, {pc, (PC + 4)}], []}.
+  {Stmt, [Update, next_command(PC)], []}.
 
 incl(PC) ->
   io:format("Process INCL~n"),
   {RX, RY, RZ} = three_operands(PC),
   RVal = (RY * 256) + RZ,
   Stmt = lists:flatten(io_lib:format("INCL $~.16B, ~B", [RX, RVal])),
-  {Stmt, [], []}.
+  RXVal = registers:query_register(RX),
+  {_Overflow, NV} = add_values(RXVal, RVal),
+  io:format("We will add ~w to ~w and we get ~w~n", [RVal, RXVal, NV]),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 orh(PC) ->
   io:format("Process ORH~n"),
@@ -372,7 +443,7 @@ add_values(V1, V2) ->
   if
     A > MaxMemory
       ->
-        register_ra ! overflow,
+        register_ra ! {event, overflow},
         {overflow,(A - MaxMemory)};
     true
       -> {no_overflow, A}

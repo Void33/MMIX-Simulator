@@ -38,12 +38,9 @@ contents() ->
 %%  V /= 0.
 
 set_register_lowwyde(RX, RVal) ->
-  io:format("Set low wyde part of register ~w to ~w~n", [RX, RVal]),
   CVal = query_register(RX),
   CQuot = CVal div 16#10000,
-  io:format("The existing value is ~w, which has other wydes of ~w~n", [CVal, CQuot]),
   NVal = CQuot * 16#10000 + RVal,
-  io:format("The new value is ~w~n", [NVal]),
   {RX, NVal}.
 
 set_register(Register, Value) ->

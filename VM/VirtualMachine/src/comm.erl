@@ -36,9 +36,9 @@ loop(Socket) ->
       case process_message(N) of
         {updates, Updates} ->
           RV = {updates, Updates},
-          io:format("The message being returned is ~w~n", [RV]),
+%%          io:format("The message being returned is ~w~n", [RV]),
           TTB = term_to_binary(RV),
-          io:format("Sending back ~w~n", [TTB]),
+%%          io:format("Sending back ~w~n", [TTB]),
           gen_udp:send(Socket, Host, Port, TTB);
         {all_registers, Registers} ->
           gen_udp:send(Socket, Host, Port, term_to_binary({all_registers, Registers}));
@@ -92,7 +92,7 @@ get_register_ra() ->
   register_ra ! {self(), value},
   receive
     Ra ->
-      io:format("We received a message ~w~n",[Ra]),
+%%      io:format("We received a message ~w~n",[Ra]),
       {rA, Ra}
   end.
 
@@ -102,8 +102,7 @@ next_statement() ->
   io:format("We are processing address ~w containing ~w~n", [PC, FullOpCode]),
   {Code, Updates, Msgs} = cpu:execute(FullOpCode, PC),
   Upd = get_special_registers(),
-  io:format("The special registers are ~w~n", [Upd]),
+%%  io:format("The special registers are ~w~n", [Upd]),
   FullUpdates = Updates ++ Upd,
-  io:format("The new updates are ~w~n", [FullUpdates]),
   lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, FullUpdates),
   {Code, FullUpdates, Msgs}.
