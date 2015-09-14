@@ -51,7 +51,7 @@ genPICodeOutput :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> Ope
 genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionIdentifier _)) = genOpCodeOutput symbols registers 193 operands address False
     where operands = i1 : i2 : (Expr (ExpressionNumber 0)) : []
 genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
-    where operands = i1 : i2 : (Expr (ExpressionNumber 0)) : []
+    where operands = i1 : (Expr (ExpressionNumber 0)) : i2 : []
 genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address False
     where operands = r1 : r2 : (Expr (ExpressionNumber 0)) : []
 genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
@@ -59,6 +59,8 @@ genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNu
 genPICodeOuput _ _ _ _ _ = Nothing
 
 genOpCodeOutput :: SymbolTable -> RegisterTable -> Int -> [OperatorElement] -> Int -> Bool -> Maybe CodeLine
+genOpCodeOutput symbols registers 254 operands address _ = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = code})
+    where code = splitSpecialRegisters symbols operands
 genOpCodeOutput symbols registers opcode operands address False =
     case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
@@ -113,6 +115,43 @@ splitOperands symbols registers (x : y : z : []) = Just(0, code)
           code = formatted_x : formatted_y : formatted_z : []
 splitOperands _ _ _ = Nothing
 
+splitSpecialRegisters :: SymbolTable -> [OperatorElement] -> String
+splitSpecialRegisters st (x:(Expr (ExpressionIdentifier (Id special))):[]) = (chr 254) : reg : special_register_to_operand special
+    where reg = formatElement st x
+
+special_register_to_operand :: String -> String
+special_register_to_operand "rA"  = (chr 0) : (chr 21) : []
+special_register_to_operand "rB"  = (chr 0) : (chr 0)  : []
+special_register_to_operand "rC"  = (chr 0) : (chr 8)  : []
+special_register_to_operand "rD"  = (chr 0) : (chr 1)  : []
+special_register_to_operand "rE"  = (chr 0) : (chr 2)  : []
+special_register_to_operand "rF"  = (chr 0) : (chr 22) : []
+special_register_to_operand "rG"  = (chr 0) : (chr 19) : []
+special_register_to_operand "rH"  = (chr 0) : (chr 3)  : []
+special_register_to_operand "rI"  = (chr 0) : (chr 12) : []
+special_register_to_operand "rJ"  = (chr 0) : (chr 4)  : []
+special_register_to_operand "rK"  = (chr 0) : (chr 15) : []
+special_register_to_operand "rL"  = (chr 0) : (chr 20) : []
+special_register_to_operand "rM"  = (chr 0) : (chr 5)  : []
+special_register_to_operand "rN"  = (chr 0) : (chr 9)  : []
+special_register_to_operand "rO"  = (chr 0) : (chr 10) : []
+special_register_to_operand "rP"  = (chr 0) : (chr 23) : []
+special_register_to_operand "rQ"  = (chr 0) : (chr 16) : []
+special_register_to_operand "rR"  = (chr 0) : (chr 6)  : []
+special_register_to_operand "rS"  = (chr 0) : (chr 11) : []
+special_register_to_operand "rT"  = (chr 0) : (chr 13) : []
+special_register_to_operand "rU"  = (chr 0) : (chr 17) : []
+special_register_to_operand "rV"  = (chr 0) : (chr 18) : []
+special_register_to_operand "rW"  = (chr 0) : (chr 24) : []
+special_register_to_operand "rX"  = (chr 0) : (chr 25) : []
+special_register_to_operand "rY"  = (chr 0) : (chr 26) : []
+special_register_to_operand "rZ"  = (chr 0) : (chr 27) : []
+special_register_to_operand "rBB" = (chr 0) : (chr 7)  : []
+special_register_to_operand "rTT" = (chr 0) : (chr 14) : []
+special_register_to_operand "rWW" = (chr 0) : (chr 28) : []
+special_register_to_operand "rXX" = (chr 0) : (chr 29) : []
+special_register_to_operand "rYY" = (chr 0) : (chr 30) : []
+special_register_to_operand "rZZ" = (chr 0) : (chr 31) : []
 
 make_bytes :: [Char] -> Int -> [Char]
 make_bytes arr size = make_inner_bytes size arr []

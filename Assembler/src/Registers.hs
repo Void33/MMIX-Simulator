@@ -61,7 +61,13 @@ addRegister table register address
     | otherwise = Right $ M.insert register address table
 
 registersFromAddresses :: RegisterTable -> AlternativeRegisterTable
-registersFromAddresses orig = M.foldrWithKey addNextRegister M.empty orig
+registersFromAddresses orig = M.foldrWithKey addNextRegister M.empty without_main
+   where without_main = M.filterWithKey remove_main orig
+
+remove_main :: Char -> ExpressionEntry -> Bool
+remove_main k _
+  | k == (chr 255) = False
+  | otherwise      = True
 
 addNextRegister :: Char -> ExpressionEntry -> AlternativeRegisterTable -> AlternativeRegisterTable
 addNextRegister k v orig = M.insert v k orig
