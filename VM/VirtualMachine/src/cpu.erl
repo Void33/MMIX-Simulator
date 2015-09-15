@@ -35,6 +35,7 @@
 -define(DIVI,   16#1D).
 -define(DIVU,   16#1E).
 -define(ADD,    16#20).
+-define(ADDI,   16#21).
 -define(ADDU,   16#22).
 -define(ADDUI,  16#23).
 -define(SUB,    16#24).
@@ -47,6 +48,7 @@
 -define(CMPI,   16#31).
 -define(CMPU,   16#32).
 -define(NEG,    16#34).
+-define(NEGI,   16#35).
 -define(NEGU,   16#36).
 -define(SL,     16#38).
 -define(SLU,    16#3A).
@@ -54,11 +56,13 @@
 -define(SRU,    16#3E).
 -define(BN,     16#40).
 -define(BZ,     16#42).
+-define(BZB,    16#43).
 -define(BP,     16#44).
 -define(BOD,    16#46).
 -define(BNN,    16#48).
 -define(BNZ,    16#4A).
 -define(BNP,    16#4C).
+-define(BNPB,   16#4D).
 -define(BEV,    16#4E).
 -define(PBN,    16#50).
 -define(PBZ,    16#52).
@@ -152,6 +156,7 @@
 -define(ANDNML, 16#EE).
 -define(ANDNL,  16#EF).
 -define(JMP,    16#F0).
+-define(JMPB,   16#F1).
 -define(PUSHJ,  16#F2).
 -define(GETA,   16#F4).
 -define(PUT,    16#F6).
@@ -169,6 +174,7 @@
 %% Determine which function we are executing
 
 %% 00-0F
+
 execute(?TRAP, PC) ->
   trap(PC);
 
@@ -180,8 +186,15 @@ execute(?DIVI, PC) ->
   divi(PC);
 
 %% 20-2F
+
+execute(?ADD, PC) ->
+  add(PC);
+execute(?ADDI, PC) ->
+  addi(PC);
+
 execute(?ADDUI, PC) ->
   addui(PC);
+
 %% 30-3F
 
 execute(?CMP, PC) ->
@@ -189,35 +202,59 @@ execute(?CMP, PC) ->
 execute(?CMPI, PC) ->
   cmpi(PC);
 
+execute(?NEG, PC) ->
+  neg(PC);
+execute(?NEGI, PC) ->
+  negi(PC);
+
 %% 40-4F
+
 execute(?BZ, PC) ->
   bz(PC);
+execute(?BZB, PC) ->
+  bzb(PC);
 execute(?BNP, PC) ->
   bnp(PC);
+execute(?BNPB, PC) ->
+  bnpb(PC);
+
 %% 50-5F
+
 %% 60-6F
+
 %% 70-7F
+
 %% 80-8F
+
 execute(?LDWU, PC) ->
   ldwu(PC);
 execute(?LDWUI, PC) ->
   ldwui(PC);
 execute(?LDOU, PC) ->
   ldou(PC);
+
 %% 90-9F
+
 %% A0-AF
+
 execute(?STWU, PC) ->
   stwu(PC);
 execute(?STWUI, PC) ->
   stwui(PC);
+
 %% B0-BF
+
 %% C0-CF
+
 execute(?OR, PC) ->
   mmix_or(PC);
 execute(?ORI, PC) ->
   ori(PC);
+
 %% D0-DF
+
 %% E0-EF
+
 execute(?SETL, PC) ->
   setl(PC);
 execute(?INCL, PC) ->
@@ -226,13 +263,19 @@ execute(?ORH, PC) ->
   orh(PC);
 execute(?ORL, PC) ->
   orl(PC);
+
 %% F0-FF
+
+execute(?JMP, PC) ->
+  jmp(PC);
+execute(?JMPB, PC) ->
+  jmpb(PC);
 execute(?GET, PC) ->
   mmix_get(PC);
 
 execute(OpCode, _PC) ->
-  erlang:display("Execute"),
-  erlang:display(OpCode).
+  io:format("We encountered a command that we do not recognized ~w~n", [OpCode]),
+  {"ERROR", [], []}.
 
 next_command(PC) ->
   {pc, PC + 4}.
@@ -278,6 +321,21 @@ divi(PC, Stmt, RX, RY, Z) ->
 
 %% 20-2F
 
+add(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("ADD $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addi(PC, Stmt, RX, RY, RZVal).
+addi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("ADDI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  addi(PC, Stmt, RX, RY, RZ).
+addi(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_register(RY),
+  {_Overflow, Result} = add_values(RYVal, Z),
+  io:format("The Y value is ~.16B and the Result is ~.16B~n", [RYVal, Result]),
+  {Stmt, [{RX, Result}, next_command(PC)], []}.
+
 addui(PC) ->
   io:format("ADDUI ~w~n",[PC]),
   {RX, RY, RZ} = three_operands(PC),
@@ -315,30 +373,51 @@ cmpi(PC, Stmt, RX, RY, Z) ->
     RYVal >  Z -> 1;
     RYVal == Z -> 0
   end,
-  io:format("Compare ~w with ~w which equals~w~n", [RYVal, Z, NV]),
+  io:format("Compare ~w with ~w which equals ~w~n", [RYVal, Z, NV]),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
+
+neg(PC) ->
+  {RX, Y, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("NEG $~.16B, ~B, $~.16B", [RX, Y, RZ])),
+  negi(PC, Stmt, RX, Y, RZVal).
+negi(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("NEGI $~.16B, ~.B, ~B", [RX, Y, Z])),
+  negi(PC, Stmt, RX, Y, Z).
+negi(PC, Stmt, RX, Y, Z) ->
+  Diff = Y - Z,
+  NV = if
+         Diff < 0 -> minus_one() + Diff + 1;
+         true     -> Diff
+       end,
+  io:format("The difference is ~w which goes to ~.16B~n", [Diff, NV]),
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 %% 40-4F
 bz(PC) ->
-  {RX, RY, RZ} = three_operands(PC),
-  RZVal = registers:query_register(RZ),
-  RXVal = registers:query_register(RX),
-  Stmt = lists:flatten(io_lib:format("BZ $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
-  case RXVal of
-    0 ->
-      io:format("We need to branch!!~n"),
-      {_Overflow, NewPC} = immediate_address(RY, RZVal),
-      io:format("The branch location is ~w~n", [NewPC]),
-      {Stmt, [{pc, NewPC}], []};
-    _ ->
-      io:format("We do not need to branch!!~n"),
-      {Stmt, [next_command(PC)], []}
-  end.
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BZ $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bz/1, PC, RX, Address, Stmt).
+
+bzb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BZB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bz/1, PC, RX, Address, Stmt).
 
 bnp(PC) ->
-  {RX, RY, RZ} = three_operands(PC),
-  Stmt = lists:flatten(io_lib:format("BNP $~.16B, $~.16B, ~B", [RX, RY, RZ])),
-  {Stmt, [], []}.
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNP $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnp/1, PC, RX, Address, Stmt).
+
+bnpb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNPB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnp/1, PC, RX, Address, Stmt).
 
 %% 50-5F
 %% 60-6F
@@ -355,7 +434,8 @@ ldwui(PC) ->
   Stmt = lists:flatten(io_lib:format("LDWUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   ldwui(PC, Stmt, RX, RY, RZ).
 ldwui(PC, Stmt, RX, RY, Z) ->
-  {_Overflow, Value} = immediate_address(RY, Z),
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_wyde(Address),
   io:format("Set the register ~w to ~w~n", [RX, Value]),
   {Stmt, [{RX, Value}, next_command(PC)], []}.
 
@@ -372,7 +452,7 @@ stwu(PC) ->
   io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
-  RZVal = registers:query_adjusted_register(RZ),
+  RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STWU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   stwui(PC, Stmt, RX, RY, RZVal).
 
@@ -386,7 +466,7 @@ stwui(PC, Stmt, RX, RY, Z) ->
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
   IA = immediate_address(RY, Z),
   case IA of
-    {no_overflow, Location} ->
+    {_, Location} ->
       RXVal = registers:query_register(RX),
       io:format("Set the address ~w to the least significant bits of ~w~n", [Location, RXVal]),
       LSB = utilities:get_0_wyde(RXVal),
@@ -395,10 +475,7 @@ stwui(PC, Stmt, RX, RY, Z) ->
       io:format("The memory changes are ~w~n", [MemoryChanges]),
       NewMessages = [{memory_change, MemoryChanges}],
       io:format("We are sending back ~w~n", [NewMessages]),
-      {Stmt, [next_command(PC)], NewMessages};
-    {overflow, _} ->
-      io:format("An overflow occured! What do we do!!!!"),
-      {Stmt, [], []}
+      {Stmt, [next_command(PC)], NewMessages}
   end.
 
 %% B0-BF
@@ -455,6 +532,18 @@ orl(PC) ->
   {"ORL", [], []}.
 
 %% F0-FF
+
+jmp(PC) ->
+  {X, Y, Z} = three_operands(PC),
+  Address = rval(rval(X, Y), Z),
+  Stmt = lists:flatten(io_lib:format("JMP ~B", [Address])),
+  branch:branch_forward(fun branch:jmp/1, PC, X, Address, Stmt).
+
+jmpb(PC) ->
+  {X, Y, Z} = three_operands(PC),
+  Address = rval(rval(X, Y), Z),
+  Stmt = lists:flatten(io_lib:format("JMPB ~B", [Address])),
+  branch:branch_backward(fun branch:jmp/1, PC, X, Address, Stmt).
 
 mmix_get(PC) ->
   {RX, _RY, RZ} = three_operands(PC),
@@ -530,7 +619,7 @@ add_values(V1, V2) ->
     A > MaxMemory
       ->
         register_ra ! {event, overflow},
-        {overflow,(A - MaxMemory)};
+        {overflow,(A - (MaxMemory + 1))};
     true
       -> {no_overflow, A}
   end.

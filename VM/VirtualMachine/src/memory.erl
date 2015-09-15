@@ -136,6 +136,8 @@ handle_call({store_program, Program, StartLocation}, _From, TableId) ->
   {reply, ok, TableId};
 handle_call({get_byte, Location}, _From, TableId) ->
   {reply, get_memory_location_byte(Location, TableId), TableId};
+handle_call({get_wyde, Location}, _From, TableId) ->
+  {reply, get_memory_location_wyde(Location, TableId), TableId};
 handle_call({get_nstring, Location}, _From, TableId) ->
   {reply, get_memory_location_nstring(Location, TableId), TableId};
 handle_call({set_wyde, Location, Value}, _From, TableId) ->
@@ -228,7 +230,22 @@ store_program([Entry|Rest], Location, TableId) ->
   store_program(Rest, (Location + 1), TableId).
 
 get_memory_location_byte(Location, TableId) ->
-  [{Location, Value}] = ets:lookup(TableId, Location),
+  case ets:lookup(TableId, Location) of
+    [{_, Byte}] -> Byte;
+    _ -> 0
+  end.
+
+get_memory_location_wyde(Location, TableId) ->
+  AdjustedLocation = utilities:adjust_location(Location, 2),
+  Byte0 = case ets:lookup(TableId, AdjustedLocation) of
+            [{_, B0}] -> B0;
+            _ -> 0
+          end,
+  Byte1 = case ets:lookup(TableId, AdjustedLocation + 1) of
+            [{_, B1}] -> B1;
+            _ -> 0
+          end,
+  Value = (Byte0 * 256) + Byte1,
   Value.
 
 get_memory_location_nstring(Location, TableId) ->
