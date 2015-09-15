@@ -90,7 +90,7 @@ Byte_Array : STR { reverse $1 }
            | Byte_Array COMMA BYTE_LIT { $3 : $1 }
            | Byte_Array COMMA HEX { (chr $3) : $1 }
 
-GlobalVariables : DS { 0x20000000 }
+GlobalVariables : DS { 0x2000000000000000 }
 
 
 --                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
