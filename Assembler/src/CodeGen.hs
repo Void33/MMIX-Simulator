@@ -63,10 +63,12 @@ genOpCodeOutput symbols registers 254 operands address _ = Just(CodeLine {cl_add
     where code = splitSpecialRegisters symbols operands
 genOpCodeOutput symbols registers opcode operands address False 
     | opcode >= 60 && opcode <= 95 = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + local_adjustment)) : code})
+    | opcode == 240 = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + jump_adjustment)) : jump_code})
     | otherwise = case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
         _ -> Nothing
       where (local_adjustment, code) = splitLocalOperands symbols operands address
+            (jump_adjustment, jump_code) = jumpOperands symbols operands address
 genOpCodeOutput symbols registers opcode operands address True =
     case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr opcode) : params})
@@ -85,8 +87,25 @@ formatElement st (Expr x@(ExpressionIdentifier id)) =
     case M.lookup id st of
         (Just (_, Just (IsRegister r))) -> chr r
         (Just (_, Just (IsIdentifier r))) -> formatElement st (Expr (ExpressionIdentifier r))
-        otherwise -> chr (E.evaluate x 0 st)
-formatElement st (Expr x) = chr (E.evaluate x 0 st)
+        otherwise -> evaluateByteToChar st x
+formatElement st (Expr x) = evaluateByteToChar st x
+
+evaluateByteToChar :: SymbolTable -> ExpressionEntry -> Char
+evaluateByteToChar st x = chr digit
+    where plain_digit = (E.evaluate x 0 st)
+          digit = if plain_digit < 0
+                      then 256 + plain_digit
+                      else plain_digit
+
+jumpOperands :: SymbolTable -> [OperatorElement] -> Int -> (Int, String)
+jumpOperands symbols ((Ident id):[]) address = (adjustment, code)
+    where ro = getSymbolAddress symbols id
+          (adjustment, offset) = localLabelOffset address ro
+          b2 = rem offset 256
+          q2 = quot offset 256
+          b1 = rem q2 256
+          b0 = quot q2 256
+          code = (chr b0) : (chr b1) : (chr b2) : []
 
 splitLocalOperands :: SymbolTable -> [OperatorElement] -> Int -> (Int, String)
 splitLocalOperands symbols (x:(Ident id):[]) address = (adjustment, code)

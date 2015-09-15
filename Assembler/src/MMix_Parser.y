@@ -80,6 +80,7 @@ PI : LOC Expression      { LocEx $2 }
    | TETRA Byte_Array    { TetraArray (reverse $2) }
    | OCTA Byte_Array     { OctaArray (reverse $2) }
    | IS INT              { IsNumber $2 }
+   | IS BYTE_LIT         { IsNumber (ord $2) }
    | IS REG              { IsRegister $2 }
    | IS Identifier       { IsIdentifier $2 }
 
@@ -90,7 +91,7 @@ Byte_Array : STR { reverse $1 }
            | Byte_Array COMMA BYTE_LIT { $3 : $1 }
            | Byte_Array COMMA HEX { (chr $3) : $1 }
 
-GlobalVariables : DS { 0x2000000000000000 }
+GlobalVariables : DS { 0x20000000 }
 
 
 --                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }

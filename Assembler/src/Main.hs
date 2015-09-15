@@ -138,7 +138,7 @@ testLine = "j0     GREG  PRIME1+2-@"
 gcfl symbols registers (LabelledOpCodeLine opcode operands _ address _) = goco symbols registers opcode operands address
 gcfl symbols registers (PlainOpCodeLine 254 operands address _) = Just (0, (sro symbols operands))
 gcfl symbols registers (PlainOpCodeLine opcode operands address _) = goco symbols registers opcode operands address
---gcfl _ _ (LabelledPILine (ByteArray arr) _ address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = arr})
+--gcfl _ _ (PlainPILine (ByteArray arr) address) = Just(CodeLine {cl_address = address, cl_size = s, cl_code = arr})
 --    where s = length arr
 --gcfl symbols registers (LabelledPILine (Set (e1, e2)) _ address) =
 --    gpico symbols registers address e1 e2
@@ -155,8 +155,7 @@ gpico :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> OperatorEleme
 --    where operands = r1 : r2 : []
 gpico _ _ _ _ _ = Nothing
 
-t1 = LabelledOpCodeLine {lpocl_code = 66, lpocl_ops = [Expr (ExpressionIdentifier (Id "jj")),Ident (Id "??2H1")], lpocl_ident = Id "??3H0", lpocl_loc = 272, lpocl_sim = False}
-t2 = PlainOpCodeLine {pocl_code = 76, pocl_ops = [Expr (ExpressionIdentifier (Id "t")),Ident (Id "??2H0")], pocl_loc = 304, pocl_sim = False}
+t1 = PlainPILine {ppl_id = ByteArray "\NUL\ETX\NUL\ENQ\NUL\a\NUL\v\NUL\r\NUL\DC1\NUL\DC3\NUL\ETB\NUL\GS", ppl_loc = 536870914}
 
 tst = M.fromList [(Id "Main",(256,Nothing)),(Id "txt",(536870912,Just (ByteArray "Hello world!\n\NUL")))] :: SymbolTable
 trt = M.fromList [('\254',ExpressionNumber 536870912),('\255',ExpressionNumber 256)]

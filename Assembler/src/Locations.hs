@@ -18,9 +18,17 @@ setLocation nextLoc ln@(LabelledPILine (LocEx loc) _ _) =
        Just val -> (val, ln { lppl_loc = val })
        _ -> (nextLoc, ln)
 setLocation nextLoc ln@(LabelledPILine (ByteArray arr) _ _) = (newLoc, ln { lppl_loc = nextLoc })
-    where newLoc = nextLoc + (length arr)
+    where size = length arr
+          adjustment = case (rem size 4) of
+                          0 -> 0
+                          x -> 4 - x
+          newLoc = nextLoc + size
 setLocation nextLoc ln@(PlainPILine (ByteArray arr) _) = (newLoc, ln { ppl_loc = nextLoc })
-    where newLoc = nextLoc + (length arr)
+    where size = length arr
+          adjustment = case (rem size 4) of
+                          0 -> 0
+                          x -> 4 - x
+          newLoc = nextLoc + size
 setLocation nextLoc ln@(LabelledPILine (WydeArray arr) _ _) = (newLoc, ln { lppl_loc = addjusted_loc })
     where addjusted_loc = case (rem nextLoc 2) of
                              0 -> nextLoc
@@ -57,7 +65,13 @@ setLocation nextLoc ln@(PlainPILine (Set _) _) = (newLoc, ln { ppl_loc = nextLoc
     where newLoc = nextLoc + 4
 setLocation nextLoc ln@(PlainPILine _ _) = (nextLoc, ln { ppl_loc = nextLoc })
 setLocation nextLoc ln@(LabelledPILine _ _ _) = (nextLoc, ln { lppl_loc = nextLoc })
-setLocation nextLoc ln@(PlainOpCodeLine _ _ _ _) = (newLoc, ln { pocl_loc = nextLoc })
-    where newLoc = nextLoc + 4
-setLocation nextLoc ln@(LabelledOpCodeLine _ _ _ _ _) = (newLoc, ln { lpocl_loc = nextLoc })
-    where newLoc = nextLoc + 4
+setLocation nextLoc ln@(PlainOpCodeLine _ _ _ _) = (newLoc, ln { pocl_loc = adjusted_loc })
+    where adjusted_loc = case (rem nextLoc 4) of
+                            0 -> nextLoc
+                            x -> nextLoc + (4 - x)
+          newLoc = adjusted_loc + 4
+setLocation nextLoc ln@(LabelledOpCodeLine _ _ _ _ _) = (newLoc, ln { lpocl_loc = adjusted_loc })
+    where adjusted_loc = case (rem nextLoc 4) of
+                            0 -> nextLoc
+                            x -> nextLoc + (4 - x)
+          newLoc = adjusted_loc + 4
