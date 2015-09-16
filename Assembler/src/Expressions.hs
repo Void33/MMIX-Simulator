@@ -8,6 +8,23 @@ isSingleExprNumber :: ExpressionEntry -> Maybe Int
 isSingleExprNumber (ExpressionNumber val) = Just val
 isSingleExprNumber _ = Nothing
 
+evaluateAllLocExpressions :: Either String [Line] -> Either String SymbolTable -> Either String [Line]
+evaluateAllLocExpressions (Left msg) _ = Left msg
+evaluateAllLocExpressions _ (Left msg) = Left msg
+evaluateAllLocExpressions (Right lines) (Right st) = Right $ evaluateAllLocLines st lines []
+
+evaluateAllLocLines :: SymbolTable -> [Line] -> [Line] -> [Line]
+evaluateAllLocLines _ [] acc = reverse acc
+evaluateAllLocLines st (ln:lns) acc = evaluateAllLocLines st lns (new_line : acc)
+        where new_line = evaluateLocLine st ln
+
+evaluateLocLine :: SymbolTable -> Line -> Line
+evaluateLocLine st ln@(LabelledPILine (LocEx expr) _ address) = ln{lppl_id = (LocEx (ExpressionNumber v))}
+   where v = evaluate expr address st
+evaluateLocLine st ln@(PlainPILine (LocEx expr) address) = ln{ppl_id = (LocEx (ExpressionNumber v))}
+   where v = evaluate expr address st
+evaluateLocLine _ ln = ln
+
 evaluateAllExpressions :: Either String [Line] -> Either String SymbolTable -> Either String [Line]
 evaluateAllExpressions (Left msg) _ = Left msg
 evaluateAllExpressions _ (Left msg) = Left msg

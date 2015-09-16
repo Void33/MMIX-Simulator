@@ -14,7 +14,8 @@ ptop   GREG  @
 j0     GREG  PRIME1+2-@
 BUF    OCTA  0
        LOC   #100
-Main   SET   n,3
+Main   GREG  @
+       SET   n,3
        SET   jj,j0
 2H     STWU  n,ptop,jj
        INCL  jj,2

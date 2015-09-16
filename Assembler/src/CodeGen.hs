@@ -48,13 +48,13 @@ genCodeForLine symbols registers (PlainPILine (Set (e1, e2)) address) =
 genCodeForLine _ _ _ = Nothing
 
 genPICodeOutput :: SymbolTable -> RegisterTable -> Int -> OperatorElement -> OperatorElement -> Maybe(CodeLine)
-genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionIdentifier _)) = genOpCodeOutput symbols registers 193 operands address False
+genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionIdentifier _)) = genOpCodeOutput symbols registers 193 operands address True
     where operands = i1 : i2 : (Expr (ExpressionNumber 0)) : []
-genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
+genPICodeOutput symbols registers address i1@(Expr (ExpressionIdentifier _)) i2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address True
     where operands = i1 : (Expr (ExpressionNumber 0)) : i2 : []
-genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address False
+genPICodeOutput symbols registers address r1@(Register _) r2@(Register _) = genOpCodeOutput symbols registers 192 operands address True
     where operands = r1 : r2 : (Expr (ExpressionNumber 0)) : []
-genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address False
+genPICodeOutput symbols registers address r1@(Register _) r2@(Expr (ExpressionNumber _)) = genOpCodeOutput symbols registers 227 operands address True
     where operands = r1 : r2 : []
 genPICodeOuput _ _ _ _ _ = Nothing
 
@@ -64,6 +64,9 @@ genOpCodeOutput symbols registers 254 operands address _ = Just(CodeLine {cl_add
 genOpCodeOutput symbols registers opcode operands address False 
     | opcode >= 60 && opcode <= 95 = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + local_adjustment)) : code})
     | opcode == 240 = Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + jump_adjustment)) : jump_code})
+    | opcode == 34 = case splitOperandsAddress symbols registers operands of
+                        Just(address_adjustment, address_code) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + address_adjustment)) : address_code})
+                        _ -> Nothing
     | otherwise = case splitOperands symbols registers operands of
         Just((adjustment,params)) -> Just(CodeLine {cl_address = address, cl_size = 4, cl_code = (chr (opcode + adjustment)) : params})
         _ -> Nothing
@@ -107,6 +110,20 @@ jumpOperands symbols ((Ident id):[]) address = (adjustment, code)
           b0 = quot q2 256
           code = (chr b0) : (chr b1) : (chr b2) : []
 
+splitOperandsAddress :: SymbolTable -> RegisterTable -> [OperatorElement] -> Maybe(AdjustedOperands)
+splitOperandsAddress symbols registers (x:(Expr (ExpressionNumber y)):[]) = Just(1, code)
+    where registersByAddress = registersFromAddresses registers
+          Just(reg, offset) = determineBaseAddressAndOffset registersByAddress (y, Nothing)
+          formatted_x = formatElement symbols x
+          code = formatted_x : reg : (chr offset) : []
+splitOperandsAddress symbols registers (x:Expr (ExpressionIdentifier y):[]) =
+    case mapSymbolToAddress symbols registers y of
+       Just(y_reg, y_offset) -> Just(1, code)
+          where formatted_x = formatElement symbols x
+                code = formatted_x : y_reg : (chr y_offset) : []
+       otherwise -> Nothing
+splitOperandsAddress _ _ _ = Nothing
+
 splitLocalOperands :: SymbolTable -> [OperatorElement] -> Int -> (Int, String)
 splitLocalOperands symbols (x:(Ident id):[]) address = (adjustment, code)
     where ro = getSymbolAddress symbols id
@@ -143,6 +160,11 @@ splitOperands symbols registers (x:(Expr (ExpressionIdentifier id)):[]) = Just(1
           code = case ro of
                      Just((base,offset)) -> formatted_x : base : (chr offset) : []
                      otherwise -> []
+splitOperands symbols registers (x : y : z@(Expr (ExpressionNumber _)) : []) = Just(1, code)
+    where formatted_x = formatElement symbols x
+          formatted_y = formatElement symbols y
+          formatted_z = formatElement symbols z
+          code = formatted_x : formatted_y : formatted_z : []
 splitOperands symbols registers (x : y : z : []) = Just(0, code)
     where formatted_x = formatElement symbols x
           formatted_y = formatElement symbols y

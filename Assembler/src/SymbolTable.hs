@@ -62,11 +62,19 @@ determineBaseAddressAndOffset rfa (required_address, _) =
 
 mapSymbolToAddress :: SymbolTable -> RegisterTable -> Identifier -> Maybe(RegisterOffset)
 mapSymbolToAddress symbols registers identifier@(Id _)
-    | M.member identifier symbols = determineBaseAddressAndOffset registersByAddress requiredAddress
+    | M.member identifier symbols = result
     | otherwise = Just('b', 2)
       where registersByAddress = registersFromAddresses registers
             requiredAddress = symbols M.! identifier
+            exactRegister   = extractRegister requiredAddress
+            result          = case exactRegister of
+                                 Just(reg) -> Just(reg, 0)
+                                 _         -> determineBaseAddressAndOffset registersByAddress requiredAddress
 mapSymbolToAddress _ _ _ = Nothing
+
+extractRegister :: RegisterAddress -> Maybe(Char)
+extractRegister (_, Just(IsRegister reg)) = Just(chr reg)
+extractRegister _ = Nothing
 
 getSymbolAddress :: SymbolTable -> Identifier -> Int
 getSymbolAddress symbols identifier = add

@@ -140,8 +140,12 @@ handle_call({get_wyde, Location}, _From, TableId) ->
   {reply, get_memory_location_wyde(Location, TableId), TableId};
 handle_call({get_nstring, Location}, _From, TableId) ->
   {reply, get_memory_location_nstring(Location, TableId), TableId};
+handle_call({set_byte, Location, Value}, _From, TableId) ->
+  {reply, set_byte(Location, Value, TableId), TableId};
 handle_call({set_wyde, Location, Value}, _From, TableId) ->
   {reply, set_wyde(Location, Value, TableId), TableId};
+handle_call({set_octabyte, Location, Value}, _From, TableId) ->
+  {reply, set_octabyte(Location, Value, TableId), TableId};
 handle_call(stop_program, _From, _TableId) ->
   {stop, normal};
 handle_call(get_contents, _From, TableId) ->
@@ -259,7 +263,7 @@ get_memory_location_nstring(Location, TableId, Accumulator) ->
   end.
 
 set_byte(Location, Value, TableId) ->
-  io:format("Set the memory location ~w to ~w~n", [Location, Value]),
+  io:format("Set the memory location ~w in the table to ~w~n", [Location, Value]),
   ets:insert(TableId, {Location, Value}),
   {Location, Value}.
 
@@ -270,3 +274,23 @@ set_wyde(Location, Value, TableId) ->
   C0 = set_byte(Adjusted_Location, B1, TableId),
   C1 = set_byte((Adjusted_Location + 1), B0, TableId),
   [C0, C1].
+
+set_octabyte(Location, Value, TableId) ->
+  Adjusted_Location = utilities:adjust_location(Location, 8),
+  B0 = utilities:get_0_byte(Value),
+  B1 = utilities:get_1_byte(Value),
+  B2 = utilities:get_2_byte(Value),
+  B3 = utilities:get_3_byte(Value),
+  B4 = utilities:get_4_byte(Value),
+  B5 = utilities:get_5_byte(Value),
+  B6 = utilities:get_6_byte(Value),
+  B7 = utilities:get_7_byte(Value),
+  C0 = set_byte(Adjusted_Location, B7, TableId),
+  C1 = set_byte((Adjusted_Location + 1), B6, TableId),
+  C2 = set_byte((Adjusted_Location + 2), B5, TableId),
+  C3 = set_byte((Adjusted_Location + 3), B4, TableId),
+  C4 = set_byte((Adjusted_Location + 4), B3, TableId),
+  C5 = set_byte((Adjusted_Location + 5), B2, TableId),
+  C6 = set_byte((Adjusted_Location + 6), B1, TableId),
+  C7 = set_byte((Adjusted_Location + 7), B0, TableId),
+  [C0, C1, C2, C3, C4, C5, C6, C7].

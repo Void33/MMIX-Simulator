@@ -107,6 +107,7 @@
 -define(GO,     16#9E).
 -define(STB,    16#A0).
 -define(STBU,   16#A2).
+-define(STBUI,  16#A3).
 -define(STW,    16#A4).
 -define(STWU,   16#A6).
 -define(STWUI,  16#A7).
@@ -114,6 +115,7 @@
 -define(STTU,   16#AA).
 -define(STO,    16#AC).
 -define(STOU,   16#AE).
+-define(STOUI,  16#AF).
 -define(STSF,   16#B0).
 -define(STHT,   16#B2).
 -define(STCO,   16#B4).
@@ -237,10 +239,19 @@ execute(?LDOU, PC) ->
 
 %% A0-AF
 
+execute(?STBU, PC) ->
+  stbu(PC);
+execute(?STBUI, PC) ->
+  stbui(PC);
 execute(?STWU, PC) ->
   stwu(PC);
 execute(?STWUI, PC) ->
   stwui(PC);
+
+execute(?STOU, PC) ->
+  stou(PC);
+execute(?STOUI, PC) ->
+  stoui(PC);
 
 %% B0-BF
 
@@ -448,6 +459,36 @@ ldou(PC) ->
 %% 90-9F
 %% A0-AF
 
+stbu(PC) ->
+  io:format("STWU ~w~n", [PC]),
+  {RX, RY, RZ} = three_operands(PC),
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("STBU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  stbui(PC, Stmt, RX, RY, RZVal).
+
+stbui(PC) ->
+  io:format("STWUI ~w~n", [PC]),
+  {RX, RY, RZVal} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("STBUI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
+  stbui(PC, Stmt, RX, RY, RZVal).
+
+stbui(PC, Stmt, RX, RY, Z) ->
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
+  IA = immediate_address(RY, Z),
+  case IA of
+    {_, Location} ->
+      RXVal = registers:query_register(RX),
+      io:format("Set the address ~w to the least significant bits of ~w~n", [Location, RXVal]),
+      LSB = utilities:get_0_byte(RXVal),
+      io:format("Which is ~w~n", [LSB]),
+      MemoryChanges = memory:set_byte(Location, LSB),
+      io:format("The memory changes are ~w~n", [MemoryChanges]),
+      NewMessages = [{memory_change, MemoryChanges}],
+      io:format("We are sending back ~w~n", [NewMessages]),
+      {Stmt, [next_command(PC)], NewMessages}
+  end.
+
 stwu(PC) ->
   io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
@@ -476,6 +517,28 @@ stwui(PC, Stmt, RX, RY, Z) ->
       NewMessages = [{memory_change, MemoryChanges}],
       io:format("We are sending back ~w~n", [NewMessages]),
       {Stmt, [next_command(PC)], NewMessages}
+  end.
+
+stou(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("STOU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  stoui(PC, Stmt, RX, RY, RZVal).
+stoui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("STOUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  stoui(PC, Stmt, RX, RY, RZ).
+stoui(PC, Stmt, RX, RY, Z) ->
+  IA = immediate_address(RY, Z),
+  case IA of
+    {_, Location} ->
+      RXVal = registers:query_register(RX),
+      io:format("Set the address ~w to ~w~n", [Location, RXVal]),
+      MemoryChanges = memory:set_octabyte(Location, RXVal),
+      io:format("The changes to memory are ~w~n", [MemoryChanges]),
+      NewMessages = [{memory_change, MemoryChanges}],
+      {Stmt, [next_command(PC)], NewMessages};
+    _ -> {"STOUI Address Error", [], []}
   end.
 
 %% B0-BF
