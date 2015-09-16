@@ -141,7 +141,7 @@ handle_call({get_wyde, Location}, _From, TableId) ->
 handle_call({get_nstring, Location}, _From, TableId) ->
   {reply, get_memory_location_nstring(Location, TableId), TableId};
 handle_call({set_byte, Location, Value}, _From, TableId) ->
-  {reply, set_byte(Location, Value, TableId), TableId};
+  {reply, [set_byte(Location, Value, TableId)], TableId};
 handle_call({set_wyde, Location, Value}, _From, TableId) ->
   {reply, set_wyde(Location, Value, TableId), TableId};
 handle_call({set_octabyte, Location, Value}, _From, TableId) ->
