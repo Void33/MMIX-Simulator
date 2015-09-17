@@ -18,6 +18,7 @@ cabal.sandbox.config
 *.out
 
 .DS_Store
+*/.idea/*
 .idea/*
 
 SimulatorGUI/.idea/*
