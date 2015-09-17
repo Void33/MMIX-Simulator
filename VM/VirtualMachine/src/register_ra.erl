@@ -33,6 +33,8 @@ loop(RoundingMode, EnableBits, EventBits) ->
       loop(RoundingMode, EnableBits, EventBits);
     {event, Flag} ->
       loop(RoundingMode, EnableBits, set_flag(EnableBits, EventBits, Flag));
+    {remove, Flag} ->
+      loop(RoundingMode, EnableBits, remove_flag(EventBits, Flag));
     Msg ->
       io:format("We received this message ~w~n", [Msg]),
       loop(RoundingMode, EnableBits, EventBits)
@@ -53,6 +55,14 @@ calculate_byte([float_to_fix|Rest], Total) -> calculate_byte(Rest, Total + 32);
 calculate_byte([overflow|Rest], Total) -> calculate_byte(Rest, Total + 64);
 calculate_byte([divide_check|Rest], Total) -> calculate_byte(Rest, Total + 128);
 calculate_byte(_, Total) -> Total.
+
+remove_flag(EventBits, Flag) ->
+  case set:is_element(Flag, EventBits) of
+    true ->
+      sets:del_element(Flag, EventBits);
+    false ->
+      EventBits
+  end.
 
 set_flag(EnableBits, EventBits, divide_check) ->
   case sets:is_element(divide_check, EnableBits) of

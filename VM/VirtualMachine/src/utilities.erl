@@ -13,7 +13,7 @@
 -export([signed_integer16/1, hex2int/1, hex2uint/1, get_8_bytes/1]).
 -export([get_0_wyde/1,get_1_wyde/1,get_2_wyde/1,get_3_wyde/1]).
 -export([get_0_byte/1,get_1_byte/1,get_2_byte/1,get_3_byte/1,get_4_byte/1,get_5_byte/1,get_6_byte/1,get_7_byte/1]).
--export([adjust_location/2]).
+-export([adjust_location/2, twos_complement/1, minus_one/0]).
 
 hex2uint(L) ->
   << I:64/unsigned-integer >> = hex_to_bin(L),
@@ -132,3 +132,13 @@ wyde_to_int(B) ->
 
 adjust_location(Location, Scale) ->
   (Location div Scale) * Scale.
+
+minus_one() -> utilities:hex2uint("FFFFFFFFFFFFFFFF").
+
+twos_complement(Value) ->
+  io:format("The initial value is ~w~n",[Value]),
+  Step1 = minus_one(),
+  Step2 = Value - 1,
+  Step3 = Step1 - Step2,
+  io:format("The three steps are ~.16B ~.16B ~.16B ~w~n", [Step1, Step2, Step3, Step3]),
+  Step3.

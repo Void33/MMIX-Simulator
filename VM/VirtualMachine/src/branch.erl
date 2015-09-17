@@ -28,36 +28,35 @@ branch_backward(Fun, PC, RX, Address, Stmt) ->
   {Stmt, [{pc, NewPC}], []}.
 
 bn(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal < 0.
 
 bz(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal == 0.
 
 bp(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal > 0.
 
 bod(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   (RXVal rem 2) == 1.
 
 bnn(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal >= 0.  %% non negative
 
 bnz(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal /= 0.
 
 bnp(RX) ->
-  RXVal = registers:query_register(RX),
-  io:format("BNP ~w~n", [RXVal]),
+  RXVal = registers:query_adjusted_register(RX),
   RXVal =< 0.
 
 bev(RX) ->
-  RXVal = registers:query_register(RX),
+  RXVal = registers:query_adjusted_register(RX),
   (RXVal rem 2) == 0.
 
 jmp(_RX) -> true.

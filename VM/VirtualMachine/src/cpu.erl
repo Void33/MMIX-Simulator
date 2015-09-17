@@ -9,284 +9,10 @@
 -module(cpu).
 -author("steveedmans").
 
--define(TRAP,   0).
--define(FCMP,   16#01).
--define(FUN,    16#02).
--define(FEQL,   16#03).
--define(FADD,   16#04).
--define(FIX,    16#05).
--define(FSUB,   16#06).
--define(FIXU,   16#07).
--define(FLOT,   16#08).
--define(FLOTU,  16#0A).
--define(SFLOT,  16#0C).
--define(SFLOTU, 16#0E).
--define(FMUL,   16#10).
--define(FCMPE,  16#11).
--define(FUNE,   16#12).
--define(FEQLE,  16#13).
--define(FDIV,   16#14).
--define(FSQRT,  16#15).
--define(FREM,   16#16).
--define(FINT,   16#17).
--define(MUL,    16#18).
--define(MULU,   16#1A).
--define(DIV,    16#1C).
--define(DIVI,   16#1D).
--define(DIVU,   16#1E).
--define(ADD,    16#20).
--define(ADDI,   16#21).
--define(ADDU,   16#22).
--define(ADDUI,  16#23).
--define(SUB,    16#24).
--define(SUBU,   16#26).
--define(ADDU2,  16#28).
--define(ADDU4,  16#2A).
--define(ADDU8,  16#2C).
--define(ADDU16, 16#2E).
--define(CMP,    16#30).
--define(CMPI,   16#31).
--define(CMPU,   16#32).
--define(NEG,    16#34).
--define(NEGI,   16#35).
--define(NEGU,   16#36).
--define(SL,     16#38).
--define(SLU,    16#3A).
--define(SR,     16#3C).
--define(SRU,    16#3E).
--define(BN,     16#40).
--define(BZ,     16#42).
--define(BZB,    16#43).
--define(BP,     16#44).
--define(BOD,    16#46).
--define(BNN,    16#48).
--define(BNZ,    16#4A).
--define(BNP,    16#4C).
--define(BNPB,   16#4D).
--define(BEV,    16#4E).
--define(PBN,    16#50).
--define(PBZ,    16#52).
--define(PBP,    16#54).
--define(PBOD,   16#56).
--define(PBNN,   16#58).
--define(PBNZ,   16#5A).
--define(PBNP,   16#5C).
--define(PBEV,   16#5E).
--define(CSN,    16#60).
--define(CSZ,    16#62).
--define(CSP,    16#64).
--define(CSOD,   16#66).
--define(CSNN,   16#68).
--define(CSNZ,   16#6A).
--define(CSNP,   16#6C).
--define(CSEV,   16#6E).
--define(ZSN,    16#70).
--define(ZSZ,    16#72).
--define(ZSP,    16#74).
--define(ZSOD,   16#76).
--define(ZSNN,   16#78).
--define(ZSNZ,   16#7A).
--define(ZSNP,   16#7C).
--define(ZSEV,   16#7E).
--define(LDB,    16#80).
--define(LDBU,   16#82).
--define(LDW,    16#84).
--define(LDWU,   16#86).
--define(LDWUI,  16#87).
--define(LDT,    16#88).
--define(LDTU,   16#8A).
--define(LDO,    16#8C).
--define(LDOU,   16#8E).
--define(LDSF,   16#90).
--define(LDHT,   16#92).
--define(CSWAP,  16#94).
--define(LDUNC,  16#96).
--define(LDVTS,  16#98).
--define(PRELD,  16#9A).
--define(PREGO,  16#9C).
--define(GO,     16#9E).
--define(STB,    16#A0).
--define(STBU,   16#A2).
--define(STBUI,  16#A3).
--define(STW,    16#A4).
--define(STWU,   16#A6).
--define(STWUI,  16#A7).
--define(STT,    16#A8).
--define(STTU,   16#AA).
--define(STO,    16#AC).
--define(STOU,   16#AE).
--define(STOUI,  16#AF).
--define(STSF,   16#B0).
--define(STHT,   16#B2).
--define(STCO,   16#B4).
--define(STUNC,  16#B6).
--define(SYNCD,  16#B8).
--define(PREST,  16#BA).
--define(SYNCID, 16#BC).
--define(PUSHGO, 16#BE).
--define(OR,     16#C0).
--define(ORI,    16#C1).
--define(ORN,    16#C2).
--define(NOR,    16#C4).
--define(XOR,    16#C6).
--define(AND,    16#C8).
--define(ANDN,   16#CA).
--define(NAND,   16#CC).
--define(NXOR,   16#CE).
--define(BDIF,   16#D0).
--define(WDIF,   16#D2).
--define(TDIF,   16#D4).
--define(ODIF,   16#D6).
--define(MUX ,   16#D8).
--define(SADD,   16#DA).
--define(MOR,    16#DC).
--define(MXOR,   16#DE).
--define(SETH,   16#E0).
--define(SETMH,  16#E1).
--define(SETML,  16#E2).
--define(SETL,   16#E3).
--define(INCH,   16#E4).
--define(INCMH,  16#E5).
--define(INCML,  16#E6).
--define(INCL,   16#E7).
--define(ORH,    16#E8).
--define(ORMH,   16#E9).
--define(ORML,   16#EA).
--define(ORL,    16#EB).
--define(ANDNH,  16#EC).
--define(ANDNMH, 16#ED).
--define(ANDNML, 16#EE).
--define(ANDNL,  16#EF).
--define(JMP,    16#F0).
--define(JMPB,   16#F1).
--define(PUSHJ,  16#F2).
--define(GETA,   16#F4).
--define(PUT,    16#F6).
--define(POP,    16#F8).
--define(RESUME, 16#F9).
--define(SAVE,   16#FA).
--define(SYNC,   16#FC).
--define(SWYM,   16#FD).
--define(GET,    16#FE).
--define(TRIP,   16#FF).
-
 %% API
 -export([execute/2]).
 
-%% Determine which function we are executing
-
-%% 00-0F
-
-execute(?TRAP, PC) ->
-  trap(PC);
-
-%% 10-1F
-
-execute(?DIV, PC) ->
-  mmix_div(PC);
-execute(?DIVI, PC) ->
-  divi(PC);
-
-%% 20-2F
-
-execute(?ADD, PC) ->
-  add(PC);
-execute(?ADDI, PC) ->
-  addi(PC);
-
-execute(?ADDUI, PC) ->
-  addui(PC);
-
-%% 30-3F
-
-execute(?CMP, PC) ->
-  cmp(PC);
-execute(?CMPI, PC) ->
-  cmpi(PC);
-
-execute(?NEG, PC) ->
-  neg(PC);
-execute(?NEGI, PC) ->
-  negi(PC);
-
-%% 40-4F
-
-execute(?BZ, PC) ->
-  bz(PC);
-execute(?BZB, PC) ->
-  bzb(PC);
-execute(?BNP, PC) ->
-  bnp(PC);
-execute(?BNPB, PC) ->
-  bnpb(PC);
-
-%% 50-5F
-
-%% 60-6F
-
-%% 70-7F
-
-%% 80-8F
-
-execute(?LDWU, PC) ->
-  ldwu(PC);
-execute(?LDWUI, PC) ->
-  ldwui(PC);
-execute(?LDOU, PC) ->
-  ldou(PC);
-
-%% 90-9F
-
-%% A0-AF
-
-execute(?STBU, PC) ->
-  stbu(PC);
-execute(?STBUI, PC) ->
-  stbui(PC);
-execute(?STWU, PC) ->
-  stwu(PC);
-execute(?STWUI, PC) ->
-  stwui(PC);
-
-execute(?STOU, PC) ->
-  stou(PC);
-execute(?STOUI, PC) ->
-  stoui(PC);
-
-%% B0-BF
-
-%% C0-CF
-
-execute(?OR, PC) ->
-  mmix_or(PC);
-execute(?ORI, PC) ->
-  ori(PC);
-
-%% D0-DF
-
-%% E0-EF
-
-execute(?SETL, PC) ->
-  setl(PC);
-execute(?INCL, PC) ->
-  incl(PC);
-execute(?ORH, PC) ->
-  orh(PC);
-execute(?ORL, PC) ->
-  orl(PC);
-
-%% F0-FF
-
-execute(?JMP, PC) ->
-  jmp(PC);
-execute(?JMPB, PC) ->
-  jmpb(PC);
-execute(?GET, PC) ->
-  mmix_get(PC);
-
-execute(OpCode, _PC) ->
-  io:format("We encountered a command that we do not recognized ~w~n", [OpCode]),
-  {"ERROR", [], []}.
+-include("cpu_execute.hrl").
 
 next_command(PC) ->
   {pc, PC + 4}.
@@ -365,6 +91,34 @@ addui(PC) ->
   Stmt = lists:flatten(io_lib:format("ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   {Stmt, NewList, []}.
 
+sub(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("SUB $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  subi(PC, Stmt, RX, RY, RZVal).
+subi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("SUBI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  subi(PC, Stmt, RX, RY, RZ).
+subi(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_register(RY),
+  ZNeg = utilities:twos_complement(Z),
+  {_Overflow, Subtraction} = add_values(RYVal, ZNeg),
+  {Stmt, [{RX, Subtraction}, next_command(PC)], []}.
+subu(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("SUBU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  Result = subi(PC, Stmt, RX, RY, RZVal),
+  register_ra ! {remove, overflow},
+  Result.
+subui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("SUBUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  Result = subi(PC, Stmt, RX, RY, RZ),
+  register_ra ! {remove, overflow},
+  Result.
+
 %% 30-3F
 
 cmp(PC) ->
@@ -380,7 +134,7 @@ cmpi(PC, Stmt, RX, RY, Z) ->
   RYVal = registers:query_register(RY),
   io:format("Compare ~w with ~w~n", [RYVal, Z]),
   NV = if
-    RYVal <  Z -> minus_one();
+    RYVal <  Z -> utilities:minus_one();
     RYVal >  Z -> 1;
     RYVal == Z -> 0
   end,
@@ -399,40 +153,370 @@ negi(PC) ->
 negi(PC, Stmt, RX, Y, Z) ->
   Diff = Y - Z,
   NV = if
-         Diff < 0 -> minus_one() + Diff + 1;
+         Diff < 0 -> utilities:minus_one() + Diff + 1;
          true     -> Diff
        end,
   io:format("The difference is ~w which goes to ~.16B~n", [Diff, NV]),
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 %% 40-4F
+
+bn(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BN $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bn/1, PC, RX, Address, Stmt).
+bnb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bn/1, PC, RX, Address, Stmt).
+
 bz(PC) ->
   {RX, Y, Z} = three_operands(PC),
   Address = rval(Y, Z),
   Stmt = lists:flatten(io_lib:format("BZ $~.16B, ~B", [RX, Address])),
   branch:branch_forward(fun branch:bz/1, PC, RX, Address, Stmt).
-
 bzb(PC) ->
   {RX, Y, Z} = three_operands(PC),
   Address = rval(Y, Z),
   Stmt = lists:flatten(io_lib:format("BZB $~.16B, ~B", [RX, Address])),
   branch:branch_backward(fun branch:bz/1, PC, RX, Address, Stmt).
 
+bp(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BP $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bp/1, PC, RX, Address, Stmt).
+bpb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BPB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bp/1, PC, RX, Address, Stmt).
+
+bod(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BOD $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bod/1, PC, RX, Address, Stmt).
+bodb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BODB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bod/1, PC, RX, Address, Stmt).
+
+bnn(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNN $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnn/1, PC, RX, Address, Stmt).
+bnnb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNNB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnn/1, PC, RX, Address, Stmt).
+
+bnz(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNZ $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnz/1, PC, RX, Address, Stmt).
+bnzb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BNZB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnz/1, PC, RX, Address, Stmt).
+
 bnp(PC) ->
   {RX, Y, Z} = three_operands(PC),
   Address = rval(Y, Z),
   Stmt = lists:flatten(io_lib:format("BNP $~.16B, ~B", [RX, Address])),
   branch:branch_forward(fun branch:bnp/1, PC, RX, Address, Stmt).
-
 bnpb(PC) ->
   {RX, Y, Z} = three_operands(PC),
   Address = rval(Y, Z),
   Stmt = lists:flatten(io_lib:format("BNPB $~.16B, ~B", [RX, Address])),
   branch:branch_backward(fun branch:bnp/1, PC, RX, Address, Stmt).
 
+bev(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BEV $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bev/1, PC, RX, Address, Stmt).
+bevb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("BEVB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bev/1, PC, RX, Address, Stmt).
+
 %% 50-5F
+
+pbn(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBN $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bn/1, PC, RX, Address, Stmt).
+pbnb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bn/1, PC, RX, Address, Stmt).
+
+pbz(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBZ $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bz/1, PC, RX, Address, Stmt).
+pbzb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBZB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bz/1, PC, RX, Address, Stmt).
+
+pbp(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBP $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bp/1, PC, RX, Address, Stmt).
+pbpb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBPB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bp/1, PC, RX, Address, Stmt).
+
+pbod(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBOD $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bod/1, PC, RX, Address, Stmt).
+pbodb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBODB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bod/1, PC, RX, Address, Stmt).
+
+pbnn(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNN $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnn/1, PC, RX, Address, Stmt).
+pbnnb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNNB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnn/1, PC, RX, Address, Stmt).
+
+pbnz(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNZ $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnz/1, PC, RX, Address, Stmt).
+pbnzb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNZB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnz/1, PC, RX, Address, Stmt).
+
+pbnp(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNP $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bnp/1, PC, RX, Address, Stmt).
+pbnpb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBNPB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bnp/1, PC, RX, Address, Stmt).
+
+pbev(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBEV $~.16B, ~B", [RX, Address])),
+  branch:branch_forward(fun branch:bev/1, PC, RX, Address, Stmt).
+pbevb(PC) ->
+  {RX, Y, Z} = three_operands(PC),
+  Address = rval(Y, Z),
+  Stmt = lists:flatten(io_lib:format("PBEVB $~.16B, ~B", [RX, Address])),
+  branch:branch_backward(fun branch:bev/1, PC, RX, Address, Stmt).
+
 %% 60-6F
+
+csn(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSN $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bn/1, PC, Stmt, RX, RY, RZVal).
+csni(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bn/1, PC, Stmt, RX, RY, Z).
+
+csz(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bz/1, PC, Stmt, RX, RY, RZVal).
+cszi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSZI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bz/1, PC, Stmt, RX, RY, Z).
+
+csp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSP $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bp/1, PC, Stmt, RX, RY, RZVal).
+cspi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSPI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bp/1, PC, Stmt, RX, RY, Z).
+
+csod(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSOD $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bod/1, PC, Stmt, RX, RY, RZVal).
+csodi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSODI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bod/1, PC, Stmt, RX, RY, Z).
+
+csnn(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNN $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bnn/1, PC, Stmt, RX, RY, RZVal).
+csnni(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNNI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bnn/1, PC, Stmt, RX, RY, Z).
+
+csnz(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bnz/1, PC, Stmt, RX, RY, RZVal).
+csnzi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNZI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bnz/1, PC, Stmt, RX, RY, Z).
+
+csnp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNP $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bnp/1, PC, Stmt, RX, RY, RZVal).
+csnpi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNPI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bnp/1, PC, Stmt, RX, RY, Z).
+
+csev(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSEV $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  cs(fun branch:bev/1, PC, Stmt, RX, RY, RZVal).
+csevi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSEVI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  cs(fun branch:bev/1, PC, Stmt, RX, RY, Z).
+
+cs(Fun, PC, Stmt, RX, RY, Z) ->
+  Updates = case Fun(RY) of
+              true  -> [{RX, Z}, next_command(PC)];
+              false -> [next_command(PC)]
+            end,
+  {Stmt, Updates, []}.
+
 %% 70-7F
+
+zsn(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSN $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bn/1, PC, Stmt, RX, RY, RZVal).
+zsni(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bn/1, PC, Stmt, RX, RY, Z).
+
+zsz(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bz/1, PC, Stmt, RX, RY, RZVal).
+zszi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSZI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bz/1, PC, Stmt, RX, RY, Z).
+
+zsp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSP $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bp/1, PC, Stmt, RX, RY, RZVal).
+zspi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSPI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bp/1, PC, Stmt, RX, RY, Z).
+
+zsod(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSOD $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bod/1, PC, Stmt, RX, RY, RZVal).
+zsodi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSODI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bod/1, PC, Stmt, RX, RY, Z).
+
+zsnn(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNN $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bnn/1, PC, Stmt, RX, RY, RZVal).
+zsnni(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNNI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bnn/1, PC, Stmt, RX, RY, Z).
+
+zsnz(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNZ $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bnz/1, PC, Stmt, RX, RY, RZVal).
+zsnzi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNZI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bnz/1, PC, Stmt, RX, RY, Z).
+
+zsnp(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSNP $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bnp/1, PC, Stmt, RX, RY, RZVal).
+zsnpi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSNPI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bnp/1, PC, Stmt, RX, RY, Z).
+
+zsev(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("CSEV $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  zs(fun branch:bev/1, PC, Stmt, RX, RY, RZVal).
+zsevi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("CSEVI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  zs(fun branch:bev/1, PC, Stmt, RX, RY, Z).
+
+zs(Fun, PC, Stmt, RX, RY, Z) ->
+  Updates = case Fun(RY) of
+              true  -> [{RX, Z}, next_command(PC)];
+              false -> [{RX, 0}, next_command(PC)]
+            end,
+  {Stmt, Updates, []}.
+
 %% 80-8F
 
 ldwu(PC) ->
@@ -450,29 +534,62 @@ ldwui(PC, Stmt, RX, RY, Z) ->
   io:format("Set the register ~w to ~w~n", [RX, Value]),
   {Stmt, [{RX, Value}, next_command(PC)], []}.
 
+ldo(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDO $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  RZVal = registers:query_register(RZ),
+  ldoui(PC, Stmt, RX, RY, RZVal).
+ldoi(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDOI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  ldoui(PC, Stmt, RX, RY, Z).
+
 ldou(PC) ->
   {RX, RY, RZ} = three_operands(PC),
-  {_Overflow, _A} = address_two_registers(RY, RZ),
   Stmt = lists:flatten(io_lib:format("LDOU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
-  {Stmt, [], []}.
+  RZVal = registers:query_register(RZ),
+  ldoui(PC, Stmt, RX, RY, RZVal).
+ldoui(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDOUI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  ldoui(PC, Stmt, RX, RY, Z).
+ldoui(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_octabyte(Address),
+  io:format("Set the register ~w to ~w~n", [RX, Value]),
+  {Stmt, [{RX, Value}, next_command(PC)], []}.
 
 %% 90-9F
 %% A0-AF
 
+stb(PC) ->
+  io:format("STWU ~w~n", [PC]),
+  {RX, RY, RZ} = three_operands(PC),
+  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("STB $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  stbui(PC, Stmt, RX, RY, RZVal).
+stbi(PC) ->
+  io:format("STWUI ~w~n", [PC]),
+  {RX, RY, RZVal} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("STBI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
+  stbui(PC, Stmt, RX, RY, RZVal).
 stbu(PC) ->
   io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STBU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
-  stbui(PC, Stmt, RX, RY, RZVal).
-
+  Result = stbui(PC, Stmt, RX, RY, RZVal),
+  register_ra ! {remove, overflow},
+  Result.
 stbui(PC) ->
   io:format("STWUI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STBUI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
-  stbui(PC, Stmt, RX, RY, RZVal).
-
+  Result = stbui(PC, Stmt, RX, RY, RZVal),
+  register_ra ! {remove, overflow},
+  Result.
 stbui(PC, Stmt, RX, RY, Z) ->
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
   IA = immediate_address(RY, Z),
@@ -584,15 +701,40 @@ incl(PC) ->
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 orh(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RVal = rval(RY, RZ),
+  RValA = RVal bsl 48,
+  RXVal = registers:query_register(RX),
+  NV = RXVal bor RValA,
+  Stmt = lists:flatten(io_lib:format("ORH $~.16B, ~B", [RX, RVal])),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
+
+ormh(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RVal = rval(RY, RZ),
+  RValA = RVal bsl 32,
+  RXVal = registers:query_register(RX),
+  NV = RXVal bor RValA,
+  Stmt = lists:flatten(io_lib:format("ORMH $~.16B, ~B", [RX, RVal])),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
+
+orml(PC) ->
   io:format("Process ORH~n"),
   {RX, RY, RZ} = three_operands(PC),
   RVal = rval(RY, RZ),
-  Stmt = lists:flatten(io_lib:format("ORH $~.16B, ~B", [RX, RVal])),
-  {Stmt, [], []}.
+  RValA = RVal bsl 16,
+  RXVal = registers:query_register(RX),
+  NV = RXVal bor RValA,
+  Stmt = lists:flatten(io_lib:format("ORML $~.16B, ~B", [RX, RVal])),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 orl(PC) ->
-  io:format("Process ORL ~w~n", [PC]),
-  {"ORL", [], []}.
+  {RX, RY, RZ} = three_operands(PC),
+  RVal = rval(RY, RZ),
+  RXVal = registers:query_register(RX),
+  NV = RXVal bor RVal,
+  Stmt = lists:flatten(io_lib:format("ORL $~.16B, ~B", [RX, RVal])),
+  {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 %% F0-FF
 
@@ -672,12 +814,10 @@ immediate_address(RY, RZ) ->
   io:format("The other value is ~w~n", [R1]),
   add_values(R1, RZ).
 
-minus_one() -> utilities:hex2uint("FFFFFFFFFFFFFFFF").
-
 add_values(V1, V2) ->
   A = (V1 + V2),
   io:format("The total is ~w~n", [A]),
-  MaxMemory = minus_one(),
+  MaxMemory = utilities:minus_one(),
   if
     A > MaxMemory
       ->

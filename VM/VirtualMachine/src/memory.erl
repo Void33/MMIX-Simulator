@@ -138,6 +138,10 @@ handle_call({get_byte, Location}, _From, TableId) ->
   {reply, get_memory_location_byte(Location, TableId), TableId};
 handle_call({get_wyde, Location}, _From, TableId) ->
   {reply, get_memory_location_wyde(Location, TableId), TableId};
+handle_call({get_tetrabyte, Location}, _From, TableId) ->
+  {reply, get_memory_location_tetrabyte(Location, TableId), TableId};
+handle_call({get_octabyte, Location}, _From, TableId) ->
+  {reply, get_memory_location_octabyte(Location, TableId), TableId};
 handle_call({get_nstring, Location}, _From, TableId) ->
   {reply, get_memory_location_nstring(Location, TableId), TableId};
 handle_call({set_byte, Location, Value}, _From, TableId) ->
@@ -250,6 +254,64 @@ get_memory_location_wyde(Location, TableId) ->
             _ -> 0
           end,
   Value = (Byte0 * 256) + Byte1,
+  Value.
+
+get_memory_location_tetrabyte(Location, TableId) ->
+  AdjustedLocation = utilities:adjust_location(Location, 4),
+  Byte0 = case ets:lookup(TableId, AdjustedLocation) of
+            [{_, B0}] -> B0;
+            _ -> 0
+          end,
+  Byte1 = case ets:lookup(TableId, AdjustedLocation + 1) of
+            [{_, B1}] -> B1;
+            _ -> 0
+          end,
+  Byte2 = case ets:lookup(TableId, AdjustedLocation + 2) of
+            [{_, B2}] -> B2;
+            _ -> 0
+          end,
+  Byte3 = case ets:lookup(TableId, AdjustedLocation + 3) of
+            [{_, B3}] -> B3;
+            _ -> 0
+          end,
+  Value = (((((Byte0 * 256) + Byte1) * 256) + Byte2) * 256) + Byte3,
+  Value.
+
+get_memory_location_octabyte(Location, TableId) ->
+  AdjustedLocation = utilities:adjust_location(Location, 8),
+  Byte0 = case ets:lookup(TableId, AdjustedLocation) of
+            [{_, B0}] -> B0;
+            _ -> 0
+          end,
+  Byte1 = case ets:lookup(TableId, AdjustedLocation + 1) of
+            [{_, B1}] -> B1;
+            _ -> 0
+          end,
+  Byte2 = case ets:lookup(TableId, AdjustedLocation + 2) of
+            [{_, B2}] -> B2;
+            _ -> 0
+          end,
+  Byte3 = case ets:lookup(TableId, AdjustedLocation + 3) of
+            [{_, B3}] -> B3;
+            _ -> 0
+          end,
+  Byte4 = case ets:lookup(TableId, AdjustedLocation) of
+            [{_, B4}] -> B4;
+            _ -> 0
+          end,
+  Byte5 = case ets:lookup(TableId, AdjustedLocation + 1) of
+            [{_, B5}] -> B5;
+            _ -> 0
+          end,
+  Byte6 = case ets:lookup(TableId, AdjustedLocation + 2) of
+            [{_, B6}] -> B6;
+            _ -> 0
+          end,
+  Byte7 = case ets:lookup(TableId, AdjustedLocation + 3) of
+            [{_, B7}] -> B7;
+            _ -> 0
+          end,
+  Value = (((((((((((((Byte0 * 256) + Byte1) * 256) + Byte2) * 256) + Byte3) * 256) + Byte4) * 256) + Byte5) * 256) + Byte6) * 256) + Byte7,
   Value.
 
 get_memory_location_nstring(Location, TableId) ->
