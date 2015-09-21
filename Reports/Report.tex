@@ -17,6 +17,7 @@
 \lstset{
 	basicstyle=\ttfamily\scriptsize,
 	breaklines=true,
+	showstringspaces=false
 }
 \renewcommand{\bibname}{References}
 \begin{document}
@@ -67,7 +68,7 @@ When you have control over the development of more than one of these components 
 
 The system that we have created in this project was inspired by Jeliot~\cite{jeliot:ref}, which is a tool that is used as an aid in the teaching of Java. The Jeliot system allows a user to give it a piece of Java source code and it will show the user what the underlying java virtual machine is doing when it runs the code.
 
-In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Professor Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Professor Knuth updated this machine architecture, which he calls MMIX. He later detailed this new version of the architecture in a fascicle~\cite{knuth:aocp2}. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing.
+In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Professor Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Professor Knuth updated this machine architecture, which he calls MMIX. He later detailed this new version of the architecture in a fascicle~\cite{knuth:aocp2}. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing. It should be noted that all definitions of an MMIX computer and the assembly language used to program it come directly from either one of these sources.
 
 \chapter{Assembler}
 \section{Introduction}
@@ -91,25 +92,116 @@ The four phases that we need for our project are Lexical Analysis, Syntax Analys
 
 The first thing that we need to do is decide which programming language is the most appropriate for this component. The component takes a fixed input and always produces the same output. The component does not contain any user interaction and it does not need a user interface. These requirements led us to choose a functional language for this component. The language we chose was Haskell.
 
-We describe how each of these phases are implemented in the next few sections.
+We describe how each of these phases are implemented in Haskell in the next few sections.
 \section{Lexer}
-The initial phase of compilation, lexical analysis, takes a stream of characters and converts them into tokens. Lexical analysis is a well know problem and there are many tools that have been created to make this task simpler. 
+The initial phase of compilation, lexical analysis, takes a stream of characters and converts them into tokens. Lexical analysis is a well know problem and there are many tools that have been created to make this task simpler. There are several lexers that already exist for Haskell and we have chosen to use a lexer called Alex\cite{alex}. 
+
+The first thing that you need to do when creating a lexer with Alex is to determine what set of tokens you will need to create. There are several parts to the MMIX assembly language (Mmixal). The first part is the way you define what operation should be performed by the computer at a specific point in the program. This is acheived with a machine language instrustion, which is typically called an Opcode. Each instruction needs some additional parameters which informs the computer on what the instruction should operate on, these parameters are typically called operands. There are two distinct types of Opcodes in Mmixal. The first type does not vary based on what operands are used with it. The second type does vary based on the operands, and the binary representation of the Opcode is different for the different set of operands. At the end of the assembly process these instructions will be converted into a binary representation that will be stored in the memory of an MMIX computer.
+
+The next type of instruction is used by the assembler specify either the initial state of the computer or assign internal details used as part of the assembly process. The instructions are called, in fascile 1\cite{knuth:aocp2}, pseudo instructions. These pseudo instructions do not necessarily result in anything being stored in memory.
+
+The mmixal language also defines labels, registers, expressions and a few other things.
+
+For this project we are using three basic groupings of tokens. The first group contains a single token, this token is for opcodes that do not vary based on their operands, we have called this token \textit{TOpCodeSimple}. The second group of tokens also contains a single token, this is the token for opcodes that do vary based on their operands, we have called this token \textit{TOpCode}. The third group contains all of the other tokens, see the code listing in Appendix~\ref{source:lexer} for a complete list of these.
+
+When you have determined what tokens are allowed you need to describe what sequences of characters should be converted to the individual tokens. The way that you describe the tokens in Alex is to create a list of regular expressions, for each regular expression you specify which token should be created if this sequence is found.
+
+The Alex lexer tool allows us to insert code at specific points in the process. The functions that we are using allows us to simplify the process of creating tokens.
+
+The Alex lexer requires us to store all of these definitions in a file with an extension of \textit{x}. When all of the definitions have been completed you run the definition file through the Alex lexer tool and it generates a haskell source file that will perform the lexical analysis for you.
 \section{Parser}
+Once we have got a stream of tokens from the lexer, we need to perform syntax analysis and semantic analysis to make sure that the supplied program is both syntactically and semantically correct. Both of these steps are usually performed at the same time with a component called a \textit{Parser}. Parsing, like lexical analysis, is a well know problem and there are many tools that have been created to make this task simpler. These tools are generally called parser generators as they take a definition file and produce the actual parser. There are several parser generators that already exist for Haskell and we have chosen to use a parser generator called Happy\cite{happy}.
+
+The requirement for a parser is to take a stream of tokens, make sure that the stream is syntactically and semantically correct, and then output an intermediate representation of the code that can be used to generate the final binary representation.
+
+The first thing that we did was to design our intermediate representation, there are four different type of code lines in mmixal, as shown below.
+
+\begin{centering}
+\begin{tabular}{ l l l l }
+BUF & OCTA & 0 & \textit{\%Labelled Pseudo Instruction Line}\\
+ & LOC & \#100 & \textit{\%Plain Pseudo Instruction Line}\\
+Main & JMP & 9F & \textit{\%Labelled Opcode Line}\\
+ & STWU & n,ptop,jj & \textit{\%Plain Opcode Line}\\
+\end{tabular}
+\end{centering}
+
+The way that the Happy parser generator works is that we need to create a definition file that specifies all of the syntactically and semantically correct types of statements in our language. We specify the valid statements using a context free grammar. A context free grammar contains two basic parts, an identifier and list of tokens, or identifiers, that the identifier represents. A cut down version of the parser definition file we have used can be found in Figure~\ref{cfg:happy} and a full description of the intermediate representation can be found in Appendix~\ref{iar}. 
+The complete definition file can be found in Appendix~\ref{source:parser}.
+
+\begin{figure}[ht!]
+\centering
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+Program         : AssignmentLines { reverse $1 }
+
+AssignmentLines : {- empty -}        {[]}
+                | AssignmentLines AssignmentLine { $2 : $1 }
+
+AssignmentLine :: {Line}
+AssingmentLine : OP_CODE OperatorList { defaultPlainOpCodeLine }
+               | Identifier PI { defaultLabelledPILine }
+               | Identifier OP_CODE OperatorList { defaultLabelledOpCodeLine }
+               | PI { defaultPlainPILine }
+               | OP_CODE_SIMPLE OperatorList { defaultPlainOpCodeLine }
+               | Identifier OP_CODE_SIMPLE OperatorList { defaultLabelledOpCodeLine }
+\end{lstlisting}
+\caption{Sample Context Free Grammar}
+\label{cfg:happy}
+\end{figure}
+
+
+The Happy parser generator requires us to store all of these definitions in a file with an extension of \textit{y}. When all of the definitions have been completed you run the definition file through the Happy parser generator tool and it generates a Haskell source file that will perform the syntactic and semantic analysis for you.
+
 \section{Code Generation}
+Now that we have got our program converted into an intermediate representation, in our case a list of \textit{Lines}, we need to convert this into a binary representation. The mmixal language contains a set of features called \textit{Local Labels} and processing these is the first step we perform when generating the code.
+\subsection{Local Labels}
+Local labels help compilers and programmers use names temporarily. They create symbols which are guaranteed to be unique over the entire scope of the input source code and which can be referred to by a simple notation. There are two parts to consider when implementing the local labels, the first is the location of the label itself, and the other is references to these labels used elsewhere in the program.
+
+The location of a local label is specified by placing a single digit followed directly by an H, i.e. \textit{0H} as a label at the start of a line. It should be noted that an individual local label can be specified many times in a single program, when they are referenced the closest label in the required direction is used. The way that we handle this is that we rename all of the local labels to system generated labels, these labels are actually illegal for user so we know that we are not creating duplicates. The format that we use is \textit{??LS\#H*} where \# is the local label number and * is a counter. We keep note of a separate counter for each of the possible local label numbers.
+
+The local labels are referenced as either forward or backward references, i.e. \textit{2B} specifies that we should look backwards in the code until we find a \textit{2H} local label and use that local. To achieve this we start off by creating two separate maps, one for forward references and one for backward references. Initially the forward references point to the first possible local label for the mapped digit, the backward references do not contain a reference and any use of it is a semantic error in the program. When we have these maps we iterate through the program replacing any reference to a local label with the appropriate system generated label from the specific map. We then check to see if the line actually contains a local label specification, if it does we update both the forward and backward maps with the appropriate changes. 
+
+At the end of this process we have converted all local labels into system generated labels that can be handled as if they were ordinary user specified labels.
 \subsection{Symbol Table}
+As we can see in Figure~\ref{CompilerPhases} one of the data structures that we need to create as part of the code generation process is called a \textit{Symbol Table}. This is simply a map that is used to record what labels have been specified and where in the program they actually point to. To create this we simply iterate through each of the lines of the program and if they contain a label we firstly check to see if it is already present and if it does not we add the label with the current location to the symbol table.
+
+The symbol table is used extensively in the later steps of the code generation.
 \subsection{Automatically Assigned Registers}
-\subsection{Local Symbols}
-%What is a local symbol
-%How do we achieve this?
-%Convert all #H statements with system generated labels that cannot be used by the user (??LS#H*) Where # is the local label number and * is a counter
-%Unclear what to do if local symbol defined on line where it could be used.
+An MMix computer, by definition, contains 256 general purpose registers. The programmer can either specify which register to use directly or they can get the assembler to assign one automatically for them. A new general purpose register is allocated every time the assembler comes across a \textit{GREG} pseudo instruction. The first register that is automatically assigned is \$FE (254). Every, subsequent, automatically generated register uses the next lowest register. We have achieved this by iterating over the lines, sending along the value of the next assignable register. If the line is a GREG instruction then we change the command to one that contains the assigned register, and we then decrement the next assignable register before passing it on the the next line.
 \subsection{Handling Operands}
+Each opcode instructions can be supplied one, two or three operands to specify exactly what we expect to happen. The majority of opcodes can either be supplied with three registers, or it can be supplied with two registers and an immediate value. The registers could, of course, be replaced by labels which represent registers. If the line specifies three registers then the plain opcode is used when we generate the code. In the other case then when we generate the code we increment the opcode by one to let the computer know not to look for this register.
+
+If the opcode is for a branching instruction then it will be supplied with a register and an address. For these instructions we need to determine the number of instructions between the current memory location and the memory location of the required address. We need the number of instructions, not just the difference in memory locations. This is calculated by determining the difference between the memory addresses and dividing this value by four. This address could be either ahead of, or before, the current location. If it is ahead of the current location then we use the plain opcode when generating the code. If the address is before the current location the we generate the code we increment the opcode by one.
 \subsection{Assembler Directives}
+TODO
 \subsection{Generating the Output}
+The final stage of the assembler is the actual outputting of the binary representation of the program. The way that we have achieved this is a two stage process. In the first stage we convert the intermediate representation of the code into a new representation of the code that makes creating the output file simpler.
+
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+CodeLine {cl_address = 256, cl_size = 4, cl_code = "\240\NUL\NUL\ETB"}
+\end{lstlisting}
+
+This representation includes the start address for this line of code, the size of the code and the binary representation of that line of code.
+
+The final stage is to output these code lines to a file. The structure of the file contains two separate parts, the first part contains the data the needs to be placed in memory, and the second part contains the initial values that the used registers need to be set to.
+
+To create the first part we group the code lines together into contiguous blocks. The first four bytes of this section contains the number of blocks that we have got, we then include the details for each block. The first four bytes of each block contains the start address of the block, next next four bytes of the block contains the size of the block, after this we include the actual code for the block.
+
+The first four bytes of the second part contains the number of registers we are defining. We then include the details for each register. The first byte of the register is register number, the next eight bytes are the initial value of that register.
+
 \section{Executable}
-%% HOW WE RUN THE ASSEMBLER, WHAT THE PARAMETERS ARE & WHAT THE OUTPUT IS
+TODO ----- HOW WE RUN THE ASSEMBLER, WHAT THE PARAMETERS ARE \& WHAT THE OUTPUT IS
 \section{Component Testing}
-%% DO I NEED A SECTION HERE TO TALK ABOUT ANY ISSUES AND THOUGHTS RESULTING IN THE DEVELOPMENT, ALONG WITH THE INTEGRATION OF THE PARTS
+When it comes to testing this component we tested it these levels.
+\begin{itemize}
+\item We tested the lexer on its own.
+\item We tested the lexer and parser together.
+\item We tested the Local Label generation on its own.
+\item We tested the Automatically Assigned Registers on their own.
+\item We tested the Code Generation on its own.
+\item We tested the component as a whole.
+\end{itemize}
+
+There are several sample programs that are written in mmixal, we used several of these when testing the assembler. The main mmixal program we used to test this component is one that determines the first 500 prime numbers. A fuller description of this program can be found at Chapter~\ref{primenumbers}.
 \chapter{Graphical User Interface}
 \section{Introduction}
 \begin{figure}[h!]
@@ -255,6 +347,7 @@ in rA specify a rounding mode, as follows: -
 %% HOW THE APPLICATION AS A WHOLE WORKS
 \section{Integration Testing}
 \subsection{Generate Prime Numbers Sample Application}
+\label{primenumbers}
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
 \nocite{*}
@@ -265,21 +358,40 @@ in rA specify a rounding mode, as follows: -
 \noappendicestocpagenum
 \addappheadtotoc 
 \chapter{Source Code}
-\section{Assembler}
+\section{Assembler}\label{source:assembler}
+\subsection{Lexer}\label{source:lexer}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/MMix_Lexer.x}
+\subsection{Parser}\label{source:parser}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/MMix_Parser.y}
+\subsection{Symbol Table}\label{source:SymbolTable}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/SymbolTable.hs}
+\subsection{Common Data Types}\label{source:DataTypes}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/DataTypes.hs}
+\subsection{Expressions}\label{source:Expressions}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/Expressions.hs}
+\subsection{Locations}\label{source:locations}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/Locations.hs}
+\subsection{Registers}\label{source:registers}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/Registers.hs}
+\subsection{Code Generation}\label{source:codegen}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/CodeGen.hs}
+\subsection{External Interface}\label{source:main}
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/Main.hs}
 \section{Graphical User Interface}
 \section{Virtual Machine}
-\chapter{Intermediate Assembler Representations}
+\chapter{Intermediate Assembler Representations}\label{iar}
 \section{Definitions}
 \section{Test Application}
 \subsection{Sample Test MMIXAL Code}
-The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is
+The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is: -
 
 \begin{CenteredBox}
-\lstinputlisting{primes.mms}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{primes.mms}
 \end{CenteredBox}
 \subsection{Parsed Sample File}
-The final version of the parsed source code for the test application is
-\lstinputlisting[language=Haskell]{parsed_example.hs}
+The final intermediate representation of the parsed source code for the test application is: -
+
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{parsed_example.hs}
 \end{appendices}
 \clearpage
 \addcontentsline{toc}{chapter}{Index}
