@@ -71,6 +71,7 @@ The system that we have created in this project was inspired by Jeliot~\cite{jel
 In his seminal work The Art of Computer Programming~\cite{knuth:aocp1} Professor Donald Knuth designed an artificial machine language that he called MIX. In a later volume of his work Professor Knuth updated this machine architecture, which he calls MMIX. He later detailed this new version of the architecture in a fascicle~\cite{knuth:aocp2}. This project will create a system that take MMIX assembly code and shows the user, graphically, what the simulated machine is doing. It should be noted that all definitions of an MMIX computer and the assembly language used to program it come directly from either one of these sources.
 
 \chapter{Assembler}
+\label{c:assembler}
 \section{Introduction}
 The first component that we developed takes a text file containing the MMIX assembly language code and translated it into a binary representation of the code.  This component it typically called a \textit{compiler}, to quote \cite{dragon}
 
@@ -165,19 +166,32 @@ At the end of this process we have converted all local labels into system genera
 As we can see in Figure~\ref{CompilerPhases} one of the data structures that we need to create as part of the code generation process is called a \textit{Symbol Table}. This is simply a map that is used to record what labels have been specified and where in the program they actually point to. To create this we simply iterate through each of the lines of the program and if they contain a label we firstly check to see if it is already present and if it does not we add the label with the current location to the symbol table.
 
 The symbol table is used extensively in the later steps of the code generation.
-\subsection{Automatically Assigned Registers}
+\subsection{Assembler Directives}
+There are a number of pseudo instructions that give the assembler instructions on how we should direct the assembly of the program. There are a number of these directive including: -
+\begin{itemize}
+\item \textbf{IS} Defines the value of the label to be the value of the expression.
+\item \textbf{LOC} Changes the current location.
+\item \textbf{GREG} Allocates a new general purpose register, see section~\ref{greg}.
+\item \textbf{BYTE} Store an array of bytes in the current location. 
+\item \textbf{WYDE} Store an array of wydes in the current location.
+\item \textbf{TETRA} Store an array of tetrabytes in the current location.
+\item \textbf{OCTA} Store an array of octabytes in the current location.
+\end{itemize}
+\subsection{Automatically Assigned Registers}\label{greg}
 An MMix computer, by definition, contains 256 general purpose registers. The programmer can either specify which register to use directly or they can get the assembler to assign one automatically for them. A new general purpose register is allocated every time the assembler comes across a \textit{GREG} pseudo instruction. The first register that is automatically assigned is \$FE (254). Every, subsequent, automatically generated register uses the next lowest register. We have achieved this by iterating over the lines, sending along the value of the next assignable register. If the line is a GREG instruction then we change the command to one that contains the assigned register, and we then decrement the next assignable register before passing it on the the next line.
 \subsection{Handling Operands}
 Each opcode instructions can be supplied one, two or three operands to specify exactly what we expect to happen. The majority of opcodes can either be supplied with three registers, or it can be supplied with two registers and an immediate value. The registers could, of course, be replaced by labels which represent registers. If the line specifies three registers then the plain opcode is used when we generate the code. In the other case then when we generate the code we increment the opcode by one to let the computer know not to look for this register.
 
 If the opcode is for a branching instruction then it will be supplied with a register and an address. For these instructions we need to determine the number of instructions between the current memory location and the memory location of the required address. We need the number of instructions, not just the difference in memory locations. This is calculated by determining the difference between the memory addresses and dividing this value by four. This address could be either ahead of, or before, the current location. If it is ahead of the current location then we use the plain opcode when generating the code. If the address is before the current location the we generate the code we increment the opcode by one.
-\subsection{Assembler Directives}
-TODO
 \subsection{Generating the Output}
 The final stage of the assembler is the actual outputting of the binary representation of the program. The way that we have achieved this is a two stage process. In the first stage we convert the intermediate representation of the code into a new representation of the code that makes creating the output file simpler.
 
-\begin{lstlisting}[basicstyle=\ttfamily\tiny]
-CodeLine {cl_address = 256, cl_size = 4, cl_code = "\240\NUL\NUL\ETB"}
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+CodeLine {
+	cl_address = 256, 
+	cl_size = 4, 
+	cl_code = "\240\NUL\NUL\ETB"
+}
 \end{lstlisting}
 
 This representation includes the start address for this line of code, the size of the code and the binary representation of that line of code.
@@ -202,59 +216,58 @@ When it comes to testing this component we tested it these levels.
 \end{itemize}
 
 There are several sample programs that are written in mmixal, we used several of these when testing the assembler. The main mmixal program we used to test this component is one that determines the first 500 prime numbers. A fuller description of this program can be found at Chapter~\ref{primenumbers}.
-\chapter{Graphical User Interface}
+\chapter{Virtual Machine}\label{VM}
 \section{Introduction}
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\textwidth]{GUISample}
-\caption{GUI Sample Screen shot}
-\end{figure}
+The majority of computers that currently exist are based on the Von Neumann Model, a description of this can be found at~\cite{vnmodel}. The main parts of a computer can be summarised as a control unit, a processing unit, memory and some for of Input/Output devices.
 
-\section{User Interface Design}
-\subsection{Console Panel}
-\subsection{Controls Panel}
-\subsection{Main State Panel}
-\subsection{Memory Panel}
-\subsection{Registers Panel}
-\section[Asynchronous UI Programming with Actors]{Asynchronous User Interface Programming with Actors}
-\section{Communication}
-\section{Component Testing}
-\chapter{Virtual Machine}
-\section{Introduction}
-All definition of an MMIX computer come directly from either \cite{knuth:aocp1} or \cite{knuth:aocp2}
+To execute a program a Von Neumann computer repeatedly performs the following cycle of event:
+\begin{enumerate}
+\item Fetch instruction from memory.\label{fec:step1}
+\item Decode instruction.
+\item Evaluate address.
+\item Fetch operands from memory.
+\item Execute operation.
+\item Store results.
+\item Increment the program counter.
+\item Go back to step \ref{fec:step1}
+\end{enumerate}
 
-Architecture of a computer  %% FIND QUOTATION
-CPU, ALU, Memory, Secondary Storage, IO Devices
+This is typically called the fetch, decode, execute cycle.
 
-The virtual machine we are developing will only consist of a CPU and memory.
+The virtual machine that we have created has most of these parts, but it relies on the GUI for all of its Input/Output devices. The virtual machine that we have created does fetch, decode, execute cycle described above.
 
+The first thing that we need to do is decide which programming language is the most appropriate for this component. The component takes a is supplied with a program and then it is continually asked to process the next statement. There is no shared state between the VM and any other components. These requirements led us to choose a message oriented language for this component. The language we chose was Erlang.
+\section{Memory}
 The way that memory is organized can be considered a hierarchy, to quote Aho et al\cite{dragon}
 \begin{quotation}
 A memory hierarchy consists of several levels of storage with different speeds and sizes, with the levels closest to the processor being the fastest but smallest... Memory hierarchies are found in all machines. A processor usually has a small number of registers consisting of hundreds of bytes, several levels of caches containing kilobytes to megabytes, physical memory containing megabytes to gigabytes, and finally secondary storage that contains gigabytes and beyond.
 \end{quotation}
 For this project we will only be considering the physical memory and the registers.
 
-\section{Memory}
-Wyde
+Memory in an MMix computer works with patterns of 0s and 1s, commonly called \textit{binary digits} or \textit{bits}. A sequence of eight bits is commonly called a \textit{byte}. An MMix computer can also handle 16 bit sequences, called a \textit{wyde}, a 32 bit sequence, called a \textit{tetrabyte} and a 64 bit sequence, called an \textit{octabyte}.
+
+When we are referencing memory we use \begin{math}M[k]\end{math} to denote that we are referencing the byte stored in memory address \textit{k}. When we need to reference more that one byte at a time we use the following terminology.
+
+\textbf{Wyde}
 
 \begin{math}
 M_2[0] = M_2[1] = M[0]M[1]
 \end{math}
 
-Tetra
+\textbf{TetraByte}
 
 \begin{math}
 M_4[4k] = M_4[4k+1] = ... = M_4[4k+3] = M[4k]M[4k+1]...M[4k+3]
 \end{math}
 
-Octa
+\textbf{OctaByte}
 
 \begin{math}
 M_8[8k] = M_8[8k+1] = ... = M_8[8k+7] = M[8k]M[8k+1]...M[8k+7]
 \end{math}
 
-\section{Registers}
-An MMIX computer contains two distinct types of registers, 256 general purpose registers and 32 special purpose registers. A complete list of the special registers can be found in Figure~\ref{fig:spec_regs}
+\section{Registers}\label{registers}
+An MMIX computer contains two distinct types of registers, 256 general purpose registers and 32 special purpose registers. A complete list of the special registers can be found in Figure~\ref{fig:spec_regs}. A Von Neumann computer uses a program counter to keep track of which instruction to execute next. This is not stored as a register in the definition of an MMix computer but to aid understanding of what the computer is doing we have included it as one of the special registers.
 
 \begin{figure}[ht!]
 \begin{center}
@@ -297,13 +310,16 @@ rZZ & Z Operand\\
 \caption{Special Registers}
 \label{fig:spec_regs}
 \end{figure}
-rA Arithmetic Status Register
 
-least significant byte contains eight event bits. DVWIOUZX
+We have currently only implemented a small number of these special registers.
 
+\subsection[Arithmetic Status Register]{rA Arithmetic Status Register}\label{rA}
+The Arithmetic Status Register is used to keep track of any required arithmetic events. The eight bytes in the register are used for different flags. The least significant byte contains eight event bits. These bits are commonly referred to as DVWIOUZX, the meanings of these flags can be seen in Figure~\ref{fig:ra_reg_flags}.
+
+\begin{figure}[!ht]
 \begin{center}
 \begin{tabular}{ c l }
-\head{Register} & \head{Description}\\
+\head{Flag} & \head{Description}\\
 D & Integer Divide Check\\
 V & Integer Overflow\\
 W & Float-to-Fix Overflow\\
@@ -314,6 +330,9 @@ Z & Division by Zero\\
 X & Floating Inexact\\
 \end{tabular}
 \end{center}
+\caption{rA Register Flags}
+\label{fig:ra_reg_flags}
+\end{figure}
 
 The next least significant byte contains eight ``enable'' bits with the same name DVWIOUZX and the same meanings.  
 
@@ -339,13 +358,101 @@ in rA specify a rounding mode, as follows: -
 \end{center}
 
 \section{Central Processing Unit}
+The Central Processing Unit (CPU) is at the heart of the virtual machine. The CPU is responsible for steps 2 - 7 in the fetch, decode, execute cycle. The first stage of fetch, decode, execute cycle that the CPU is responsible for is the decode stage. This is simple achieved with a function that pattern matches against the value and runs the relevant decoded function. There are two different types instructions that the CPU could be running, as described in Chapter~\ref{c:assembler}. The set of instructions that can be in one of three forms, with three registers or with two registers and an immediate value, are all implemented in a similar manner. In the case where we have three registers we obtain the value stored in the third register and then both versions functions call a shared function which performs the actual operation.
+
+
 \section{Calling the Operating System}
+
 \section{Communication}
+
 \section{Component Testing}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Graphical User Interface}
+\section{Introduction}
+One of the key objectives of the project chosen was to assist students understanding of how a computer program works. This objective makes the graphical user interface (GUI) a key component. A sample screenshot can be seen in Figure~\ref{screenshot}.
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=\textwidth]{GUISample2}
+\caption{GUI Sample Screenshot}
+\label{screenshot}
+\end{figure}
+
+The first thing that we need to do is decide which programming language is the most appropriate for this component. This component needs to be able to display a graphical user interface and it also needs to be able to communicate with the Virtual Machine, see Chapter~\ref{VM}. These requirements led us to a more general purpose language and we chose to use Scala.
+\section{User Interface Design}
+We decided to split the user interface(UI) up into a number of smaller regions, which are typically called panels. 
+\subsection{Console Panel}
+The console panel is a fairly simple panel that simulates the interaction between the computer and the end user. This panel contains two separate areas, the main area shows details that the programmer wants to inform the user about. The other area allows the user to enter some data and send it to the program, when they are so prompted.
+\subsection{Controls Panel}
+The controls panel is the area of the GUI that contains the buttons which allow the user to interact with the simulator. The controls panel contains the following buttons: -
+\begin{itemize}
+\item \textbf{Reset Simulator} -- This button completely resets the simulator, removing any currently loaded program from memory.
+\item \textbf{Load Program} -- This button allows the user to choose a file that contains the binary representation of an MMIX program. This program will then be loaded in from the file and passed on to the virtual machine. When this process has finished the application will be ready to start simulating the program. This process obviously has to be able to understand the binary representation of the mmixal program that our assembler creates.
+\item \textbf{Reset Program} -- This button will reset the GUI and the virtual machine back to the same state it was in when the application was first loaded.
+\item \textbf{Process Next} -- This button, when enabled, will process the next available statement.
+\item \textbf{Start / Stop} -- This button allows the GUI to automate the processing of the next statements, freeing the user up from having to constantly press the process next button.
+\end{itemize}
+\subsection{Main State Panel}
+The main state panel contains two separate areas, the main area contains a list of all of the instructions that the VM has processed. This list is displayed in reverse order so that the last statement executed is at the top of the list. The other area shows a number of flags, these flags are stored in the arithmetic status register, which is described in section~\ref{rA}.
+\subsection{Memory Panel}
+The memory panel contains a table that describes the current state of the memory in the VM. The each row in the table starts with a column the tells the user the starting memory address for this row. The next four columns give a hexadecimal representation of the contents of those memory locations. The final column contains an ASCII representation of the data in those four memory locations, if the cell contains a non printable ASCII character then it is substituted with a `.'. 
+
+If the processing of an instruction changes the content of a memory location then those memory locations are highlighted in green.
+\subsection{Registers Panel}
+The registers panel contains the current values stored in all of the general purpose and special registers. It also includes the current value of the additional program counter register we are using to keep count of the location of the next instruction to be processed.
+
+If the processing of an instruction changes the content of a register then those registers are highlighted in green.
+\section{Asynchronous UI Programming with Actors}
+The development of a graphical user interface will always contain a few non-functional requirements, one that should always be present is that the GUI should be responsive. We mean, by this, that the GUI should always respond to what the user does with it, no matter what processing it is also doing at the same time. This has traditional been the domain of multi-threaded programming, however there is now a new approach available to us, we can use an actor library. 
+
+When we use an actor library you gain a mechanism for easily handling concurrency and parallelism.  A highly regarded actor library that is available in Scala is called Akka~\cite{akka}. To quote the Akka website: -
+
+\begin{quotation}
+Actors give you:
+
+\begin{itemize}
+\item Simple and high-level abstractions for concurrency and parallelism.
+\item Asynchronous, non-blocking and highly performant event-driven programming model.
+\item Very lightweight event-driven processes (several million actors per GB of heap memory).
+\end{itemize}
+\end{quotation}
+
+The way that we have designed the GUI is that we have created a separate actor for each of the panels and a separate actor that is responsible for communicating with the virtual machine. The panel actors are responsible for both updating the panels with information from the VM and handling any input from the users. The virtual machine actor is responsible for communicating with the VM.
+\section{Communication}
+There are two types of communication that we need to handle in the project, communication between the GUI and the BM, along with communication between the various UI panels.
+\subsection{GUI to VM Communication}
+We need a mechanism for transferring data and commands between the GUI written in Scala and the VM written in Erlang. There is a built in function inside Erlang which will convert a term, which is the name Erlang uses for a data structure, into binary. This function is called \textit{term\_to\_binary} and it takes a value as a parameter. The function creates a binary representation based on a fixed format the can be found on the Erlang website~\cite{term_to_binary}.
+
+We have written an object, in Scala, that will perform the same translation. It will convert binary streams from Erlang into Scala data structures and it will convert Scala data structures into a binary stream that Erlang can understand. This object has been embedded inside the Virtual Machine Actor, the full source code is available in Appendix~\ref{source:vm_actor}.
+
+This object allows us the ability to marshal data structures between the two components but we also need to handle the actual transferral action. We have decided to, initially, require that both the GUI and VM processes should run on the same physical machine. This requirement allows us to simple create a UDP connection between the two processes.
+\subsection{UI Panel Communication}
+The communication between the UI panels, and the virtual machine actor all happens with Akka messages. As an example when we ask the VM to process the next statement it will respond with not only all of the things that have changed but what instruction was executed and all some updates to the console. This results in the virtual machine actor sending messages to the main state panel actor, the memory panel actor, the registers panel actor and potentially the console panel actor.
+\section{Component Testing}
+
+
+
 \chapter{Simulator Application}
 \section{Introduction}
 %% HOW THE APPLICATION AS A WHOLE WORKS
 \section{Integration Testing}
+\begin{centering}
+\begin{tabular}{ l l l }
+ & LOC & Data\_Segment\\
+ & GREG & @\\
+txt & BYTE & ``Hello world!'',10,0\\
+\\
+ & LOC & \#100\\
+\\
+Main & LDA & \$255,txt\\
+ & TRAP & 0,Fputs,StdOut\\
+ & TRAP & 0,Halt,0\\
+\end{tabular}
+\end{centering}
 \subsection{Generate Prime Numbers Sample Application}
 \label{primenumbers}
 \chapter*{Conclusion}
@@ -378,7 +485,48 @@ in rA specify a rounding mode, as follows: -
 \subsection{External Interface}\label{source:main}
 \lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/Main.hs}
 \section{Graphical User Interface}
+\subsection{Scala Build Tool}\label{source:sbt}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/build.sbt}
+\subsection{Console Panel}\label{source:console_panel}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/ConsolePanel.scala}
+\subsection{Controls Panel}\label{source:controls_panel}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/ControlsPanel.scala}
+\subsection{Main Form}\label{source:main_form}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/main_form.scala}
+\subsection{Main State Panel}\label{source:main_state_panel}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/MainStatePanel.scala}
+\subsection{Memory Panel}\label{source:memory_panel}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/MemoryPanel.scala}
+\subsection{MMix File}\label{source:mmix_file}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/MMixFile.scala}
+\subsection{Register Panel}\label{source:register_panel}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/RegisterPanel.scala}
+\subsection{Utilities}\label{source:utilities}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/Utilities.scala}
+\subsection{Virtual Machine Actor}\label{source:vm_actor}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{gui/VirtualMachineActor.scala}
 \section{Virtual Machine}
+\subsection{Branch}\label{source:vm_branch}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/branch.erl}
+\subsection{Communication}\label{source:vm_comm}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/comm.erl}
+\subsection{CPU Main Header}\label{source:vm_cpu_header}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/cpu.hrl}
+\subsection{CPU Execute Statment}\label{source:vm_cpu_execute}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/cpu_execute.hrl}
+\subsection{CPU}\label{source:vm_cpu}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/cpu.erl}
+\subsection{Memory}\label{source:vm_memory}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/memory.erl}
+\subsection{rA Register}\label{source:vm_register_ra}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/register_ra.erl}
+\subsection{Registers}\label{source:vm_register}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/registers.erl}
+\subsection{Trap}\label{source:vm_trap}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/trap.erl}
+\subsection{Utilities}\label{source:vm_utilities}
+\lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/utilities.erl}
+
 \chapter{Intermediate Assembler Representations}\label{iar}
 \section{Definitions}
 \section{Test Application}
