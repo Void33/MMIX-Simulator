@@ -266,6 +266,12 @@ M_4[4k] = M_4[4k+1] = ... = M_4[4k+3] = M[4k]M[4k+1]...M[4k+3]
 M_8[8k] = M_8[8k+1] = ... = M_8[8k+7] = M[8k]M[8k+1]...M[8k+7]
 \end{math}
 
+We have implemented the memory as a basic open telecom platform (OTP) server. The OTP provides the implementation of a number of common patterns, in this case we are using the basic server pattern.
+
+
+
+
+
 \section{Registers}\label{registers}
 An MMIX computer contains two distinct types of registers, 256 general purpose registers and 32 special purpose registers. A complete list of the special registers can be found in Figure~\ref{fig:spec_regs}. A Von Neumann computer uses a program counter to keep track of which instruction to execute next. This is not stored as a register in the definition of an MMix computer but to aid understanding of what the computer is doing we have included it as one of the special registers.
 
