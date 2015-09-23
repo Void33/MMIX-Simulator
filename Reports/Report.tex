@@ -61,6 +61,10 @@ The purpose of this project is to examine this approach. The application that we
 \newpage
 \chapter*{Acknowledgments}
 \addcontentsline{toc}{chapter}{Acknowledgments}
+KM NM JK SF
+
+%% Throughout my graduate education Crandall Shifflett has been an excellent mentor and teacher. He truly understands what hard work and dedication can bring to ones life. I would like to thank Kathleen Jones for introducing me to the history of medicine. This thesis would not have happened without her support. I would also like to express gratitude toward Tom Ewing who pushed toward improving my writing in class and offered many comments during various conference sessions. If it were not for Kenneth Noe, my interest in history would have never developed into its current capacity. During my undergraduate studies he was always a man whom I looked up to and respected dearly. I will always owe a great deal of gratitude toward these professors. Without the support and motivation provided by Rebecca Lapczynski life in graduate school would have been mundane. Her presence, patience, and emotional support made the transition from West Georgia to Virginia Tech an easy one. 
+
 \chapter{Introduction}
 As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components.  This is a sentiment mentioned by Turner~\cite{turner:why}  He calls these components ``collections of modules'', these components will interact with each other to make the complete system. 
 
@@ -148,7 +152,6 @@ AssingmentLine : OP_CODE OperatorList { defaultPlainOpCodeLine }
 \caption{Sample Context Free Grammar}
 \label{cfg:happy}
 \end{figure}
-
 
 The Happy parser generator requires us to store all of these definitions in a file with an extension of \textit{y}. When all of the definitions have been completed you run the definition file through the Happy parser generator tool and it generates a Haskell source file that will perform the syntactic and semantic analysis for you.
 
@@ -266,11 +269,20 @@ M_4[4k] = M_4[4k+1] = ... = M_4[4k+3] = M[4k]M[4k+1]...M[4k+3]
 M_8[8k] = M_8[8k+1] = ... = M_8[8k+7] = M[8k]M[8k+1]...M[8k+7]
 \end{math}
 
-We have implemented the memory as a basic open telecom platform (OTP) server. The OTP provides the implementation of a number of common patterns, in this case we are using the basic server pattern.
+Erlang contains a framework, called the open telecom platform, or OTP for short. This framework contains a number of implementations of common patterns, these patterns are called behaviours. We have simulated the memory inside the VM by using the \textit{gen\_server} OTP behaviour.
 
+The gen\_server behaviour not only creates a new actor but it also provides functions that handle the interaction with other actors and it handles the maintenance of state within the actor.
 
+The data structure that we are using to contain the memory is called \textit{Erlang Term Storage (ETS)}. To quote the Erlang documentation
+\begin{quote}
+ETS provides the ability to store very large quantities of data in an Erlang runtime system, and to have constant access time to the data.
+\end{quote}
 
+When you are using ETS you create individual tables that contain a collection of key value pair tuples. The table that we create for the memory uses the address as the key and the byte stored in the address as the value.
 
+The data stored in an ETS table only exists while the process that owns it is in memory. When this process is terminated the table is automatically destroyed.
+
+The other parts of the VM requests the memory server to either return or store bytes, wydes, tetrabytes or octabytes. There are a few extra requests that can be made that allow bulk operations, such as storing a completely new program.
 
 \section{Registers}\label{registers}
 An MMIX computer contains two distinct types of registers, 256 general purpose registers and 32 special purpose registers. A complete list of the special registers can be found in Figure~\ref{fig:spec_regs}. A Von Neumann computer uses a program counter to keep track of which instruction to execute next. This is not stored as a register in the definition of an MMix computer but to aid understanding of what the computer is doing we have included it as one of the special registers.
@@ -363,16 +375,46 @@ in rA specify a rounding mode, as follows: -
 \end{tabular}
 \end{center}
 
+We have implemented the arithmetic status register as a separate actor. This actor contains three pieces of state, the rounding mode, a set of flags to keep track of the enable bits that have been set, and a set of flags to keep track of the event buts that have been set.
+
+This actor allows us to do four this, it allows us to change the rounding mode, it allows us to potentially flag an event as having happened, it allows us to remove a flag if it exists, and it allows us to find out what the actual value is recorded in the register. The way we have implemented the get value functionality is that we have assumed that this is the last thing that happens when processing an instruction. As such we reset all of the set event flags after we have determined the current value of the register. 
+\subsection{General Purpose Registers}
+We are storing the general purpose registers inside a separate ETS table. This table uses the register identifier as the key and the octabyte stored in it as the value. When we start the VM, or when we send a new set of registers from the GUI, we create a new version of the ETS table.
 \section{Central Processing Unit}
-The Central Processing Unit (CPU) is at the heart of the virtual machine. The CPU is responsible for steps 2 - 7 in the fetch, decode, execute cycle. The first stage of fetch, decode, execute cycle that the CPU is responsible for is the decode stage. This is simple achieved with a function that pattern matches against the value and runs the relevant decoded function. There are two different types instructions that the CPU could be running, as described in Chapter~\ref{c:assembler}. The set of instructions that can be in one of three forms, with three registers or with two registers and an immediate value, are all implemented in a similar manner. In the case where we have three registers we obtain the value stored in the third register and then both versions functions call a shared function which performs the actual operation.
+The Central Processing Unit (CPU) is at the heart of the virtual machine. The CPU is responsible for steps 2 - 7 in the fetch, decode, execute cycle. The first stage of fetch, decode, execute cycle that the CPU is responsible for is the decode stage. This is simple achieved with a function that pattern matches against the value and runs the relevant decoded function. 
 
+There are many different forms of instructions that the CPU could be running, as described in Chapter~\ref{c:assembler}. 
 
-\section{Calling the Operating System}
+One of the sets of instruction can be specified in one of two ways, with three registers or with two registers and an immediate value, are all implemented in a similar manner. In the case where we have three registers we obtain the value stored in the third register and then both versions functions call a shared function which performs the actual operation.
 
+Another set of instructions are the branching instructions. These instructions all take a single register and a sixteen bit number. The instructions look at the value in the register and if it matches a boolean function then processing moves, either forward or backwards, the number of instructions specified in the sixteen bit number. The actual new location is the current location, either plus or minus, four times the specified number of instructions.
+
+Another set of instructions are used to conditionally set the value in a register. These instructions take two registers and a number. We use the same set of boolean functions as we have in the branching instructions against the second register. If the boolean function returns true then we set the first register to the number specified, if it returns true then we leave it alone. There is another set of instructions that are identical to this however if the boolean function returns false it set the first register to zero.
+
+The execution of MMIX programs can be interrupted in several ways. The main way that it can happen in our VM is through the TRIP and TRAP instructions. The difference between these two instructions is that TRIPs interrupt the current execution and execute some user code, whereas TRAPs interrupt the current execution and execute an operating system command. We have not implemented the TRIPs but we have implemented a small number of TRAPs.
+\section{Calling the Operating System}\label{trip:trap}
+There are many reasons that a program might need to interact with the operating system. It might need to read data in from secondary storage, it might need to output text to the user, it might need to be told that the current program has finished, it might need to obtain data entered in by the user.
+
+These operations are executed through the TRAP instruction, for example
+
+\begin{lstlisting}
+TRAP 0,Fputs,StdOut
+\end{lstlisting}
+tells the program to look at the memory location stored in general purpose register \$255. It will assume that this memory location is the start of a null terminated string. Therefore, it will read all of subsequent memory locations until it finds a location containing 0. It will assume that all of the other values for part of the string and it will send it to the operating systems currently defined standard output.
+
+For the purpose of our application we consider the GUI to be the operating system. The way that the VM interacts with the GUI, in the case of TRAPs, is that it creates a list of tuples, the first element of the tuple contains a symbol that is known by the GUI. The remaining elements in the tuple are the data the GUI will need to perform the operation.
+
+There is not a definitive list of what TRAP instructions there should be, but there is a list of rudimentary I/O commands that it should execute. We have actually only implemented a couple of the possible TRAP instructions.
 \section{Communication}
+The way we start the VM is by executing a function that starts all of the appropriate actors and the starts a UDP server, waiting for instructions from the GUI. When the VM receive a message it processes that message and then it will send a response back to the GUI. 
 
+The main message that we receive is the \textit{process next statement} message. This message tells the VM that we need to perform the next fetch, decode and execute cycle. The response that is sent back to the GUI from this message contains three parts. The first part is a textual representation of the decoded instruction that we have just processed. The second part is a list of tuples containing the details of any registers that have changed value. The third part is tuples containing extra messages for the GUI, these extra messages contain instructions like changes to memory locations, text to be displayed on the console.
+
+Another message that we might receive is a request to list all of the known registers and what values they have. The response to this message is a pair tuple containing a symbol telling the GUI that we are sending it all registers and a list of pair tuples that contain the register identifier and the value of the register for all of the known registers.
+
+All other messages that are received are processed and then we respond with a symbol telling the GUI that we have finished processing.
 \section{Component Testing}
-
+The way that we have architected the VM we were able to do some extensive unit testing.
 
 
 
@@ -444,7 +486,7 @@ The communication between the UI panels, and the virtual machine actor all happe
 
 \chapter{Simulator Application}
 \section{Introduction}
-%% HOW THE APPLICATION AS A WHOLE WORKS
+In the previous chapters we have described the individual components that make up the Simulator Application.
 \section{Integration Testing}
 \begin{centering}
 \begin{tabular}{ l l l }
@@ -463,6 +505,22 @@ Main & LDA & \$255,txt\\
 \label{primenumbers}
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
+We found that having a single developer 
+
+Pattern Matching
+
+Lists
+
+Tuples
+
+\section*{Possible Future Enhancements}
+\addcontentsline{toc}{section}{Possible Future Enhancements}
+Extra TRAP instructions.
+
+Extra special registers.
+
+Directly link the GUI with the Assembler.
+
 \nocite{*}
 \bibliographystyle{alpha}
 \bibliography{bibtex}

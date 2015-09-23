@@ -5,7 +5,6 @@
 
 -behaviour(gen_server).
 
--include("memory.hrl").
 -define(MEMORY_TABLE, memory_table).
 -define(MEMORY_SERVER, memory_server).
 
@@ -132,6 +131,7 @@ init([]) ->
 handle_call(reset_memory, _From, TableId) ->
   clear_memory(TableId);
 handle_call({store_program, Program, StartLocation}, _From, TableId) ->
+  clear_memory(TableId),
   store_program(Program, StartLocation, TableId),
   {reply, ok, TableId};
 handle_call({get_byte, Location}, _From, TableId) ->
