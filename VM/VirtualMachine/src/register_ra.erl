@@ -57,7 +57,7 @@ calculate_byte([divide_check|Rest], Total) -> calculate_byte(Rest, Total + 128);
 calculate_byte(_, Total) -> Total.
 
 remove_flag(EventBits, Flag) ->
-  case set:is_element(Flag, EventBits) of
+  case sets:is_element(Flag, EventBits) of
     true ->
       sets:del_element(Flag, EventBits);
     false ->

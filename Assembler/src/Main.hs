@@ -12,30 +12,33 @@ import Locations
 import Registers
 import DataTypes
 import Expressions as E
+import System.Environment
+import Data.List
+import System.FilePath
+import System.Exit
 
-main :: IO()
-main = undefined
+main :: IO ExitCode
+main = do
+       args <- getArgs
+       case args of
+            (source:[]) -> process source
+            _           -> displayUsage
 
---contents "/home/steveedmans/development/MMIX-Simulator/Sample/hail1.mms"
---parseOnly "/home/steveedmans/development/MMIX-Simulator/Sample/hail1.mms"
---toks "/home/steveedmans/development/MMIX-Simulator/Sample/hail1.mms"
---contents "/home/steveedmans/development/MMIX-Simulator/Sample/Simple.mms"
+process :: [Char] -> IO ExitCode
+process sourceFile = do
+       let outputFile = replaceExtension sourceFile "se"
+       result <- contents sourceFile outputFile
+       case result of
+           Left _ -> exitFailure
+           Right _ -> exitSuccess
 
-toks fs = do
-    x <- readFile fs
-    printf "%s\n" x
-    let s = tokens x
-    return s
-
-parseOnly fs = do
-    x <- readFile fs
-    printf "%s\n" x
-    let s = parseStr x
-    return s
+displayUsage :: IO ExitCode
+displayUsage = do
+       putStrLn "usage: MMixAssembler sourceFile"
+       exitSuccess
 
 contents ifs ofs = do
     x <- readFile ifs
-    printf "%s\n" x
     let s0 = parseStr x
     let s1 =  setLocalSymbolLabelAuto s0
     let s2 = setAlexLoc s1
@@ -48,13 +51,12 @@ contents ifs ofs = do
     let regs = createRegisterTable s6
     let st2 = createSymbolTable s6
     let code = acg st2 regs s6
-    print code
+    --print code
     let pg = encodeProgram code regs
     case pg of
         Right encoded_program -> writeFile ofs encoded_program
-        Left error            -> print error
-    print pg
-    return s6
+        Left error            -> putStrLn error
+    return pg
 
 contents' ifs = do
     x <- readFile ifs
@@ -96,10 +98,6 @@ contents' ifs = do
     --print s4
     --print s5
     return s6
-
--- contents "/home/steveedmans/hail.mms"
--- parseOnly "/home/steveedmans/hail.mms"
--- contents "/home/steveedmans/test.mms"
 
 setAlexLoc :: Either String [Line] -> Either String [Line]
 setAlexLoc (Right lns) = Right $ setLoc 0 lns

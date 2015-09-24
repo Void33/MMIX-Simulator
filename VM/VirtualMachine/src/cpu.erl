@@ -563,19 +563,19 @@ ldoui(PC, Stmt, RX, RY, Z) ->
 %% A0-AF
 
 stb(PC) ->
-  io:format("STWU ~w~n", [PC]),
+  io:format("STB ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STB $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   stbui(PC, Stmt, RX, RY, RZVal).
 stbi(PC) ->
-  io:format("STWUI ~w~n", [PC]),
+  io:format("STBI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STBI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   stbui(PC, Stmt, RX, RY, RZVal).
 stbu(PC) ->
-  io:format("STWU ~w~n", [PC]),
+  io:format("STBU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
   io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
@@ -584,7 +584,7 @@ stbu(PC) ->
   register_ra ! {remove, overflow},
   Result.
 stbui(PC) ->
-  io:format("STWUI ~w~n", [PC]),
+  io:format("STBUI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STBUI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   Result = stbui(PC, Stmt, RX, RY, RZVal),

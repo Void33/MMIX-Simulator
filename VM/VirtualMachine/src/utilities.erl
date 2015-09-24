@@ -10,7 +10,7 @@
 -author("Steve Edmans").
 
 %% API
--export([signed_integer16/1, hex2int/1, hex2uint/1, get_8_bytes/1]).
+-export([signed_integer16/1, unsigned_integer16/1, hex2int/1, hex2uint/1, get_8_bytes/1]).
 -export([get_0_wyde/1,get_1_wyde/1,get_2_wyde/1,get_3_wyde/1]).
 -export([get_0_byte/1,get_1_byte/1,get_2_byte/1,get_3_byte/1,get_4_byte/1,get_5_byte/1,get_6_byte/1,get_7_byte/1]).
 -export([adjust_location/2, twos_complement/1, minus_one/0]).
@@ -32,9 +32,14 @@ h2i(X) ->
   end.
 
 signed_integer16(V) ->
-  FV = io_lib:format("~16.16.0B", [V]),
-  FV1 = lists:flatten(FV),
-  hex2int(FV1).
+  FV = unsigned_integer16(V),
+  case FV >= min_value() of
+    false -> FV;
+    true  -> -1 * ((minus_one() - FV) + 1)
+  end.
+
+unsigned_integer16(V) ->
+  twos_complement(twos_complement(V)).#
 
 get_8_bytes(V) ->
   A = integer_to_list(V, 16),
@@ -133,12 +138,16 @@ wyde_to_int(B) ->
 adjust_location(Location, Scale) ->
   (Location div Scale) * Scale.
 
+min_value() -> utilities:hex2uint("8000000000000000").
 minus_one() -> utilities:hex2uint("FFFFFFFFFFFFFFFF").
 
 twos_complement(Value) ->
-  io:format("The initial value is ~w~n",[Value]),
-  Step1 = minus_one(),
-  Step2 = Value - 1,
-  Step3 = Step1 - Step2,
-  io:format("The three steps are ~.16B ~.16B ~.16B ~w~n", [Step1, Step2, Step3, Step3]),
+  Step3 = case Value < 0 of
+    false ->
+      Step1 = minus_one(),
+      Step2 = Value - 1,
+      Step1 - Step2;
+    true ->
+      -1 * Value
+  end,
   Step3.

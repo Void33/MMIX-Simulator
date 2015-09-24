@@ -52,11 +52,8 @@ start_link() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-store_program([]) ->
-  erlang:display("STORED PROGRAM");
-store_program([{StartLocation, Program}|Rest]) ->
-  gen_server:call(?MEMORY_SERVER, {store_program, Program, StartLocation}),
-  store_program(Rest).
+store_program(Code) ->
+  gen_server:call(?MEMORY_SERVER, {store_program, Code}).
 
 stop() ->
   gen_server:call(?MEMORY_SERVER, stop_program).
@@ -130,9 +127,9 @@ init([]) ->
   {stop, Reason :: term(), NewState :: term()}).
 handle_call(reset_memory, _From, TableId) ->
   clear_memory(TableId);
-handle_call({store_program, Program, StartLocation}, _From, TableId) ->
+handle_call({store_program, Code}, _From, TableId) ->
   clear_memory(TableId),
-  store_program(Program, StartLocation, TableId),
+  store_program_int(Code, TableId),
   {reply, ok, TableId};
 handle_call({get_byte, Location}, _From, TableId) ->
   {reply, get_memory_location_byte(Location, TableId), TableId};
@@ -222,6 +219,13 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+
+store_program_int([], _) ->
+  erlang:display("STORED PROGRAM");
+store_program_int([{StartLocation, Program}|Rest], TableId) ->
+  store_program(Program, StartLocation, TableId),
+  store_program_int(Rest, TableId).
 
 contents(TableId) ->
   erlang:display("Contents"),

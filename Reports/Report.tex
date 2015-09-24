@@ -207,6 +207,11 @@ The first four bytes of the second part contains the number of registers we are 
 
 \section{Executable}
 TODO ----- HOW WE RUN THE ASSEMBLER, WHAT THE PARAMETERS ARE \& WHAT THE OUTPUT IS
+
+\begin{lstlisting}
+ghc -o MMixAssembler --make Main
+\end{lstlisting}
+
 \section{Component Testing}
 When it comes to testing this component we tested it these levels.
 \begin{itemize}
@@ -416,8 +421,27 @@ All other messages that are received are processed and then we respond with a sy
 \section{Component Testing}
 The way that we have architected the VM we were able to do some extensive unit testing.
 
+\subsection{Conditional Statements}
+The Mmix computer performs nine different types conditional statements, eight of these statements are supplied with a register, they check the value stored in the register, and then return either true or false. The other type of conditional statement takes two registers, or a register and a value, and compares these values. It puts a value into a third register based on the comparison performed.
 
-
+\begin{lstlisting}
+\$1 = 0
+\$2 = -1
+\$3 = 1
+\$4 = 202
+\$5 = 0xFFFFFFFFFFFFFFFF
+\end{lstlisting}
+\begin{center}
+\begin{tabular}{| l | c | c  | c | c  | c | c  | c | c  |}
+\hline
+ & \textbf{Neg} & \textbf{Zero} & \textbf{Pos} & \textbf{Odd} & \textbf{Not Neg} & \textbf{Not Zero} & \textbf{Not Pos} & \textbf{Even}\\ \hline
+\textbf{\$1} & F & T & F & F & T & F & T & T\\ \hline
+\textbf{\$2} & T & F & F & T & F & T & T & F\\ \hline
+\textbf{\$3} & F & F & T & T & T & T & F & F\\ \hline
+\textbf{\$4} & F & F & T & F & T & T & F & T\\ \hline
+\textbf{\$5} & T & F & F & T & F & T & T & F\\ \hline
+\end{tabular}
+\end{center}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Graphical User Interface}

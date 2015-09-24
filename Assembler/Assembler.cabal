@@ -6,4 +6,4 @@ cabal-version:     >= 1.2
 executable Assembler
   main-is:         Main.hs
   hs-source-dirs:  src
-  build-depends:   containers, base, regex-posix, data-ordlist >= 0.4.6, utf8-string >= 0.3.7
+  build-depends:   containers, base, regex-posix, data-ordlist >= 0.4.6, utf8-string >= 0.3.7, filepath
