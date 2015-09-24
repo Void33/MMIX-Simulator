@@ -25,8 +25,7 @@ loop(RoundingMode, EnableBits, EventBits) ->
     stop ->
       true;
     {From, value} ->
-      RAVal = return_state(From, RoundingMode, EnableBits, EventBits),
-      io:format("The rA Value is ~w~n", [RAVal]),
+      return_state(From, RoundingMode, EnableBits, EventBits),
       loop(RoundingMode, EnableBits, sets:new());
     {From, rounding_mode} ->
       From ! {self(), RoundingMode},
