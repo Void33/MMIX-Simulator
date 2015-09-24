@@ -228,11 +228,9 @@ store_program_int([{StartLocation, Program}|Rest], TableId) ->
   store_program_int(Rest, TableId).
 
 contents(TableId) ->
-  erlang:display("Contents"),
   ets:tab2list(TableId).
 
 clear_memory(TableId) ->
-  erlang:display("Clear Memory"),
   ets:delete_all_objects(TableId).
 
 store_program([], _Location, State) ->
@@ -329,7 +327,6 @@ get_memory_location_nstring(Location, TableId, Accumulator) ->
   end.
 
 set_byte(Location, Value, TableId) ->
-  io:format("Set the memory location ~w in the table to ~w~n", [Location, Value]),
   ets:insert(TableId, {Location, Value}),
   {Location, Value}.
 
