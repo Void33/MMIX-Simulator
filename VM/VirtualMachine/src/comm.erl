@@ -100,4 +100,5 @@ next_statement() ->
   Upd = get_special_registers(),
   FullUpdates = Updates ++ Upd,
   lists:map(fun({R, V}) -> {registers:set_register(R, V)} end, FullUpdates),
+  io:format("We processed ~s~n", [Code]),
   {Code, FullUpdates, Msgs}.
