@@ -28,7 +28,10 @@ tokens :-
 <0>($digit)H                            { mkLocalLabel }
 <0>($digit)F                            { mkLocalForwardOperand }
 <0>($digit)B                            { mkLocalBackwardOperand }
+<0>Text_Segment                         { mkT TTextSegment }
 <0>Data_Segment                         { mkT TDataSegment }
+<0>Pool_Segment                         { mkT TPoolSegment }
+<0>Stack_Segment                        { mkT TStackSegment }
 <0>\@                                   { mkT TAtSign }
 <0>\+                                   { mkT TPlus }
 <0>\-                                   { mkT TMinus }
@@ -224,7 +227,10 @@ data Token = LEOF
             | THalt
             | TOpCode { toc_value :: Int }
             | TOpCodeSimple { soc_value :: Int }
+            | TTextSegment
             | TDataSegment
+            | TPoolSegment
+            | TStackSegment
             | TAtSign
             | TComma
             | TPlus

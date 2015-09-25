@@ -269,7 +269,7 @@ blockDetails (currentBlock:rest) acc = blockDetails rest newAcc
 
 blockDetail :: BlockSummary -> [Int]
 blockDetail (start, size, code) = startc ++ sizec ++ code
-    where startc = char4 start
+    where startc = char8 start
           sizec  = char4 size
 
 char4 :: Int -> [Int]

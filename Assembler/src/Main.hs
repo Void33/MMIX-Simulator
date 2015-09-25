@@ -80,10 +80,10 @@ contents' ifs = do
     --print st1
     --print "INITIAL ST"
     --print initial_st
-    print "ST"
-    print st
-    print "ST2"
-    print st2
+    --print "ST"
+    --print st
+    --print "ST2"
+    --print st2
     print regs
     let code = acg st2 regs s6
     print code
