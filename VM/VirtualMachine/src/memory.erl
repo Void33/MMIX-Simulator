@@ -327,7 +327,8 @@ get_memory_location_nstring(Location, TableId, Accumulator) ->
   end.
 
 set_byte(Location, Value, TableId) ->
-  ets:insert(TableId, {Location, Value}),
+  AdjustedValue = Value rem 256,  %% Make sure we only store byte values
+  ets:insert(TableId, {Location, AdjustedValue}),
   {Location, Value}.
 
 set_wyde(Location, Value, TableId) ->

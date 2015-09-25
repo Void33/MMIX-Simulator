@@ -13,7 +13,7 @@
 -export([signed_integer16/1, unsigned_integer16/1, hex2int/1, hex2uint/1, get_8_bytes/1]).
 -export([get_0_wyde/1,get_1_wyde/1,get_2_wyde/1,get_3_wyde/1]).
 -export([get_0_byte/1,get_1_byte/1,get_2_byte/1,get_3_byte/1,get_4_byte/1,get_5_byte/1,get_6_byte/1,get_7_byte/1]).
--export([adjust_location/2, twos_complement/1, minus_one/0]).
+-export([adjust_location/2, twos_complement/1, minus_one/0, max_value/0, min_value/0]).
 
 hex2uint(L) ->
   << I:64/unsigned-integer >> = hex_to_bin(L),
@@ -39,7 +39,7 @@ signed_integer16(V) ->
   end.
 
 unsigned_integer16(V) ->
-  twos_complement(twos_complement(V)).#
+  twos_complement(twos_complement(V)).
 
 get_8_bytes(V) ->
   A = integer_to_list(V, 16),
@@ -139,6 +139,7 @@ adjust_location(Location, Scale) ->
   (Location div Scale) * Scale.
 
 min_value() -> utilities:hex2uint("8000000000000000").
+max_value() -> utilities:hex2uint("7FFFFFFFFFFFFFFF").
 minus_one() -> utilities:hex2uint("FFFFFFFFFFFFFFFF").
 
 twos_complement(Value) ->
