@@ -89,18 +89,29 @@ class MemoryPanel(system: ActorSystem) extends ScrollPane with GUIProgressEventH
           xAlignment = Alignment.Center
           if (hasFocus) {
             opaque = true
-            if (isSelected) {
-              background = if (updated_locations.contains(address)) Color.GREEN else Color.cyan
-            } else {
-              background = if (updated_locations.contains(address)) Color.GREEN else Color.cyan
+            if ((column == final_column) || (column == 0)) {
+              val addresses = block_start to block_start + 3
+              background = if (addresses.exists(updated_locations.contains(_))) Color.GREEN else Color.cyan
             }
+            else
+              background = if (updated_locations.contains(address)) Color.GREEN else Color.cyan
           } else {
             if (isSelected) {
-              background = if (updated_locations.contains(address)) Color.GREEN else Color.cyan
+              if ((column == final_column) || (column == 0)) {
+                val addresses = block_start to block_start + 3
+                background = if (addresses.exists(updated_locations.contains(_))) Color.GREEN else Color.cyan
+              }
+              else
+                background = if (updated_locations.contains(address)) Color.GREEN else Color.cyan
               opaque = true
             } else {
               background = Color.GREEN
-              opaque = updated_locations.contains(address)
+              if ((column == final_column) || (column == 0)) {
+                val addresses = block_start to block_start + 3
+                opaque = addresses.exists(updated_locations.contains(_))
+              }
+              else
+                opaque = updated_locations.contains(address)
             }
           }
         }
@@ -117,7 +128,6 @@ class MemoryPanel(system: ActorSystem) extends ScrollPane with GUIProgressEventH
   }
 
   def to_main_memory(blocks : Map[String, String]) : SortedMap[Long, Int] = {
-    println("WORKING")
     blocks.foldLeft(SortedMap[Long, Int]())((acc, block) => {
       block match {
         case (start_location, data) =>
@@ -167,18 +177,14 @@ class MemoryPanel(system: ActorSystem) extends ScrollPane with GUIProgressEventH
   override def handleGuiProgressEvent(event: GuiEvent): Unit = {
     event match {
       case NewProgram(file) =>
-        println("WE HAVE A FILE IN THE GUI!")
         main_memory = to_main_memory(file.MemoryBlocks)
         refreshTable()
       case UpdateAddress(location, value) =>
         main_memory += (location -> value)
         updated_locations = updated_locations.::(location)
-        println(s"We are updating $location to $value")
       case StartNewSetOfUpdates =>
-        println("START NEW SET OF UPDATES")
         updated_locations = List.empty
       case RefreshTable =>
-        println(s"REFRESH TABLE with $updated_locations")
         refreshTable()
     }
   }

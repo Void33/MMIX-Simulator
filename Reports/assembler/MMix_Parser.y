@@ -37,7 +37,10 @@ import MMix_Lexer
     MULTIPLY       { TMult }
     DIVIDE         { TDivide }
     AT             { TAtSign }
+    TS             { TTextSegment }
     DS             { TDataSegment }
+    PS             { TPoolSegment }
+    SS             { TStackSegment }
     BYTE           { TByte }
     STR            { TStringLiteral $$ }
     HEX            { THexLiteral $$ }
@@ -91,10 +94,10 @@ Byte_Array : STR { reverse $1 }
            | Byte_Array COMMA BYTE_LIT { $3 : $1 }
            | Byte_Array COMMA HEX { (chr $3) : $1 }
 
-GlobalVariables : DS { 0x20000000 }
-
-
---                   | OPEN Expression CLOSE { [ExpressionClose] ++ $2 ++ [ExpressionOpen] }
+GlobalVariables : TS { 0x0000000000000000 }
+                | DS { 0x2000000000000000 }
+                | PS { 0x4000000000000000 }
+                | SS { 0x6000000000000000 }
 
 Expression : Term { $1 }
            | Expression PLUS Term { ExpressionPlus $1 $3 }

@@ -191,7 +191,7 @@ class RegisterPanel(system: ActorSystem) extends ScrollPane with GUIProgressEven
       case ur : UpdatedRegisters =>
         handler.handleGuiProgressEvent(ur)
       case msg =>
-        log.info(s"WE HAVE A MESSAGE $msg")
+        log.debug(s"WE HAVE A MESSAGE $msg")
     }
   }
 }

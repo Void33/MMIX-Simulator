@@ -24,56 +24,7 @@ import Char (ord)
 #endif
 {-# LINE 1 "templates/wrappers.hs" #-}
 {-# LINE 1 "templates/wrappers.hs" #-}
-{-# LINE 1 "<command-line>" #-}
-
-
-
-
-
-
-
-# 1 "/usr/include/stdc-predef.h" 1 3 4
-
-# 17 "/usr/include/stdc-predef.h" 3 4
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 1 "/usr/include/x86_64-linux-gnu/bits/predefs.h" 1 3 4
-
-# 18 "/usr/include/x86_64-linux-gnu/bits/predefs.h" 3 4
-
-
-
-
-
-
-
-
-
-
-
-
-# 31 "/usr/include/stdc-predef.h" 2 3 4
-
-
-
-
-
-
-
-
-# 7 "<command-line>" 2
+{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "templates/wrappers.hs" #-}
 -- -----------------------------------------------------------------------------
 -- Alex wrapper code.
@@ -81,8 +32,10 @@ import Char (ord)
 -- This code is in the PUBLIC DOMAIN; you may copy it freely and use
 -- it for any purpose whatsoever.
 
+import Control.Applicative (Applicative (..))
 import Data.Word (Word8)
-{-# LINE 22 "templates/wrappers.hs" #-}
+
+{-# LINE 23 "templates/wrappers.hs" #-}
 
 import qualified Data.Bits
 
@@ -134,11 +87,14 @@ alexGetByte (p,_,[],(c:s))  = let p' = alexMove p c
                               in p' `seq`  Just (b, (p', c, bs, s))
 
 
-{-# LINE 89 "templates/wrappers.hs" #-}
 
-{-# LINE 103 "templates/wrappers.hs" #-}
+{-# LINE 93 "templates/wrappers.hs" #-}
 
-{-# LINE 118 "templates/wrappers.hs" #-}
+
+{-# LINE 107 "templates/wrappers.hs" #-}
+
+
+{-# LINE 122 "templates/wrappers.hs" #-}
 
 -- -----------------------------------------------------------------------------
 -- Token positions
@@ -193,6 +149,19 @@ runAlex input (Alex f)
                                           Right ( _, a ) -> Right a
 
 newtype Alex a = Alex { unAlex :: AlexState -> Either String (AlexState, a) }
+
+instance Functor Alex where
+  fmap f a = Alex $ \s -> case unAlex a s of
+                            Left msg -> Left msg
+                            Right (s', a') -> Right (s', f a')
+
+instance Applicative Alex where
+  pure a   = Alex $ \s -> Right (s, a)
+  fa <*> a = Alex $ \s -> case unAlex fa s of
+                            Left msg -> Left msg
+                            Right (s', f) -> case unAlex a s' of
+                                               Left msg -> Left msg
+                                               Right (s'', b) -> Right (s'', f b)
 
 instance Monad Alex where
   m >>= k  = Alex $ \s -> case unAlex m s of 
@@ -265,21 +234,25 @@ token t input len = return (t input len)
 -- -----------------------------------------------------------------------------
 -- Monad (with ByteString input)
 
-{-# LINE 328 "templates/wrappers.hs" #-}
+
+{-# LINE 347 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Basic wrapper
 
-{-# LINE 355 "templates/wrappers.hs" #-}
+
+{-# LINE 374 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Basic wrapper, ByteString version
 
-{-# LINE 373 "templates/wrappers.hs" #-}
 
-{-# LINE 386 "templates/wrappers.hs" #-}
+{-# LINE 392 "templates/wrappers.hs" #-}
+
+
+{-# LINE 406 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
@@ -287,19 +260,22 @@ token t input len = return (t input len)
 
 -- Adds text positions to the basic model.
 
-{-# LINE 403 "templates/wrappers.hs" #-}
+
+{-# LINE 423 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- Posn wrapper, ByteString version
 
-{-# LINE 418 "templates/wrappers.hs" #-}
+
+{-# LINE 438 "templates/wrappers.hs" #-}
 
 
 -- -----------------------------------------------------------------------------
 -- GScan wrapper
 
 -- For compatibility with previous versions of Alex, and because we can.
+
 
 alex_base :: Array Int Int
 alex_base = listArray (0,431) [1,154,44,45,46,48,93,282,410,538,666,794,907,0,1035,0,1148,0,1213,0,1326,66,67,68,69,0,1391,1647,1583,0,0,1648,70,71,72,73,1904,1840,0,2096,2032,0,142,2249,2333,2417,2501,2585,2669,2753,2837,0,0,0,2921,3005,3089,3173,0,0,0,0,0,0,0,3248,127,3285,3369,3453,3537,3621,3705,3789,3873,3957,4041,4125,4209,4293,4377,4461,4545,4629,4713,4797,4881,4965,5049,5133,5217,5301,5385,5469,5553,5637,0,0,0,0,5721,5805,5889,5973,6057,6141,6225,6309,6393,6477,6561,6645,6729,6813,6897,6981,7065,7149,7233,7317,7401,7485,7569,7653,7737,7821,7905,7989,8073,8157,8241,8325,8409,8493,8577,8661,8745,8829,8913,8997,9081,9165,9249,9333,9417,9501,9585,9669,9753,9837,9921,10005,10089,10173,10257,10341,10425,10509,10593,10677,10761,10845,10929,11013,11097,11181,11265,11349,11433,11517,11601,11685,11769,11853,11937,12021,12105,12189,12273,12357,12441,12525,12609,12693,12777,12861,12945,13029,13113,13197,13281,13365,13449,13533,13617,13701,13785,13869,13953,14037,14121,14205,14289,14373,14457,14541,14625,14709,14793,14877,14961,15045,15129,15213,15297,15381,15465,15549,15624,199,15642,15675,15701,209,15727,0,0,0,0,0,0,3230,0,15752,15836,15920,16004,16088,16172,16256,16340,16424,16508,16592,16676,16760,16844,16928,17012,17096,17180,17264,17348,17432,17516,17600,17684,17768,17852,17936,18020,18104,18188,18272,18356,18440,18524,18608,18692,18776,18860,18944,19028,19112,19196,19280,19364,19448,19532,19616,19700,19784,19868,19952,20036,20120,20204,20288,20372,20456,20540,20624,20708,20792,20876,20960,21044,21128,21212,21296,21380,21464,21548,21632,21716,21800,21884,21968,22052,22136,22220,22304,22388,22472,22556,22640,22724,22808,22892,22976,23060,23144,23228,23312,23396,23480,23564,23648,23732,23816,23900,23984,24068,24152,24236,24320,24404,24488,24572,24656,24740,24824,24908,24992,25076,25160,25244,25328,25412,25496,25580,25664,25748,25832,25916,26000,26084,26168,26252,26336,26420,26504,26588,26672,26756,26840,26924,27008,27092,27176,27260,27344,27428,27512,27596,27680,27764,27848,27932,28016,28100,28184,28268,28352,28436,28520,28604,28688,28772,28856,28940,29024,29108,29192,29276,29360,29444,29528,29612,29696,29780,29864,29948,30032,30116,30200,30284,30368,30452,30536,30620,30704,30788,30872,30956,31040,31124,31208,31292,31376,31460,31544,31628,31712,31796,31880,31964,32048,0,32045,32253,32263]
@@ -665,54 +641,7 @@ alex_action_184 =  mkIdentifier
 alex_action_185 =  mkError 
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
-{-# LINE 1 "<command-line>" #-}
-
-
-
-
-
-# 1 "/usr/include/stdc-predef.h" 1 3 4
-
-# 17 "/usr/include/stdc-predef.h" 3 4
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 1 "/usr/include/x86_64-linux-gnu/bits/predefs.h" 1 3 4
-
-# 18 "/usr/include/x86_64-linux-gnu/bits/predefs.h" 3 4
-
-
-
-
-
-
-
-
-
-
-
-
-# 31 "/usr/include/stdc-predef.h" 2 3 4
-
-
-
-
-
-
-
-
-# 5 "<command-line>" 2
+{-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- -----------------------------------------------------------------------------
 -- ALEX TEMPLATE
@@ -723,19 +652,24 @@ alex_action_185 =  mkError
 -- -----------------------------------------------------------------------------
 -- INTERNALS and main scanner engine
 
+
 {-# LINE 21 "templates/GenericTemplate.hs" #-}
 
-{-# LINE 50 "templates/GenericTemplate.hs" #-}
 
-{-# LINE 71 "templates/GenericTemplate.hs" #-}
+{-# LINE 51 "templates/GenericTemplate.hs" #-}
+
+
+{-# LINE 72 "templates/GenericTemplate.hs" #-}
 alexIndexInt16OffAddr arr off = arr ! off
 
 
-{-# LINE 92 "templates/GenericTemplate.hs" #-}
+
+{-# LINE 93 "templates/GenericTemplate.hs" #-}
 alexIndexInt32OffAddr arr off = arr ! off
 
 
-{-# LINE 103 "templates/GenericTemplate.hs" #-}
+
+{-# LINE 105 "templates/GenericTemplate.hs" #-}
 quickIndex arr i = arr ! i
 
 
@@ -876,3 +810,4 @@ alexRightContext (sc) user _ _ input =
 
 -- used by wrappers
 iUnbox (i) = i
+

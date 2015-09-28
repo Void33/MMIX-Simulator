@@ -4,7 +4,7 @@ import scala.io.Source
 
 sealed trait MMixFile {
   def MemoryBlocks : Map[String, String]
-  def Memory : List[(Int, List[Byte])]
+  def Memory : List[(Long, List[Byte])]
   def Registers : List[(Any, Long)]
 }
 
@@ -23,8 +23,6 @@ object MMixFile {
         (e, h)
       }
     }
-
-    println(regs_code)
 
     val (numRegs, rest_r) = Utilities.nextChar4(regs_data)
 
@@ -49,7 +47,7 @@ object MMixFile {
   }
 
   private def readBlock(data : List[Byte]) : (List[Byte], String, String) = {
-    val (address, s1) = Utilities.nextChar4Hex(data)
+    val (address, s1) = Utilities.nextChar8Hex(data)
     val (size, s2)    = Utilities.nextChar4(s1)
     val (code_list, rest) = s2.splitAt(size)
     val code = Utilities.bytes2hex(code_list)
@@ -69,14 +67,15 @@ object MMixFile {
       code.toMap[String, String]
     }
 
-    override def Memory : List[(Int, List[Byte])] = {
+    override def Memory : List[(Long, List[Byte])] = {
       code map {
         case (address, memory) => BlockOfMemory(address, memory)
       }
     }
 
-    def BlockOfMemory(address : String, memory : String) : (Int, List[Byte]) = {
-      val start_address = Integer.parseInt(address, 16)
+    def BlockOfMemory(address : String, memory : String) : (Long, List[Byte]) = {
+      //val start_address = Integer.parseInt(address, 16)
+      val start_address = Utilities.hex2dec(address).toLong
       val memory_list = Utilities.hex2bytes(memory)
       (start_address, memory_list)
     }

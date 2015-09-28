@@ -41,22 +41,18 @@ bp(RX) ->
 
 bod(RX) ->
   RXVal = registers:query_adjusted_register(RX),
-  (RXVal rem 2) == 1.
+  (RXVal rem 2) /= 0.
 
 bnn(RX) ->
-  RXVal = registers:query_adjusted_register(RX),
-  RXVal >= 0.  %% non negative
+  bn(RX) == false.
 
 bnz(RX) ->
-  RXVal = registers:query_adjusted_register(RX),
-  RXVal /= 0.
+  bz(RX) == false.
 
 bnp(RX) ->
-  RXVal = registers:query_adjusted_register(RX),
-  RXVal =< 0.
+  bp(RX) == false.
 
 bev(RX) ->
-  RXVal = registers:query_adjusted_register(RX),
-  (RXVal rem 2) == 0.
+  bod(RX) == false.
 
 jmp(_RX) -> true.

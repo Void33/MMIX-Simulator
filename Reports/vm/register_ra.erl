@@ -25,8 +25,7 @@ loop(RoundingMode, EnableBits, EventBits) ->
     stop ->
       true;
     {From, value} ->
-      RAVal = return_state(From, RoundingMode, EnableBits, EventBits),
-      io:format("The rA Value is ~w~n", [RAVal]),
+      return_state(From, RoundingMode, EnableBits, EventBits),
       loop(RoundingMode, EnableBits, sets:new());
     {From, rounding_mode} ->
       From ! {self(), RoundingMode},
@@ -57,7 +56,7 @@ calculate_byte([divide_check|Rest], Total) -> calculate_byte(Rest, Total + 128);
 calculate_byte(_, Total) -> Total.
 
 remove_flag(EventBits, Flag) ->
-  case set:is_element(Flag, EventBits) of
+  case sets:is_element(Flag, EventBits) of
     true ->
       sets:del_element(Flag, EventBits);
     false ->

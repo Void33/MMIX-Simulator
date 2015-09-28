@@ -75,8 +75,6 @@ class ControlsPanel(system: ActorSystem) extends BoxPanel(orientation = Orientat
       system.actorSelection("/user/consoleUpdateActor") ! ClearPanel
       worker ! LoadProgram(file)
     }
-
-    println(s"Load Program Pressed")
   }
 
   def handleGuiProgressEvent(event: GuiEvent) {
@@ -133,34 +131,34 @@ class WorkerActor(val guiUpdateActor: ActorRef, val vmActor : ActorRef) extends 
 
   def receive = {
     case ProcessNext =>
-      log.info("Processing Next Statement")
+      log.debug("Processing Next Statement")
       vmActor ! SendData(Symbol("process_next"))
     case LoadProgram(file) =>
-      log.info(s"LOAD PROGRAM")
+      log.debug(s"LOAD PROGRAM")
       vmActor ! SendData((Symbol("program"), file.Memory))
       vmActor ! SendData((Symbol("registers"), file.Registers))
       vmActor ! SendData(Symbol("get_all_registers"))
       guiUpdateActor ! ControlsPanel.ProgramReady
     case Stop =>
-      log.info("Stopping the Virtual Machine")
+      log.debug("Stopping the Virtual Machine")
       vmActor ! SendData(Symbol("stop"))
     case StartAutomation =>
-      log.info("Start Automation")
+      log.debug("Start Automation")
       currentState = RUNNING
-      log.info("Processing Next Statement")
+      log.debug("Processing Next Statement")
       vmActor ! SendData(Symbol("process_next"))
     case StopAutomation =>
-      log.info("Stop Automation")
+      log.debug("Stop Automation")
       currentState = STOPPED
     case Automate =>
       currentState match {
         case RUNNING =>
-          context.system.scheduler.scheduleOnce(250 millis, self, ProcessNext)
+          context.system.scheduler.scheduleOnce(1 millis, self, ProcessNext)
         case STOPPED =>
-          log.info("We are not automating so we ignore this")
+          log.debug("We are not automating so we ignore this")
       }
     case msg =>
-      log.info(s"We have received an unknown message $msg")
+      log.debug(s"We have received an unknown message $msg")
   }
 }
 

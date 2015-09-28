@@ -61,7 +61,7 @@ class ConsolePanel(system: ActorSystem) extends BorderPanel with GUIProgressEven
     def receive = {
       case msg : GuiEvent => handler.handleGuiProgressEvent(msg)
       case msg =>
-        log.info(s"WE HAVE A MESSAGE $msg")
+        log.debug(s"WE HAVE A MESSAGE $msg")
     }
   }
 }

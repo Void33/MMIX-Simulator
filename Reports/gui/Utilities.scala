@@ -40,6 +40,11 @@ object Utilities {
     (bytes2hex(next), rest)
   }
 
+  def nextChar8Hex(start : List[Byte]) : (String, List[Byte]) = {
+    val (next, rest) = start.splitAt(8)
+    (bytes2hex(next), rest)
+  }
+
 // From https://gist.github.com/tmyymmt/3721117
 
   def hex2bytes(hex: String): List[Byte] = {

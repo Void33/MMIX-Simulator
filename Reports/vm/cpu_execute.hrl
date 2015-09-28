@@ -19,10 +19,25 @@ execute(?TRAP, PC) ->
 
 %% 10-1F
 
+execute(?MUL, PC) ->
+  mul(PC);
+execute(?MULI, PC) ->
+  muli(PC);
+
+execute(?MULU, PC) ->
+  mulu(PC);
+execute(?MULUI, PC) ->
+  mului(PC);
+
 execute(?DIV, PC) ->
   mmix_div(PC);
 execute(?DIVI, PC) ->
   divi(PC);
+
+execute(?DIVU, PC) ->
+  divu(PC);
+execute(?DIVUI, PC) ->
+  divui(PC);
 
 %% 20-2F
 
@@ -31,6 +46,8 @@ execute(?ADD, PC) ->
 execute(?ADDI, PC) ->
   addi(PC);
 
+execute(?ADDU, PC) ->
+  addu(PC);
 execute(?ADDUI, PC) ->
   addui(PC);
 
@@ -43,6 +60,26 @@ execute(?SUBU, PC) ->
   subu(PC);
 execute(?SUBUI, PC) ->
   subui(PC);
+
+execute(?ADDU2, PC) ->
+  addu2(PC);
+execute(?ADDU2I, PC) ->
+  addu2i(PC);
+
+execute(?ADDU4, PC) ->
+  addu4(PC);
+execute(?ADDU4I, PC) ->
+  addu4i(PC);
+
+execute(?ADDU8, PC) ->
+  addu8(PC);
+execute(?ADDU8I, PC) ->
+  addu8i(PC);
+
+execute(?ADDU16, PC) ->
+  addu16(PC);
+execute(?ADDU16I, PC) ->
+  addu16i(PC);
 
 %% 30-3F
 
@@ -212,10 +249,30 @@ execute(?ZSEVI, PC) ->
 
 %% 80-8F
 
+execute(?LDB, PC) ->
+  ldb(PC);
+execute(?LDBI, PC) ->
+  ldbi(PC);
+execute(?LDBU, PC) ->
+  ldbu(PC);
+execute(?LDBUI, PC) ->
+  ldbui(PC);
+execute(?LDW, PC) ->
+  ldw(PC);
+execute(?LDWI, PC) ->
+  ldwi(PC);
 execute(?LDWU, PC) ->
   ldwu(PC);
 execute(?LDWUI, PC) ->
   ldwui(PC);
+execute(?LDT, PC) ->
+  ldt(PC);
+execute(?LDTI, PC) ->
+  ldti(PC);
+execute(?LDTU, PC) ->
+  ldtu(PC);
+execute(?LDTUI, PC) ->
+  ldtui(PC);
 execute(?LDO, PC) ->
   ldo(PC);
 execute(?LDOI, PC) ->

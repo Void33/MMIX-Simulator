@@ -199,12 +199,12 @@ class VirtualMachineActor extends Actor with ActorLogging {
 
   def receive = {
     case ProcessNextStatement =>
-      log.info("PROCESS NEXT STATEMENT")
+      log.debug("PROCESS NEXT STATEMENT")
       val out = Udp_Client.term_to_binary(Udp_Client.PROCESS_NEXT)
       val out_packet = new DatagramPacket(out, out.length, local, Udp_Client.port)
       sock.send(out_packet)
     case SendData(data) =>
-      log.info(s"SEND DATA $data")
+      log.debug(s"SEND DATA $data")
       val out = Udp_Client.term_to_binary(data)
       val out_packet = new DatagramPacket(out, out.length, local, Udp_Client.port)
       sock.send(out_packet)
@@ -224,9 +224,9 @@ class VirtualMachineActor extends Actor with ActorLogging {
           case (location: Long, value) =>
             context.actorSelection("/user/memoryUpdateActor") ! MemoryPanel.UpdateAddress(location, value.byteValue)
         }
-        log.info("Update memory locations")
+        log.debug("Update memory locations")
       case msg =>
-        log.info(msg.toString)
+        log.debug(msg.toString)
     }
   }
 
@@ -242,22 +242,23 @@ class VirtualMachineActor extends Actor with ActorLogging {
   def handle_response(response : Any) = {
     response match {
       case 'finished =>
-        log.info("FINISHED")
+        log.debug("FINISHED")
       case ('all_registers , registers : List[Tuple2[Any, Any]]) =>
-        log.info(s"ALL REGISTERS RETURNED SIZE = ${registers.size}")
+        log.debug(s"ALL REGISTERS RETURNED SIZE = ${registers.size}")
         context.actorSelection("/user/registersUpdateActor") ! RegisterPanel.FullRegisterSet(convert_to_long(registers))
       case ('updates , (statement : String, registers : List[Tuple2[Any, Any]], messages : List[Any])) =>
-        log.info(s"REGISTERS UPDATES RETURNED SIZE = ${registers.size}")
-        log.info(s"THE NUMBER OF ADDITION MESSAGES ARE = ${messages.size}")
-        log.info(s"The command executed was $statement")
+        log.debug(s"REGISTERS UPDATES RETURNED SIZE = ${registers.size}")
+        log.debug(s"THE NUMBER OF ADDITION MESSAGES ARE = ${messages.size}")
+        log.debug(s"The command executed was $statement")
         context.actorSelection("/user/mainStateUpdateActor") ! RecordStatement(statement)
         context.actorSelection("/user/memoryUpdateActor") ! StartNewSetOfUpdates
         context.actorSelection("/user/registersUpdateActor") ! RegisterPanel.UpdatedRegisters(convert_to_long(registers))
         messages.foreach(handle_message)
-        context.actorSelection("/user/workerActor") ! Automate
+        if (messages.count(_ == 'halt) == 0)
+          context.actorSelection("/user/workerActor") ! Automate
         context.actorSelection("/user/memoryUpdateActor") ! RefreshTable
       case _ =>
-        log.info(s"UNKNOWN RESPONSE $response")
+        log.debug(s"UNKNOWN RESPONSE $response")
     }
   }
 }

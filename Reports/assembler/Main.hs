@@ -12,13 +12,33 @@ import Locations
 import Registers
 import DataTypes
 import Expressions as E
+import System.Environment
+import Data.List
+import System.FilePath
+import System.Exit
 
-main :: IO()
-main = undefined
+main :: IO ExitCode
+main = do
+       args <- getArgs
+       case args of
+            (source:[]) -> process source
+            _           -> displayUsage
+
+process :: [Char] -> IO ExitCode
+process sourceFile = do
+       let outputFile = replaceExtension sourceFile "se"
+       result <- contents sourceFile outputFile
+       case result of
+           Left _ -> exitFailure
+           Right _ -> exitSuccess
+
+displayUsage :: IO ExitCode
+displayUsage = do
+       putStrLn "usage: MMixAssembler sourceFile"
+       exitSuccess
 
 contents ifs ofs = do
     x <- readFile ifs
-    printf "%s\n" x
     let s0 = parseStr x
     let s1 =  setLocalSymbolLabelAuto s0
     let s2 = setAlexLoc s1
@@ -31,13 +51,12 @@ contents ifs ofs = do
     let regs = createRegisterTable s6
     let st2 = createSymbolTable s6
     let code = acg st2 regs s6
-    print code
+    --print code
     let pg = encodeProgram code regs
     case pg of
         Right encoded_program -> writeFile ofs encoded_program
-        Left error            -> print error
-    print pg
-    return s6
+        Left error            -> putStrLn error
+    return pg
 
 setAlexLoc :: Either String [Line] -> Either String [Line]
 setAlexLoc (Right lns) = Right $ setLoc 0 lns
@@ -59,6 +78,7 @@ showLoc (LabelledPILine _ _ loc) acc =  loc : acc
 showLoc (PlainOpCodeLine _ _ loc _) acc =  loc : acc
 showLoc (LabelledOpCodeLine _ _ _ loc _) acc =  loc : acc
 
+
 acg (Right sym) (Right regs) (Right lns) = Right $ cg sym regs [] lns
 acg _ _ _ = Left "Something is missing!!!"
 
@@ -70,4 +90,3 @@ cg s r acc (ln:lns) = cg s r newAcc lns
               Just(codeline) -> codeline : acc
               Nothing -> acc
                   where newline = CodeLine {cl_address = 0, cl_size = 0, cl_code = (show ln)}
-

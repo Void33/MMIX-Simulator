@@ -22,7 +22,6 @@ next_command(PC) ->
 %% 00-0F
 
 trap(PC) ->
-  io:format("TRAP~n"),
   {RX, RY, RZ} = three_operands(PC),
   Msgs = trap:process_trap(RX, RY, RZ),
   Updates = [next_command(PC)],
@@ -31,9 +30,50 @@ trap(PC) ->
 
 %% 10-1F
 
-mmix_div(PC) ->
+mul(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
+  Stmt = lists:flatten(io_lib:format("MUL $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  muli(PC, Stmt, RX, RY, RZVal).
+muli(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("MULI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  muli(PC, Stmt, RX, RY, RZ).
+muli(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_adjusted_register(RY),
+  NV = Z * RYVal,
+  MinV = utilities:min_value(),
+  MaxV = utilities:max_value(),
+  NV2 = if
+    NV > MaxV ->
+      register_ra ! {event, overflow},
+      NV rem MaxV;
+    NV < MinV ->
+      register_ra ! {event, overflow},
+      NV rem MaxV;
+    true      -> NV
+  end,
+  {Stmt, [{RX, NV2}, next_command(PC)], []}.
+
+mulu(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("MULU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  mului(PC, Stmt, RX, RY, RZVal).
+mului(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("MULUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  mului(PC, Stmt, RX, RY, RZ).
+mului(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_register(RY),
+  NV = Z * RYVal,
+  SV = NV rem (utilities:minus_one() + 1),
+  HV = NV div (utilities:minus_one() + 1),
+  {Stmt, [{RX, SV}, [rH, HV], next_command(PC)], []}.
+
+mmix_div(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
   Stmt = lists:flatten(io_lib:format("DIV $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   divi(PC, Stmt, RX, RY, RZVal).
 divi(PC) ->
@@ -41,6 +81,30 @@ divi(PC) ->
   Stmt = lists:flatten(io_lib:format("DIVI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   divi(PC, Stmt, RX, RY, RZ).
 divi(PC, Stmt, RX, RY, Z) ->
+  RYVal = registers:query_adjusted_register(RY),
+  Updates = [next_command(PC)],
+  if
+    Z == 0 ->
+      register_ra ! {event, divide_check},
+      XtraUpdates = [{RX, 0}, {rR, RYVal}];
+    true ->
+      Quot  = RYVal div Z,
+      Rem   = RYVal rem Z,
+      XtraUpdates = [{RX, Quot}, {rR, Rem}]
+  end,
+  FullUpdates = Updates ++ XtraUpdates,
+  {Stmt, FullUpdates, []}.
+
+divu(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("DIVU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  divui(PC, Stmt, RX, RY, RZVal).
+divui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("DIVUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  divui(PC, Stmt, RX, RY, RZ).
+divui(PC, Stmt, RX, RY, Z) ->
   RYVal = registers:query_register(RY),
   Updates = [next_command(PC)],
   if
@@ -50,7 +114,6 @@ divi(PC, Stmt, RX, RY, Z) ->
     true ->
       Quot  = RYVal div Z,
       Rem   = RYVal rem Z,
-      io:format("When we divide ~w by ~w we get ~w remainder ~w~n", [RYVal, Z, Quot, Rem]),
       XtraUpdates = [{RX, Quot}, {rR, Rem}]
   end,
   FullUpdates = Updates ++ XtraUpdates,
@@ -60,7 +123,7 @@ divi(PC, Stmt, RX, RY, Z) ->
 
 add(PC) ->
   {RX, RY, RZ} = three_operands(PC),
-  RZVal = registers:query_register(RZ),
+  RZVal = registers:query_adjusted_register(RZ),
   Stmt = lists:flatten(io_lib:format("ADD $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   addi(PC, Stmt, RX, RY, RZVal).
 addi(PC) ->
@@ -68,27 +131,29 @@ addi(PC) ->
   Stmt = lists:flatten(io_lib:format("ADDI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   addi(PC, Stmt, RX, RY, RZ).
 addi(PC, Stmt, RX, RY, Z) ->
-  RYVal = registers:query_register(RY),
+  RYVal = registers:query_adjusted_register(RY),
   {_Overflow, Result} = add_values(RYVal, Z),
-  io:format("The Y value is ~.16B and the Result is ~.16B~n", [RYVal, Result]),
   {Stmt, [{RX, Result}, next_command(PC)], []}.
 
-addui(PC) ->
-  io:format("ADDUI ~w~n",[PC]),
+addu(PC) ->
   {RX, RY, RZ} = three_operands(PC),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
-  {Overflow, NewValue} = immediate_address(RY, RZ),
-  io:format("Registers ~w - ~w~n",[Overflow, NewValue]),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("ADDU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addui(PC, Stmt, RX, RY, RZVal).
+addui(PC) ->
+  {RX, RY, Z} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("ADDUI $~.16B, $~.16B, ~B", [RX, RY, Z])),
+  addui(PC, Stmt, RX, RY, Z).
+addui(PC, Stmt, RX, RY, RZVal) ->
+  {Overflow, NewValue} = immediate_address(RY, RZVal),
   Updates = [{RX, NewValue}, next_command(PC)],
-  io:format("Updates ~w~n",[Updates]),
+  register_ra ! {remove, overflow},
   NewList = case Overflow of
               overflow ->
                 [{rA, 1} | Updates];
               _ ->
                 Updates
             end,
-  io:format("New List ~w~n",[NewList]),
-  Stmt = lists:flatten(io_lib:format("ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
   {Stmt, NewList, []}.
 
 sub(PC) ->
@@ -105,6 +170,7 @@ subi(PC, Stmt, RX, RY, Z) ->
   ZNeg = utilities:twos_complement(Z),
   {_Overflow, Subtraction} = add_values(RYVal, ZNeg),
   {Stmt, [{RX, Subtraction}, next_command(PC)], []}.
+
 subu(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   RZVal = registers:query_register(RZ),
@@ -119,6 +185,62 @@ subui(PC) ->
   register_ra ! {remove, overflow},
   Result.
 
+addu2(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
+  Stmt = lists:flatten(io_lib:format("2ADDU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addu2i(PC, Stmt, RX, RY, RZVal).
+addu2i(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("2ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  addu2i(PC, Stmt, RX, RY, RZ).
+addu2i(PC, Stmt, RX, RY, Z) ->
+  RYVal = 2 * registers:query_adjusted_register(RY),
+  {_Overflow, Result} = add_values(RYVal, Z),
+  {Stmt, [{RX, Result}, next_command(PC)], []}.
+
+addu4(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
+  Stmt = lists:flatten(io_lib:format("4ADDU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addu4i(PC, Stmt, RX, RY, RZVal).
+addu4i(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("4ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  addu4i(PC, Stmt, RX, RY, RZ).
+addu4i(PC, Stmt, RX, RY, Z) ->
+  RYVal = 4 * registers:query_adjusted_register(RY),
+  {_Overflow, Result} = add_values(RYVal, Z),
+  {Stmt, [{RX, Result}, next_command(PC)], []}.
+
+addu8(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
+  Stmt = lists:flatten(io_lib:format("8ADDU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addu8i(PC, Stmt, RX, RY, RZVal).
+addu8i(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("8ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  addu8i(PC, Stmt, RX, RY, RZ).
+addu8i(PC, Stmt, RX, RY, Z) ->
+  RYVal = 8 * registers:query_adjusted_register(RY),
+  {_Overflow, Result} = add_values(RYVal, Z),
+  {Stmt, [{RX, Result}, next_command(PC)], []}.
+
+addu16(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_adjusted_register(RZ),
+  Stmt = lists:flatten(io_lib:format("16ADDU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  addu16i(PC, Stmt, RX, RY, RZVal).
+addu16i(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("16ADDUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  addu16i(PC, Stmt, RX, RY, RZ).
+addu16i(PC, Stmt, RX, RY, Z) ->
+  RYVal = 16 * registers:query_adjusted_register(RY),
+  {_Overflow, Result} = add_values(RYVal, Z),
+  {Stmt, [{RX, Result}, next_command(PC)], []}.
+
 %% 30-3F
 
 cmp(PC) ->
@@ -132,13 +254,11 @@ cmpi(PC) ->
   cmpi(PC, Stmt, RX, RY, Z).
 cmpi(PC, Stmt, RX, RY, Z) ->
   RYVal = registers:query_register(RY),
-  io:format("Compare ~w with ~w~n", [RYVal, Z]),
   NV = if
     RYVal <  Z -> utilities:minus_one();
     RYVal >  Z -> 1;
     RYVal == Z -> 0
   end,
-  io:format("Compare ~w with ~w which equals ~w~n", [RYVal, Z, NV]),
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 neg(PC) ->
@@ -156,7 +276,6 @@ negi(PC, Stmt, RX, Y, Z) ->
          Diff < 0 -> utilities:minus_one() + Diff + 1;
          true     -> Diff
        end,
-  io:format("The difference is ~w which goes to ~.16B~n", [Diff, NV]),
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 %% 40-4F
@@ -519,6 +638,56 @@ zs(Fun, PC, Stmt, RX, RY, Z) ->
 
 %% 80-8F
 
+ldb(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDB $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldbi(PC, Stmt, RX, RY, RZVal).
+ldbi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDBI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldbi(PC, Stmt, RX, RY, RZ).
+ldbi(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_byte(Address),
+  SignedValue = if
+                  Value > 127 -> Value - 256;
+                  true        -> Value
+                end,
+  {Stmt, [{RX, SignedValue}, next_command(PC)], []}.
+
+ldbu(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDBU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldbui(PC, Stmt, RX, RY, RZVal).
+ldbui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDBUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldbui(PC, Stmt, RX, RY, RZ).
+ldbui(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_byte(Address),
+  {Stmt, [{RX, Value}, next_command(PC)], []}.
+
+ldw(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDW $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldwi(PC, Stmt, RX, RY, RZVal).
+ldwi(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDWI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldwi(PC, Stmt, RX, RY, RZ).
+ldwi(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_wyde(Address),
+  SignedValue = if
+                  Value > 32767 -> Value - 32768;
+                  true          -> Value
+                end,
+  {Stmt, [{RX, SignedValue}, next_command(PC)], []}.
+
 ldwu(PC) ->
   {RX, RY, RZ} = three_operands(PC),
   RZVal = registers:query_register(RZ),
@@ -531,7 +700,38 @@ ldwui(PC) ->
 ldwui(PC, Stmt, RX, RY, Z) ->
   {_Overflow, Address} = immediate_address(RY, Z),
   Value = memory:get_wyde(Address),
-  io:format("Set the register ~w to ~w~n", [RX, Value]),
+  {Stmt, [{RX, Value}, next_command(PC)], []}.
+
+ldt(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDT $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldti(PC, Stmt, RX, RY, RZVal).
+ldti(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDTI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldti(PC, Stmt, RX, RY, RZ).
+ldti(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_tetrabyte(Address),
+  SignedValue = if
+                  Value > 2147483647 -> Value - 2147483648;
+                  true               -> Value
+                end,
+  {Stmt, [{RX, SignedValue}, next_command(PC)], []}.
+
+ldtu(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  RZVal = registers:query_register(RZ),
+  Stmt = lists:flatten(io_lib:format("LDTU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
+  ldtui(PC, Stmt, RX, RY, RZVal).
+ldtui(PC) ->
+  {RX, RY, RZ} = three_operands(PC),
+  Stmt = lists:flatten(io_lib:format("LDTUI $~.16B, $~.16B, ~B", [RX, RY, RZ])),
+  ldtui(PC, Stmt, RX, RY, RZ).
+ldtui(PC, Stmt, RX, RY, Z) ->
+  {_Overflow, Address} = immediate_address(RY, Z),
+  Value = memory:get_tetrabyte(Address),
   {Stmt, [{RX, Value}, next_command(PC)], []}.
 
 ldo(PC) ->
@@ -563,76 +763,57 @@ ldoui(PC, Stmt, RX, RY, Z) ->
 %% A0-AF
 
 stb(PC) ->
-  io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STB $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   stbui(PC, Stmt, RX, RY, RZVal).
 stbi(PC) ->
-  io:format("STWUI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STBI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   stbui(PC, Stmt, RX, RY, RZVal).
 stbu(PC) ->
-  io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STBU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   Result = stbui(PC, Stmt, RX, RY, RZVal),
   register_ra ! {remove, overflow},
   Result.
 stbui(PC) ->
-  io:format("STWUI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STBUI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   Result = stbui(PC, Stmt, RX, RY, RZVal),
   register_ra ! {remove, overflow},
   Result.
 stbui(PC, Stmt, RX, RY, Z) ->
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
   IA = immediate_address(RY, Z),
   case IA of
     {_, Location} ->
       RXVal = registers:query_register(RX),
-      io:format("Set the address ~w to the least significant bits of ~w~n", [Location, RXVal]),
       LSB = utilities:get_0_byte(RXVal),
-      io:format("Which is ~w~n", [LSB]),
       MemoryChanges = memory:set_byte(Location, LSB),
-      io:format("The memory changes are ~w~n", [MemoryChanges]),
       NewMessages = [{memory_change, MemoryChanges}],
-      io:format("We are sending back ~w~n", [NewMessages]),
       {Stmt, [next_command(PC)], NewMessages}
   end.
 
 stwu(PC) ->
-  io:format("STWU ~w~n", [PC]),
   {RX, RY, RZ} = three_operands(PC),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RZVal = registers:query_register(RZ),
   Stmt = lists:flatten(io_lib:format("STWU $~.16B, $~.16B, $~.16B", [RX, RY, RZ])),
   stwui(PC, Stmt, RX, RY, RZVal).
 
 stwui(PC) ->
-  io:format("STWUI ~w~n", [PC]),
   {RX, RY, RZVal} = three_operands(PC),
   Stmt = lists:flatten(io_lib:format("STWUI $~.16B, $~.16B, ~B", [RX, RY, RZVal])),
   stwui(PC, Stmt, RX, RY, RZVal).
 
 stwui(PC, Stmt, RX, RY, Z) ->
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, Z]),
   IA = immediate_address(RY, Z),
   case IA of
     {_, Location} ->
       RXVal = registers:query_register(RX),
-      io:format("Set the address ~w to the least significant bits of ~w~n", [Location, RXVal]),
       LSB = utilities:get_0_wyde(RXVal),
-      io:format("Which is ~w~n", [LSB]),
       MemoryChanges = memory:set_wyde(Location, LSB),
-      io:format("The memory changes are ~w~n", [MemoryChanges]),
       NewMessages = [{memory_change, MemoryChanges}],
-      io:format("We are sending back ~w~n", [NewMessages]),
       {Stmt, [next_command(PC)], NewMessages}
   end.
 
@@ -650,9 +831,7 @@ stoui(PC, Stmt, RX, RY, Z) ->
   case IA of
     {_, Location} ->
       RXVal = registers:query_register(RX),
-      io:format("Set the address ~w to ~w~n", [Location, RXVal]),
       MemoryChanges = memory:set_octabyte(Location, RXVal),
-      io:format("The changes to memory are ~w~n", [MemoryChanges]),
       NewMessages = [{memory_change, MemoryChanges}],
       {Stmt, [next_command(PC)], NewMessages};
     _ -> {"STOUI Address Error", [], []}
@@ -675,7 +854,6 @@ ori(PC) ->
 ori(PC, Stmt, RX, RY, Z) ->
   RYVal = registers:query_register(RY),
   NVal = RYVal bor Z,
-  io:format("ORI ~w ~w (~w) ~w = (~w)~n", [RX, RY, RYVal, Z, NVal]),
   {Stmt, [{RX, NVal}, next_command(PC)], []}.
 
 %% D0-DF
@@ -683,21 +861,17 @@ ori(PC, Stmt, RX, RY, Z) ->
 
 setl(PC) ->
   {RX, RY, RZ} = three_operands(PC),
-  io:format("SETL~n", []),
-  io:format("Registers ~w - ~w - ~w~n",[RX, RY, RZ]),
   RVal = rval(RY, RZ),
   Update = registers:set_register_lowwyde(RX, RVal),
   Stmt = lists:flatten(io_lib:format("SETL $~.16B, ~B", [RX, RVal])),
   {Stmt, [Update, next_command(PC)], []}.
 
 incl(PC) ->
-  io:format("Process INCL~n"),
   {RX, RY, RZ} = three_operands(PC),
   RVal = rval(RY, RZ),
   Stmt = lists:flatten(io_lib:format("INCL $~.16B, ~B", [RX, RVal])),
   RXVal = registers:query_register(RX),
   {_Overflow, NV} = add_values(RXVal, RVal),
-  io:format("We will add ~w to ~w and we get ~w~n", [RVal, RXVal, NV]),
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 orh(PC) ->
@@ -719,7 +893,6 @@ ormh(PC) ->
   {Stmt, [{RX, NV}, next_command(PC)], []}.
 
 orml(PC) ->
-  io:format("Process ORH~n"),
   {RX, RY, RZ} = three_operands(PC),
   RVal = rval(RY, RZ),
   RValA = RVal bsl 16,
@@ -804,19 +977,12 @@ three_operands(PC) ->
 operand(Location) ->
   memory:get_byte(Location).
 
-address_two_registers(RX, RY) ->
-  R1 = registers:query_register(RX),
-  R2 = registers:query_register(RY),
-  add_values(R1, R2).
-
 immediate_address(RY, RZ) ->
   R1 = registers:query_register(RY),
-  io:format("The other value is ~w~n", [R1]),
   add_values(R1, RZ).
 
 add_values(V1, V2) ->
   A = (V1 + V2),
-  io:format("The total is ~w~n", [A]),
   MaxMemory = utilities:minus_one(),
   if
     A > MaxMemory

@@ -16,11 +16,6 @@
 %% Create a new ETS table and populate it with all of the available
 %% registers.
 init() ->
-%%  Info = ets:info(registers),
-%%  case Info of
-%%    undefined -> true;
-%%    _ -> ets:delete(registers)
-%%  end,
   Registers_Table = create_table(),
   create_user_defined_registers(Registers_Table),
   create_mmix_specific_registers(Registers_Table).
@@ -30,12 +25,7 @@ stop() ->
 
 contents() ->
   FL = ets:tab2list(registers),
-%%  lists:filter(fun(X) -> tst_filter(X) end, FL).
   FL.
-
-%%tst_filter(X) ->
-%%  {_, V} = X,
-%%  V /= 0.
 
 set_register_lowwyde(RX, RVal) ->
   CVal = query_register(RX),
@@ -44,7 +34,6 @@ set_register_lowwyde(RX, RVal) ->
   {RX, NVal}.
 
 set_register(Register, Value) ->
-  io:format("Set Register ~w to ~w~n",[Register, Value]),
   ets:update_element(registers, Register, {2, Value}).
 
 query_register(Register) ->

@@ -49,16 +49,19 @@ class MainStatePanel (system: ActorSystem) extends BorderPanel with GUIProgressE
 
   val scroller = new ScrollPane(console)
 
+  var statements = List.empty[String]
+
   layout(scroller) = Center
   layout(arithmetic_flags) = East
 
   override def handleGuiProgressEvent(event: GuiEvent): Unit = {
     event match {
       case RecordStatement(statement) =>
-        val new_text = statement.toUpperCase + "\n" + console.text
-        console.text = new_text
+        statements = statement.toUpperCase :: statements.take(299)
+        console.text = statements.mkString("\n")
       case ResetMainState =>
         console.text = ""
+        statements = List.empty[String]
       case UpdateMainStateRegisters(registers) =>
         update_state(registers)
       case msg =>
@@ -98,7 +101,7 @@ class MainStatePanel (system: ActorSystem) extends BorderPanel with GUIProgressE
     def receive = {
       case msg : GuiEvent => handler.handleGuiProgressEvent(msg)
       case msg =>
-        log.info(s"MAIN STATE PANEL HAS RECEIVED A MESSAGE $msg")
+        log.debug(s"MAIN STATE PANEL HAS RECEIVED A MESSAGE $msg")
     }
   }
 }

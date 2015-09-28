@@ -61,9 +61,7 @@ The purpose of this project is to examine this approach. The application that we
 \newpage
 \chapter*{Acknowledgments}
 \addcontentsline{toc}{chapter}{Acknowledgments}
-KM NM JK SF
-
-%% Throughout my graduate education Crandall Shifflett has been an excellent mentor and teacher. He truly understands what hard work and dedication can bring to ones life. I would like to thank Kathleen Jones for introducing me to the history of medicine. This thesis would not have happened without her support. I would also like to express gratitude toward Tom Ewing who pushed toward improving my writing in class and offered many comments during various conference sessions. If it were not for Kenneth Noe, my interest in history would have never developed into its current capacity. During my undergraduate studies he was always a man whom I looked up to and respected dearly. I will always owe a great deal of gratitude toward these professors. Without the support and motivation provided by Rebecca Lapczynski life in graduate school would have been mundane. Her presence, patience, and emotional support made the transition from West Georgia to Virginia Tech an easy one. 
+I could not have completed this project without the help and patience of some important people. I would like to thank Dr. Keith Mannock for all his help and patience during the production of this project. I would also like to thank Dr. Nigel Martin for his support and encouragement. I would also like to thank Dr. Johnny Kelsey for his support and encouragement on an almost daily basis. Lastly, and definitely not leastly, I would like to thank Sam Forster for all of his support and encouragement, while putting up with me endlessly talking about this project.
 
 \chapter{Introduction}
 As software systems get larger and more complex there is a need to handle this complexity. There is a prevailing design paradigm, which addresses these issues, that is to break these systems up into smaller components.  This is a sentiment mentioned by Turner~\cite{turner:why}  He calls these components ``collections of modules'', these components will interact with each other to make the complete system. 
@@ -114,7 +112,7 @@ When you have determined what tokens are allowed you need to describe what seque
 The Alex lexer tool allows us to insert code at specific points in the process. The functions that we are using allows us to simplify the process of creating tokens.
 
 The Alex lexer requires us to store all of these definitions in a file with an extension of \textit{x}. When all of the definitions have been completed you run the definition file through the Alex lexer tool and it generates a haskell source file that will perform the lexical analysis for you.
-\section{Parser}
+\section{Parser}\label{sec:parser}
 Once we have got a stream of tokens from the lexer, we need to perform syntax analysis and semantic analysis to make sure that the supplied program is both syntactically and semantically correct. Both of these steps are usually performed at the same time with a component called a \textit{Parser}. Parsing, like lexical analysis, is a well know problem and there are many tools that have been created to make this task simpler. These tools are generally called parser generators as they take a definition file and produce the actual parser. There are several parser generators that already exist for Haskell and we have chosen to use a parser generator called Happy\cite{happy}.
 
 The requirement for a parser is to take a stream of tokens, make sure that the stream is syntactically and semantically correct, and then output an intermediate representation of the code that can be used to generate the final binary representation.
@@ -206,12 +204,17 @@ To create the first part we group the code lines together into contiguous blocks
 The first four bytes of the second part contains the number of registers we are defining. We then include the details for each register. The first byte of the register is register number, the next eight bytes are the initial value of that register.
 
 \section{Executable}
-TODO ----- HOW WE RUN THE ASSEMBLER, WHAT THE PARAMETERS ARE \& WHAT THE OUTPUT IS
+Haskell, as a language, allows you to create an executable file from a collection of source code files. As with most programming languages that allow you to create an executable the language specifies the first function that is called when the application is run. In the case of Haskell that function is called main and it must return an IO monad.
+
+The main function in our assembler application is stored in a source code file called Main.hs. The instruction that you need to run to create the executable, in this case the executable is called MMixAssembler, is: -
 
 \begin{lstlisting}
 ghc -o MMixAssembler --make Main
 \end{lstlisting}
 
+What the function does is that it, firstly, is that it makes sure that the application is supplied with a single argument. This argument should be the name of the file containing the mmix assembly language source.
+
+The application will compile the source code and output the assembled program in a file in the same folder as the source file, where the file extension has been changed to ``se''.
 \section{Component Testing}
 When it comes to testing this component we tested it these levels.
 \begin{itemize}
@@ -222,6 +225,8 @@ When it comes to testing this component we tested it these levels.
 \item We tested the Code Generation on its own.
 \item We tested the component as a whole.
 \end{itemize}
+
+One of the questions that came out of the development of the assembler is given that we use some tools that generate code for us, how much should we test the code generation. As these components have been successfully used for a number of years we decided that we did not need to test the code generation in this case.
 
 There are several sample programs that are written in mmixal, we used several of these when testing the assembler. The main mmixal program we used to test this component is one that determines the first 500 prime numbers. A fuller description of this program can be found at Chapter~\ref{primenumbers}.
 \chapter{Virtual Machine}\label{VM}
@@ -419,10 +424,13 @@ Another message that we might receive is a request to list all of the known regi
 
 All other messages that are received are processed and then we respond with a symbol telling the GUI that we have finished processing.
 \section{Component Testing}
-The way that we have architected the VM we were able to do some extensive unit testing.
+The way that we have architected the VM we were able to do some extensive unit testing. We decided, however, that as the memory and register sections are basically extension to the erlang language ETS feature that we did not need to do extensive testing of this. The only part of this we tested was in the memory actor where we split integers up into bytes, or conversly, converting bytes back into integers.
 
+One of the core parts of the virtual machine is the way it handles conditional statements and we performed some specific testing to confirm that this works properly.
 \subsection{Conditional Statements}
 The Mmix computer performs nine different types conditional statements, eight of these statements are supplied with a register, they check the value stored in the register, and then return either true or false. The other type of conditional statement takes two registers, or a register and a value, and compares these values. It puts a value into a third register based on the comparison performed.
+
+To test this we put the following know values into some registers.
 
 \begin{lstlisting}
 \$1 = 0
@@ -431,6 +439,9 @@ The Mmix computer performs nine different types conditional statements, eight of
 \$4 = 202
 \$5 = 0xFFFFFFFFFFFFFFFF
 \end{lstlisting}
+\clearpage
+With these values in mind we created the following test matrix. This shows us the results we would expect to get for each of our registers when used in the specific comparison test.
+\begin{figure}[ht!]
 \begin{center}
 \begin{tabular}{| l | c | c  | c | c  | c | c  | c | c  |}
 \hline
@@ -442,14 +453,17 @@ The Mmix computer performs nine different types conditional statements, eight of
 \textbf{\$5} & T & F & F & T & F & T & T & F\\ \hline
 \end{tabular}
 \end{center}
+\caption{Conditional Statement Test Matrix}
+\end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We ran all of these tests until we managed to get the code to successfully pass all of these tests.
+
 \chapter{Graphical User Interface}
 \section{Introduction}
 One of the key objectives of the project chosen was to assist students understanding of how a computer program works. This objective makes the graphical user interface (GUI) a key component. A sample screenshot can be seen in Figure~\ref{screenshot}.
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=\textwidth]{GUISample2}
+\includegraphics[width=\textwidth]{GUISample3}
 \caption{GUI Sample Screenshot}
 \label{screenshot}
 \end{figure}
@@ -504,9 +518,19 @@ We have written an object, in Scala, that will perform the same translation. It 
 This object allows us the ability to marshal data structures between the two components but we also need to handle the actual transferral action. We have decided to, initially, require that both the GUI and VM processes should run on the same physical machine. This requirement allows us to simple create a UDP connection between the two processes.
 \subsection{UI Panel Communication}
 The communication between the UI panels, and the virtual machine actor all happens with Akka messages. As an example when we ask the VM to process the next statement it will respond with not only all of the things that have changed but what instruction was executed and all some updates to the console. This results in the virtual machine actor sending messages to the main state panel actor, the memory panel actor, the registers panel actor and potentially the console panel actor.
+\subsection{Automation}
+There is one of the features of the GUI we have not discussed yet, this is the automation feature. The initial version of the application just had a ``process next statement'', which works well for small programs. When you start using a bigger program like our test application, see section~\ref{primenumbers}, this take a considerable amount of effort.
+
+When we started simulating our test application we decided we wished to have a way that would automate the processing. The decision to use Akka actors made the implementation of this quite simple. The way that we implemented this was to add an automation state variable to the controls panel actor. We also added a button to the GUI so that the user can toggle between the \textit{stopped} and \textit{running} states.
+
+With the state in place we amened the GUIs virtual machine actor to send an \textit{automate} message to the controls panel whenever we have received the \textit{update} message from the VM. When the controls panel actor receives the automate message it checks the current state. If we are in the \textit{running} state it will use an Akka scheduler to simulate the pressing of the ``process next'' button after a short delay.
+
+The current version of the application has a fixed delay used in the automation but it should be a simple matter to allow the user to alter this delay through the UI.
+
 \section{Component Testing}
+The GUI performs very little complex processing, the initial task is reading the data from our own specific binary file format. This is simply tested by reading in a number of different files.
 
-
+The main complex task we have to perform is the communction between the GUI and the VM. We tested this by transferring a large number of different data structures from erlang to scala and vice versa.
 
 \chapter{Simulator Application}
 \section{Introduction}
@@ -552,7 +576,35 @@ Directly link the GUI with the Assembler.
 \begin{appendices}
 \noappendicestocpagenum
 \addappheadtotoc 
+\chapter{Intermediate Assembler Representations}\label{iar}
+\section{Definitions}
+As we described in section~\ref{sec:parser} there are four different types of lines in an mmix application. These can be grouped together into two different sets. The first set is whether or not the line contains a pseudo instruction or an operation. The second set is whether or not the line contains a label. 
+
+The haskell language allows you to define a number of related types that contain different attributes, these are called \textit{Algebraic Data Types} (ADT). We use this feature to define an algebraic data type with four different constructors to represent each line of code. 
+
+\begin{itemize}
+\item PlainPILine
+\item LabelledPILine
+\item PlainOpCodeLine
+\item LabelledOpCodeLine
+\end{itemize}
+
+We use this ADT in our assembler as our intermediate representation. 
+
+\section{Test Application}
+To demonstrate the intermediate representation we will include the source code for our test application and then we will show you the intermediate representation of this program.
+\subsection{Sample Test MMIXAL Code}
+The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is: -
+
+\begin{CenteredBox}
+\lstinputlisting[basicstyle=\ttfamily\tiny]{primes.mms}
+\end{CenteredBox}
+\subsection{Parsed Sample File}
+The final intermediate representation of the parsed source code for the test application is: -
+
+\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{parsed_example.hs}
 \chapter{Source Code}
+This appendix contains the source code for all of our components.
 \section{Assembler}\label{source:assembler}
 \subsection{Lexer}\label{source:lexer}
 \lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/MMix_Lexer.x}
@@ -614,23 +666,6 @@ Directly link the GUI with the Assembler.
 \lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/trap.erl}
 \subsection{Utilities}\label{source:vm_utilities}
 \lstinputlisting[language=erlang,basicstyle=\ttfamily\tiny]{vm/utilities.erl}
-
-\chapter{Intermediate Assembler Representations}\label{iar}
-\section{Definitions}
-\section{Test Application}
-\subsection{Sample Test MMIXAL Code}
-The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is: -
-
-\begin{CenteredBox}
-\lstinputlisting[basicstyle=\ttfamily\tiny]{primes.mms}
-\end{CenteredBox}
-\subsection{Parsed Sample File}
-The final intermediate representation of the parsed source code for the test application is: -
-
-\lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{parsed_example.hs}
 \end{appendices}
-\clearpage
-\addcontentsline{toc}{chapter}{Index}
-\printindex
 \end{document}
 
