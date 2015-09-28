@@ -96,6 +96,7 @@ The four phases that we need for our project are Lexical Analysis, Syntax Analys
 The first thing that we need to do is decide which programming language is the most appropriate for this component. The component takes a fixed input and always produces the same output. The component does not contain any user interaction and it does not need a user interface. These requirements led us to choose a functional language for this component. The language we chose was Haskell.
 
 We describe how each of these phases are implemented in Haskell in the next few sections.
+\clearpage
 \section{Lexer}
 The initial phase of compilation, lexical analysis, takes a stream of characters and converts them into tokens. Lexical analysis is a well know problem and there are many tools that have been created to make this task simpler. There are several lexers that already exist for Haskell and we have chosen to use a lexer called Alex\cite{alex}. 
 
@@ -131,6 +132,9 @@ Main & JMP & 9F & \textit{\%Labelled Opcode Line}\\
 The way that the Happy parser generator works is that we need to create a definition file that specifies all of the syntactically and semantically correct types of statements in our language. We specify the valid statements using a context free grammar. A context free grammar contains two basic parts, an identifier and list of tokens, or identifiers, that the identifier represents. A cut down version of the parser definition file we have used can be found in Figure~\ref{cfg:happy} and a full description of the intermediate representation can be found in Appendix~\ref{iar}. 
 The complete definition file can be found in Appendix~\ref{source:parser}.
 
+\clearpage
+The Happy parser generator requires us to store all of these definitions in a file with an extension of \textit{y}. When all of the definitions have been completed you run the definition file through the Happy parser generator tool and it generates a Haskell source file that will perform the syntactic and semantic analysis for you.
+
 \begin{figure}[ht!]
 \centering
 \begin{lstlisting}[basicstyle=\ttfamily\tiny]
@@ -150,8 +154,6 @@ AssingmentLine : OP_CODE OperatorList { defaultPlainOpCodeLine }
 \caption{Sample Context Free Grammar}
 \label{cfg:happy}
 \end{figure}
-
-The Happy parser generator requires us to store all of these definitions in a file with an extension of \textit{y}. When all of the definitions have been completed you run the definition file through the Happy parser generator tool and it generates a Haskell source file that will perform the syntactic and semantic analysis for you.
 
 \section{Code Generation}
 Now that we have got our program converted into an intermediate representation, in our case a list of \textit{Lines}, we need to convert this into a binary representation. The mmixal language contains a set of features called \textit{Local Labels} and processing these is the first step we perform when generating the code.
@@ -184,6 +186,7 @@ An MMix computer, by definition, contains 256 general purpose registers. The pro
 Each opcode instructions can be supplied one, two or three operands to specify exactly what we expect to happen. The majority of opcodes can either be supplied with three registers, or it can be supplied with two registers and an immediate value. The registers could, of course, be replaced by labels which represent registers. If the line specifies three registers then the plain opcode is used when we generate the code. In the other case then when we generate the code we increment the opcode by one to let the computer know not to look for this register.
 
 If the opcode is for a branching instruction then it will be supplied with a register and an address. For these instructions we need to determine the number of instructions between the current memory location and the memory location of the required address. We need the number of instructions, not just the difference in memory locations. This is calculated by determining the difference between the memory addresses and dividing this value by four. This address could be either ahead of, or before, the current location. If it is ahead of the current location then we use the plain opcode when generating the code. If the address is before the current location the we generate the code we increment the opcode by one.
+\clearpage
 \subsection{Generating the Output}
 The final stage of the assembler is the actual outputting of the binary representation of the program. The way that we have achieved this is a two stage process. In the first stage we convert the intermediate representation of the code into a new representation of the code that makes creating the output file simpler.
 
@@ -205,7 +208,7 @@ The first four bytes of the second part contains the number of registers we are 
 
 \section{Executable}
 Haskell, as a language, allows you to create an executable file from a collection of source code files. As with most programming languages that allow you to create an executable the language specifies the first function that is called when the application is run. In the case of Haskell that function is called main and it must return an IO monad.
-
+\clearpage
 The main function in our assembler application is stored in a source code file called Main.hs. The instruction that you need to run to create the executable, in this case the executable is called MMixAssembler, is: -
 
 \begin{lstlisting}
@@ -340,7 +343,7 @@ rZZ & Z Operand\\
 \end{figure}
 
 We have currently only implemented a small number of these special registers.
-
+\clearpage
 \subsection[Arithmetic Status Register]{rA Arithmetic Status Register}\label{rA}
 The Arithmetic Status Register is used to keep track of any required arithmetic events. The eight bytes in the register are used for different flags. The least significant byte contains eight event bits. These bits are commonly referred to as DVWIOUZX, the meanings of these flags can be seen in Figure~\ref{fig:ra_reg_flags}.
 
@@ -386,7 +389,7 @@ in rA specify a rounding mode, as follows: -
 \end{center}
 
 We have implemented the arithmetic status register as a separate actor. This actor contains three pieces of state, the rounding mode, a set of flags to keep track of the enable bits that have been set, and a set of flags to keep track of the event buts that have been set.
-
+\clearpage
 This actor allows us to do four this, it allows us to change the rounding mode, it allows us to potentially flag an event as having happened, it allows us to remove a flag if it exists, and it allows us to find out what the actual value is recorded in the register. The way we have implemented the get value functionality is that we have assumed that this is the last thing that happens when processing an instruction. As such we reset all of the set event flags after we have determined the current value of the register. 
 \subsection{General Purpose Registers}
 We are storing the general purpose registers inside a separate ETS table. This table uses the register identifier as the key and the octabyte stored in it as the value. When we start the VM, or when we send a new set of registers from the GUI, we create a new version of the ETS table.
@@ -396,7 +399,7 @@ The Central Processing Unit (CPU) is at the heart of the virtual machine. The CP
 There are many different forms of instructions that the CPU could be running, as described in Chapter~\ref{c:assembler}. 
 
 One of the sets of instruction can be specified in one of two ways, with three registers or with two registers and an immediate value, are all implemented in a similar manner. In the case where we have three registers we obtain the value stored in the third register and then both versions functions call a shared function which performs the actual operation.
-
+\clearpage
 Another set of instructions are the branching instructions. These instructions all take a single register and a sixteen bit number. The instructions look at the value in the register and if it matches a boolean function then processing moves, either forward or backwards, the number of instructions specified in the sixteen bit number. The actual new location is the current location, either plus or minus, four times the specified number of instructions.
 
 Another set of instructions are used to conditionally set the value in a register. These instructions take two registers and a number. We use the same set of boolean functions as we have in the branching instructions against the second register. If the boolean function returns true then we set the first register to the number specified, if it returns true then we leave it alone. There is another set of instructions that are identical to this however if the boolean function returns false it set the first register to zero.
@@ -411,7 +414,7 @@ These operations are executed through the TRAP instruction, for example
 TRAP 0,Fputs,StdOut
 \end{lstlisting}
 tells the program to look at the memory location stored in general purpose register \$255. It will assume that this memory location is the start of a null terminated string. Therefore, it will read all of subsequent memory locations until it finds a location containing 0. It will assume that all of the other values for part of the string and it will send it to the operating systems currently defined standard output.
-
+\clearpage
 For the purpose of our application we consider the GUI to be the operating system. The way that the VM interacts with the GUI, in the case of TRAPs, is that it creates a list of tuples, the first element of the tuple contains a symbol that is known by the GUI. The remaining elements in the tuple are the data the GUI will need to perform the operation.
 
 There is not a definitive list of what TRAP instructions there should be, but there is a list of rudimentary I/O commands that it should execute. We have actually only implemented a couple of the possible TRAP instructions.
@@ -439,7 +442,7 @@ To test this we put the following know values into some registers.
 \$4 = 202
 \$5 = 0xFFFFFFFFFFFFFFFF
 \end{lstlisting}
-\clearpage
+
 With these values in mind we created the following test matrix. This shows us the results we would expect to get for each of our registers when used in the specific comparison test.
 \begin{figure}[ht!]
 \begin{center}
@@ -514,7 +517,7 @@ There are two types of communication that we need to handle in the project, comm
 We need a mechanism for transferring data and commands between the GUI written in Scala and the VM written in Erlang. There is a built in function inside Erlang which will convert a term, which is the name Erlang uses for a data structure, into binary. This function is called \textit{term\_to\_binary} and it takes a value as a parameter. The function creates a binary representation based on a fixed format the can be found on the Erlang website~\cite{term_to_binary}.
 
 We have written an object, in Scala, that will perform the same translation. It will convert binary streams from Erlang into Scala data structures and it will convert Scala data structures into a binary stream that Erlang can understand. This object has been embedded inside the Virtual Machine Actor, the full source code is available in Appendix~\ref{source:vm_actor}.
-
+\clearpage
 This object allows us the ability to marshal data structures between the two components but we also need to handle the actual transferral action. We have decided to, initially, require that both the GUI and VM processes should run on the same physical machine. This requirement allows us to simple create a UDP connection between the two processes.
 \subsection{UI Panel Communication}
 The communication between the UI panels, and the virtual machine actor all happens with Akka messages. As an example when we ask the VM to process the next statement it will respond with not only all of the things that have changed but what instruction was executed and all some updates to the console. This results in the virtual machine actor sending messages to the main state panel actor, the memory panel actor, the registers panel actor and potentially the console panel actor.
@@ -534,8 +537,10 @@ The main complex task we have to perform is the communction between the GUI and 
 
 \chapter{Simulator Application}
 \section{Introduction}
-In the previous chapters we have described the individual components that make up the Simulator Application.
+In the previous chapters we have described the individual components that make up the Simulator Application. We now need to describe how these components work together. The three components are all stand alone applications and they need to be run separately.
 \section{Integration Testing}
+The integration testing that we performed on the application comes in two parts. The first part was the running of an ``Hello World'' application.
+
 \begin{centering}
 \begin{tabular}{ l l l }
  & LOC & Data\_Segment\\
@@ -549,25 +554,64 @@ Main & LDA & \$255,txt\\
  & TRAP & 0,Halt,0\\
 \end{tabular}
 \end{centering}
+
+The output for the assembler was produced correctly. We then ran the application through the GUI, which can be seen in Figure~\ref{gui:helloworld}. 
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=\textwidth]{helloworld}
+\caption{Hello World GUI Screenshot}
+\label{gui:helloworld}
+\end{figure}
+
+To allow everything to run correctly we also need to have the VM running, the output from the VM can be seen in Figure~\ref{vm:helloworld}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics{HelloWorldVM}
+\caption{Hello World VM Screenshot}
+\label{vm:helloworld}
+\end{figure}
+
 \subsection{Generate Prime Numbers Sample Application}
 \label{primenumbers}
+As can be seen the first test application is extremely simple. To give the application more of a test we have taken an example from Fasicle 1~\cite{knuth:aocp2}. This example calculates the first five hundred primes numbers. The complete source code listing for this test application can be found in Appendix~\ref{primes:source}. 
+
+This application can be split into two distinct parts. The first part calculates the prime numbers and the second part displays them on the console. The prime numbers are calculated in a nieve way. The application starts by giving us 2 and 3 as prime numbers. It keeps track of the next potential prime number in a general purpose register. The application sets this register to three and each pass through it increments it by 2.
+\clearpage
+The next step is checking to see if the potential prime number is actually prime. To do this the application loops through all of the previously discovered prime numbers. It divides the new candidate prime number by the known prime, if the remainder is zero we know that the candidate is not a prime. If we manage to loop through all of the smaller prime numbers then the candidate is actually a prime number.
+
+The application uses a register as a proxy for the number of prime numbers found, when we have found a new prime number we increment this register. If we have reached the point when we have discovered all of the required prime numbers then the application jumps to the output stage. If we have not reached the required number of primes then we increment the candidate prime by 2 and then start the checking process again.
+
+The output stage displays the prime numbers we have found in ten columns where the numbers that we have found are display in ascending order one column at a time. Therefore the first column will contain prime numbers 1 - 50, the second column will contain prime numbers 51 - 100, etc.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=\textwidth]{GUISample3}
+\caption{Prime Numbers GUI Screenshot}
+\label{primes:gui}
+\end{figure}
+
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
-We found that having a single developer 
+The initial question we attempted to answer with this project is whether or not using a different programming language, or paradigm, for each component in a complex system is a good idea. The answer to that question depends on whether the system is being developed by a small number of people, less than the number of components, or there will be a separate team of developers for each of the components.
 
-Pattern Matching
+If there will be a separate team for each of the components then using a different programming language or paradigm we determined would not be a bad idea. The issues that would need to addressed fairly early in the development process would be the inter-team and inter-component communications. We believe that a considerable amount of effort would need to be used to make sure the individual components worked well together. This is normal for all large systems with multiple teams but the use of different programming languages makes this task essential.
 
-Lists
-
-Tuples
-
+If there will be a small number of developers working on the project we determined that this would not be a good idea. If you are using different programming languages then we believe there is a mental shift that needs to take place when swapping from one programming language to another. This mental shift can be quite confusing at times, especially when you are under pressure. There is an added difficulty if, as we had in our languages, there are similar constructs and data structures in the different languages. We were constantly finding that we were using the data structures and programming constructs from one of the other components. This can lead to lengthy delays. 
+\clearpage
 \section*{Possible Future Enhancements}
 \addcontentsline{toc}{section}{Possible Future Enhancements}
-Extra TRAP instructions.
+There are a number of future enhancement we believe could be made to the simulator application.
 
-Extra special registers.
-
-Directly link the GUI with the Assembler.
+\begin{itemize}
+\item Extra TRAP instructions - We have only implemented a couple of the defined TRAP instructions, we would need to enhance the GUI and the VM to handle additional instructions. The main instructions we feel would be needed are the file handling instructions.
+\item Extra special registers - We only implemented a subset of the defined special registers. It would be a good idea to implement the remaining special registers.
+\item Directly link the GUI with the Assembler - At the moment the use has to compile there source mmixal application outside of the GUI. It would be a nice to add an extra screen to the GUI that allows the user to enter there programs directly in it. We would then need to enhance the GUI to use the assembler to generate the binary representation.
+\item Source Code Pointers - At present the binary representation of the application does not know anything about where, in the source code, the instructions come from. It would be very useful to extend the binary representation to know which line of source code a specific instruction comes from. We code then enhance the GUI to display this as well.
+\item Automation Delay - The amount of time the GUI waits before exectuing the next instruction, when automating, is fixed. It would be a very good enhancement to allow the user to adjust this delay while the application is running.
+\item Run Application - At present the only way to run an application through the GUI is to step through each instruction. It would be a good enhancement to allow the user to run the program until it ends. The VM would need to keep track of all updates that would need to be returned to the GUI.
+\end{itemize}
 
 \nocite{*}
 \bibliographystyle{alpha}
@@ -593,7 +637,7 @@ We use this ADT in our assembler as our intermediate representation.
 
 \section{Test Application}
 To demonstrate the intermediate representation we will include the source code for our test application and then we will show you the intermediate representation of this program.
-\subsection{Sample Test MMIXAL Code}
+\subsection{Sample Test MMIXAL Code}\label{primes:source}
 The sample mmixal application I am using to test the system is taken from Fascile 1\cite{knuth:aocp2}.  The complete code listing is: -
 
 \begin{CenteredBox}
@@ -604,7 +648,8 @@ The final intermediate representation of the parsed source code for the test app
 
 \lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{parsed_example.hs}
 \chapter{Source Code}
-This appendix contains the source code for all of our components.
+This appendix contains the source code for all of our components. The complete source for this application, along with instructions for how to run it, can be found at \url{https://github.com/Void33/MMIX-Simulator}.
+
 \section{Assembler}\label{source:assembler}
 \subsection{Lexer}\label{source:lexer}
 \lstinputlisting[language=Haskell,basicstyle=\ttfamily\tiny]{assembler/MMix_Lexer.x}
