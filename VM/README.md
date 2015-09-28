@@ -28,7 +28,8 @@ c(comm).
 
 When you have compiled the modules all you need to do to start the application is to run: -
 
+```
 comm:start_vm().
-
+```
 
 **Please Note that all . in the above code statements are essential and not just punctation**
